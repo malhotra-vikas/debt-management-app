@@ -25,6 +25,15 @@ import {
 import { Slider } from '@/components/ui/slider'
 import { toast } from '@/components/ui/use-toast'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 
 const userInfoSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
@@ -45,8 +54,9 @@ type UserInfo = z.infer<typeof userInfoSchema>
 type DebtInfo = z.infer<typeof debtFormSchema>
 
 export function MultiStepForm() {
-  const [step, setStep] = useState<'userInfo' | 'debtInfo'>('userInfo')
+  const [step, setStep] = useState<'userInfo' | 'debtInfo' | 'summary'>('userInfo')
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
+  const [debtInfo, setDebtInfo] = useState<DebtInfo | null>(null)
 
   const userInfoForm = useForm<UserInfo>({
     resolver: zodResolver(userInfoSchema),
@@ -73,16 +83,21 @@ export function MultiStepForm() {
   }
 
   function onDebtInfoSubmit(values: DebtInfo) {
+    setDebtInfo(values)
     console.log({ ...userInfo, ...values })
     toast({
       title: "Information submitted",
       description: "Your information has been saved successfully.",
     })
-    // Reset forms and go back to first step
+    setStep('summary')
+  }
+
+  function resetForms() {
     userInfoForm.reset()
     debtInfoForm.reset()
     setStep('userInfo')
     setUserInfo(null)
+    setDebtInfo(null)
   }
 
   return (
@@ -90,11 +105,12 @@ export function MultiStepForm() {
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="bg-blue-500 text-white rounded-t-lg">
           <CardTitle className="text-2xl font-bold text-center">
-            {step === 'userInfo' ? 'User Information' : 'Debt Information'}
+            {step === 'userInfo' ? 'User Information' : 
+             step === 'debtInfo' ? 'Debt Information' : 'Summary'}
           </CardTitle>
         </CardHeader>
         <CardContent className="bg-white rounded-b-lg">
-          {step === 'userInfo' ? (
+          {step === 'userInfo' && (
             <Form {...userInfoForm}>
               <form onSubmit={userInfoForm.handleSubmit(onUserInfoSubmit)} className="space-y-6">
                 <FormField
@@ -110,36 +126,39 @@ export function MultiStepForm() {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={userInfoForm.control}
-                  name="firstName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-blue-600 font-semibold">First Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter your first name" {...field} className="border-blue-300 focus:border-blue-500" />
-                      </FormControl>
-                      <FormMessage className="text-red-500" />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={userInfoForm.control}
-                  name="lastName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-blue-600 font-semibold">Last Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter your last name" {...field} className="border-blue-300 focus:border-blue-500" />
-                      </FormControl>
-                      <FormMessage className="text-red-500" />
-                    </FormItem>
-                  )}
-                />
+                <div className="flex space-x-4">
+                  <FormField
+                    control={userInfoForm.control}
+                    name="firstName"
+                    render={({ field }) => (
+                      <FormItem className="flex-1">
+                        <FormLabel className="text-blue-600 font-semibold">First Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter your first name" {...field} className="border-blue-300 focus:border-blue-500" />
+                        </FormControl>
+                        <FormMessage className="text-red-500" />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={userInfoForm.control}
+                    name="lastName"
+                    render={({ field }) => (
+                      <FormItem className="flex-1">
+                        <FormLabel className="text-blue-600 font-semibold">Last Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter your last name" {...field} className="border-blue-300 focus:border-blue-500" />
+                        </FormControl>
+                        <FormMessage className="text-red-500" />
+                      </FormItem>
+                    )}
+                  />
+                </div>
                 <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white">Next</Button>
               </form>
             </Form>
-          ) : (
+          )}
+          {step === 'debtInfo' && (
             <Form {...debtInfoForm}>
               <form onSubmit={debtInfoForm.handleSubmit(onDebtInfoSubmit)} className="space-y-6">
                 <FormField
@@ -260,6 +279,48 @@ export function MultiStepForm() {
                 </div>
               </form>
             </Form>
+          )}
+          {step === 'summary' && userInfo && debtInfo && (
+            <div className="space-y-6">
+              <Table>
+                <TableCaption>Submitted Debt Information</TableCaption>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[200px]">Field</TableHead>
+                    <TableHead>Value</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell className="font-medium">Name</TableCell>
+                    <TableCell>{`${userInfo.firstName} ${userInfo.lastName}`}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="font-medium">Email</TableCell>
+                    <TableCell>{userInfo.email}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="font-medium">Creditor Name</TableCell>
+                    <TableCell>{debtInfo.creditorName}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="font-medium">Debt Type</TableCell>
+                    <TableCell>{debtInfo.debtType}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="font-medium">Balance</TableCell>
+                    <TableCell>${debtInfo.balance.toFixed(2)}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="font-medium">Interest Rate</TableCell>
+                    <TableCell>{debtInfo.interestRate.toFixed(1)}%</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+              <Button onClick={resetForms} className="w-full bg-blue-500 hover:bg-blue-600 text-white">
+                Add Another Debt
+              </Button>
+            </div>
           )}
         </CardContent>
       </Card>
