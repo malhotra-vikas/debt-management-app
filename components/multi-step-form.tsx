@@ -40,6 +40,7 @@ const userInfoSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
   firstName: z.string().min(2, { message: "First name must be at least 2 characters" }),
   lastName: z.string().min(2, { message: "Last name must be at least 2 characters" }),
+  phoneNumber: z.string().regex(/^\d{10}$/, { message: "Phone number must be 10 digits" }),
 })
 
 const debtFormSchema = z.object({
@@ -66,6 +67,7 @@ export function MultiStepForm() {
       email: "",
       firstName: "",
       lastName: "",
+      phoneNumber: "",
     },
   })
 
@@ -269,8 +271,8 @@ export function MultiStepForm() {
             </CardTitle>
           </CardHeader>
           <CardContent className="bg-white rounded-b-lg">
-            <div className="pt-4 mb-6">
-              <Progress value={getProgressPercentage()} className="w-full h-2" />
+            <div className="mb-6">
+              <Progress value={getProgressPercentage()} className="w-full h-2 mt-4" />
             </div>
             {step === 'userInfo' && (
               <Form {...userInfoForm}>
@@ -316,6 +318,29 @@ export function MultiStepForm() {
                       )}
                     />
                   </div>
+                  <FormField
+                    control={userInfoForm.control}
+                    name="phoneNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-blue-600 font-semibold">Phone Number</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Enter your 10-digit phone number" 
+                            {...field} 
+                            className="border-blue-300 focus:border-blue-500"
+                            type="tel"
+                            inputMode="numeric"
+                            pattern="[0-9]{10}"
+                          />
+                        </FormControl>
+                        <FormDescription className="text-gray-500">
+                          Please enter a 10-digit phone number without spaces or dashes.
+                        </FormDescription>
+                        <FormMessage className="text-red-500" />
+                      </FormItem>
+                    )}
+                  />
                   <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white">Next</Button>
                 </form>
               </Form>
@@ -339,6 +364,10 @@ export function MultiStepForm() {
                     <TableRow>
                       <TableCell className="font-medium">Email</TableCell>
                       <TableCell>{userInfo.email}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">Phone Number</TableCell>
+                      <TableCell>{userInfo.phoneNumber}</TableCell>
                     </TableRow>
                     {allDebts.length > 0 && (
                       <>
