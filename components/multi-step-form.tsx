@@ -106,8 +106,8 @@ export function MultiStepForm() {
 
   return (
     <div className="min-h-screen bg-blue-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-4xl flex space-x-4">
-        <Card className="w-full max-w-md shadow-lg">
+      <div className="w-full max-w-2xl space-y-4">
+        <Card className="w-full shadow-lg">
           <CardHeader className="bg-blue-500 text-white rounded-t-lg">
             <CardTitle className="text-2xl font-bold text-center">
               {step === 'userInfo' ? 'User Information' : 
@@ -329,36 +329,37 @@ export function MultiStepForm() {
             )}
           </CardContent>
         </Card>
-        
-        <Card className="w-full shadow-lg">
-          <CardHeader className="bg-blue-500 text-white rounded-t-lg">
-            <CardTitle className="text-2xl font-bold text-center">All Debts</CardTitle>
-          </CardHeader>
-          <CardContent className="bg-white rounded-b-lg">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Creditor</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Balance</TableHead>
-                  <TableHead>Interest Rate</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {allDebts.map((debt, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{`${debt.firstName} ${debt.lastName}`}</TableCell>
-                    <TableCell>{debt.creditorName}</TableCell>
-                    <TableCell>{debt.debtType}</TableCell>
-                    <TableCell>${debt.balance.toFixed(2)}</TableCell>
-                    <TableCell>{debt.interestRate.toFixed(1)}%</TableCell>
+        {step === 'debtInfo' && (
+          <Card className="w-full shadow-lg">
+            <CardHeader className="bg-blue-500 text-white rounded-t-lg">
+              <CardTitle className="text-2xl font-bold text-center">All Debts</CardTitle>
+            </CardHeader>
+            <CardContent className="bg-white rounded-b-lg">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Creditor</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Balance</TableHead>
+                    <TableHead>Interest Rate</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                </TableHeader>
+                <TableBody>
+                  {allDebts.map((debt, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{`${debt.firstName} ${debt.lastName}`}</TableCell>
+                      <TableCell>{debt.creditorName}</TableCell>
+                      <TableCell>{debt.debtType}</TableCell>
+                      <TableCell>${debt.balance.toFixed(2)}</TableCell>
+                      <TableCell>{debt.interestRate.toFixed(1)}%</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   )
