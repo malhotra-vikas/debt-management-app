@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { toast } from '@/components/ui/use-toast'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 const formSchema = z.object({
   creditorName: z.string().min(2, {
@@ -59,87 +60,96 @@ export function DebtForm() {
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <FormField
-          control={form.control}
-          name="creditorName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Creditor Name</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter creditor name" {...field} />
-              </FormControl>
-              <FormDescription>
-                The name of the institution or person you owe money to.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="debtType"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Debt Type</FormLabel>
-              <Select 
-                onValueChange={field.onChange} 
-                defaultValue={field.value}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a debt type" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="credit_card">Credit Card</SelectItem>
-                  <SelectItem value="personal_loan">Personal Loan</SelectItem>
-                  <SelectItem value="line_of_credit">Line of Credit</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                The type of revolving debt you're recording.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="balance"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Current Balance</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter current balance" {...field} />
-              </FormControl>
-              <FormDescription>
-                The current amount you owe on this debt.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="interestRate"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Interest Rate (%)</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter interest rate" {...field} />
-              </FormControl>
-              <FormDescription>
-                The annual interest rate for this debt.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <Button type="submit">Submit Debt Information</Button>
-      </form>
-    </Form>
+    <div className="min-h-screen bg-blue-100 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md shadow-lg">
+        <CardHeader className="bg-blue-500 text-white rounded-t-lg">
+          <CardTitle className="text-2xl font-bold text-center">Debt Information</CardTitle>
+        </CardHeader>
+        <CardContent className="bg-white rounded-b-lg">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="creditorName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-blue-600 font-semibold">Creditor Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter creditor name" {...field} className="border-blue-300 focus:border-blue-500" />
+                    </FormControl>
+                    <FormDescription className="text-gray-500">
+                      The name of the institution or person you owe money to.
+                    </FormDescription>
+                    <FormMessage className="text-red-500" />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="debtType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-blue-600 font-semibold">Debt Type</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="border-blue-300 focus:border-blue-500">
+                          <SelectValue placeholder="Select a debt type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="credit_card">Credit Card</SelectItem>
+                        <SelectItem value="personal_loan">Personal Loan</SelectItem>
+                        <SelectItem value="line_of_credit">Line of Credit</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormDescription className="text-gray-500">
+                      The type of revolving debt you're recording.
+                    </FormDescription>
+                    <FormMessage className="text-red-500" />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="balance"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-blue-600 font-semibold">Current Balance</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter current balance" {...field} className="border-blue-300 focus:border-blue-500" />
+                    </FormControl>
+                    <FormDescription className="text-gray-500">
+                      The current amount you owe on this debt.
+                    </FormDescription>
+                    <FormMessage className="text-red-500" />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="interestRate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-blue-600 font-semibold">Interest Rate (%)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter interest rate" {...field} className="border-blue-300 focus:border-blue-500" />
+                    </FormControl>
+                    <FormDescription className="text-gray-500">
+                      The annual interest rate for this debt.
+                    </FormDescription>
+                    <FormMessage className="text-red-500" />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white">Submit Debt Information</Button>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+    </div>
   )
 }
