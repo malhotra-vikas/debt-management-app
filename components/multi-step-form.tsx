@@ -269,7 +269,7 @@ export function MultiStepForm() {
             </CardTitle>
           </CardHeader>
           <CardContent className="bg-white rounded-b-lg">
-            <div className="mb-6">
+            <div className="pt-4 mb-6">
               <Progress value={getProgressPercentage()} className="w-full h-2" />
             </div>
             {step === 'userInfo' && (
