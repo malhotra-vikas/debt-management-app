@@ -134,7 +134,7 @@ export function DebtForm() {
                   <FormItem>
                     <FormLabel className="text-blue-600 font-semibold">Interest Rate (%)</FormLabel>
                     <FormControl>
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         <Slider
                           min={0}
                           max={100}
@@ -143,8 +143,10 @@ export function DebtForm() {
                           onValueChange={(vals) => onChange(vals[0])}
                           className="w-full"
                         />
-                        <div className="text-right font-medium text-blue-600">
-                          {value.toFixed(1)}%
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-500">0%</span>
+                          <span className="text-lg font-semibold text-blue-600">{value.toFixed(1)}%</span>
+                          <span className="text-sm text-gray-500">100%</span>
                         </div>
                       </div>
                     </FormControl>
