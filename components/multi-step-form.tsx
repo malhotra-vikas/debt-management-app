@@ -1,4 +1,4 @@
-'use client'
+ 'use client'
 
 import React, { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/table"
 import { Progress } from "@/components/ui/progress"
 import { Checkbox } from "@/components/ui/checkbox"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
 const userInfoSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
@@ -53,17 +54,30 @@ const debtFormSchema = z.object({
   interestRate: z.number().min(0).max(100),
 })
 
+const additionalInfoSchema = z.object({
+  shortTermLoss: z.boolean(),
+  futureIncomeIncrease: z.boolean(),
+  futureIncomeAmount: z.number().optional(),
+  debtSituation: z.enum(['overwhelmed', 'struggling', 'managing', 'improving']),
+  monthlyMinimumPayments: z.number().min(0),
+  hasSavings: z.boolean(),
+  savingsAmount: z.number().optional(),
+  yearsToDebtFree: z.number().min(1).max(30),
+})
+
 type UserInfo = z.infer<typeof userInfoSchema>
 type DebtTypes = z.infer<typeof debtTypesSchema>
 type DebtInfo = z.infer<typeof debtFormSchema>
+type AdditionalInfo = z.infer<typeof additionalInfoSchema>
 type FullDebtInfo = DebtInfo & { type: string }
 
 export function MultiStepForm() {
-  const [step, setStep] = useState<'userInfo' | 'debtTypes' | 'debtInfo' | 'summary'>('userInfo')
+  const [step, setStep] = useState<'userInfo' | 'debtTypes' | 'debtInfo' | 'additionalInfo' | 'summary'>('userInfo')
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
   const [selectedDebtTypes, setSelectedDebtTypes] = useState<string[]>([])
   const [currentDebtType, setCurrentDebtType] = useState<string | null>(null)
   const [allDebts, setAllDebts] = useState<FullDebtInfo[]>([])
+  const [additionalInfo, setAdditionalInfo] = useState<AdditionalInfo | null>(null)
 
   const userInfoForm = useForm<UserInfo>({
     resolver: zodResolver(userInfoSchema),
@@ -92,6 +106,18 @@ export function MultiStepForm() {
       creditorName: "",
       balance: 0,
       interestRate: 0,
+    },
+  })
+
+  const additionalInfoForm = useForm<AdditionalInfo>({
+    resolver: zodResolver(additionalInfoSchema),
+    defaultValues: {
+      shortTermLoss: false,
+      futureIncomeIncrease: false,
+      debtSituation: 'managing',
+      monthlyMinimumPayments: 0,
+      hasSavings: false,
+      yearsToDebtFree: 5,
     },
   })
 
@@ -131,18 +157,23 @@ export function MultiStepForm() {
     debtInfoForm.reset()
   }
 
+  function onAdditionalInfoSubmit(values: AdditionalInfo) {
+    setAdditionalInfo(values)
+    setStep('summary')
+  }
+
   function moveToNextDebtType() {
     const currentIndex = selectedDebtTypes.indexOf(currentDebtType!)
     if (currentIndex < selectedDebtTypes.length - 1) {
       setCurrentDebtType(selectedDebtTypes[currentIndex + 1])
       debtInfoForm.reset()
     } else {
-      setStep('summary')
+      setStep('additionalInfo')
     }
   }
 
   const getProgressPercentage = () => {
-    const steps = ['userInfo', 'debtTypes', 'debtInfo', 'summary']
+    const steps = ['userInfo', 'debtTypes', 'debtInfo', 'additionalInfo', 'summary']
     const currentIndex = steps.indexOf(step)
     return Math.round((currentIndex / (steps.length - 1)) * 100)
   }
@@ -167,6 +198,7 @@ export function MultiStepForm() {
               {step === 'userInfo' ? 'User Information' : 
                step === 'debtTypes' ? 'Types of Unsecured Debt' :
                step === 'debtInfo' ? `${getDebtTypeLabel(currentDebtType!)} Information` : 
+               step === 'additionalInfo' ? 'Additional Information' :
                'Summary'}
             </CardTitle>
           </CardHeader>
@@ -369,10 +401,209 @@ export function MultiStepForm() {
                 </form>
               </Form>
             )}
-            {step === 'summary' && userInfo && (
+            {step === 'additionalInfo' && (
+              <Form {...additionalInfoForm}>
+                <form onSubmit={additionalInfoForm.handleSubmit(onAdditionalInfoSubmit)} className="space-y-6">
+                  <FormField
+                    control={additionalInfoForm.control}
+                    name="shortTermLoss"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>Are you experiencing short-term loss in income?</FormLabel>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={additionalInfoForm.control}
+                    name="futureIncomeIncrease"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={(checked) => {
+                              field.onChange(checked)
+                              if (!checked) {
+                                additionalInfoForm.setValue('futureIncomeAmount', undefined)
+                              }
+                            }}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>Will your income be increasing in the near future?</FormLabel>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                  {additionalInfoForm.watch('futureIncomeIncrease') && (
+                    <FormField
+                      control={additionalInfoForm.control}
+                      name="futureIncomeAmount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>How much will your income increase?</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="Enter amount"
+                              {...field}
+                              onChange={(e) => field.onChange(Number(e.target.value))}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                  <FormField
+                    control={additionalInfoForm.control}
+                    name="debtSituation"
+                    render={({ field }) => (
+                      <FormItem className="space-y-3">
+                        <FormLabel>Which best describes your situation?</FormLabel>
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                            className="flex flex-col space-y-1"
+                          >
+                            <FormItem className="flex items-center space-x-3 space-y-0">
+                              <FormControl>
+                                <RadioGroupItem value="overwhelmed" />
+                              </FormControl>
+                              <FormLabel className="font-normal">
+                                Overwhelmed by debt
+                              </FormLabel>
+                            </FormItem>
+                            <FormItem className="flex items-center space-x-3 space-y-0">
+                              <FormControl>
+                                <RadioGroupItem value="struggling" />
+                              </FormControl>
+                              <FormLabel className="font-normal">
+                                Struggling to make payments
+                              </FormLabel>
+                            </FormItem>
+                            <FormItem className="flex items-center space-x-3 space-y-0">
+                              <FormControl>
+                                <RadioGroupItem value="managing" />
+                              </FormControl>
+                              <FormLabel className="font-normal">
+                                Managing, but want to improve
+                              </FormLabel>
+                            </FormItem>
+                            <FormItem className="flex items-center space-x-3 space-y-0">
+                              <FormControl>
+                                <RadioGroupItem value="improving" />
+                              </FormControl>
+                              <FormLabel className="font-normal">
+                                Actively improving financial situation
+                              </FormLabel>
+                            </FormItem>
+                          </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={additionalInfoForm.control}
+                    name="monthlyMinimumPayments"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>What is your total monthly minimum payments amount? ($)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="Enter amount"
+                            {...field}
+                            onChange={(e) => field.onChange(Number(e.target.value))}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={additionalInfoForm.control}
+                    name="hasSavings"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={(checked) => {
+                              field.onChange(checked)
+                              if (!checked) {
+                                additionalInfoForm.setValue('savingsAmount', undefined)
+                              }
+                            }}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>Do you have any savings?</FormLabel>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                  {additionalInfoForm.watch('hasSavings') && (
+                    <FormField
+                      control={additionalInfoForm.control}
+                      name="savingsAmount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>How much savings do you have? ($)</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="Enter amount"
+                              {...field}
+                              onChange={(e) => field.onChange(Number(e.target.value))}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                  <FormField
+                    control={additionalInfoForm.control}
+                    name="yearsToDebtFree"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>In how many years would you like to be debt free?</FormLabel>
+                        <FormControl>
+                          <div className="space-y-3">
+                            <Slider
+                              min={1}
+                              max={30}
+                              step={1}
+                              value={[field.value]}
+                              onValueChange={(vals) => field.onChange(vals[0])}
+                              className="w-full"
+                            />
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-gray-500">1 year</span>
+                              <span className="text-lg font-semibold text-blue-600">{field.value} years</span>
+                              <span className="text-sm text-gray-500">30 years</span>
+                            </div>
+                          </div>
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white">Submit</Button>
+                </form>
+              </Form>
+            )}
+            {step === 'summary' && userInfo && additionalInfo && (
               <div className="space-y-6">
                 <Table>
-                  <TableCaption>Submitted Debt Information</TableCaption>
+                  <TableCaption>Submitted Information Summary</TableCaption>
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-[200px]">Field</TableHead>
@@ -413,10 +644,34 @@ export function MultiStepForm() {
                         </TableRow>
                       </React.Fragment>
                     ))}
+                    <TableRow>
+                      <TableCell className="font-medium">Experiencing Short-Term Income Loss</TableCell>
+                      <TableCell>{additionalInfo.shortTermLoss ? 'Yes' : 'No'}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">Future Income Increase</TableCell>
+                      <TableCell>{additionalInfo.futureIncomeIncrease ? `Yes, $${additionalInfo.futureIncomeAmount}` : 'No'}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">Debt Situation</TableCell>
+                      <TableCell>{additionalInfo.debtSituation}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">Monthly Minimum Payments</TableCell>
+                      <TableCell>${additionalInfo.monthlyMinimumPayments.toFixed(2)}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">Savings</TableCell>
+                      <TableCell>{additionalInfo.hasSavings ? `$${additionalInfo.savingsAmount}` : 'No savings'}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">Years to Become Debt Free</TableCell>
+                      <TableCell>{additionalInfo.yearsToDebtFree} years</TableCell>
+                    </TableRow>
                   </TableBody>
                 </Table>
                 <Button onClick={() => setStep('debtTypes')} className="w-full bg-blue-500 hover:bg-blue-600 text-white">
-                  Add More Debts
+                  Start Over
                 </Button>
               </div>
             )}
