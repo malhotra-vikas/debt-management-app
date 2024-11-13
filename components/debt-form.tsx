@@ -31,9 +31,7 @@ const formSchema = z.object({
     message: "Creditor name must be at least 2 characters.",
   }),
   debtType: z.enum(["credit_card", "personal_loan", "line_of_credit", "other"]),
-  balance: z.string().refine((val) => !isNaN(Number(val)), {
-    message: "Balance must be a valid number.",
-  }),
+  balance: z.number().min(0).max(100000),
   interestRate: z.number().min(0).max(100),
 })
 
@@ -43,7 +41,7 @@ export function DebtForm() {
     defaultValues: {
       creditorName: "",
       debtType: "credit_card",
-      balance: "",
+      balance: 0,
       interestRate: 0,
     },
   })
@@ -116,9 +114,30 @@ export function DebtForm() {
                 name="balance"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-blue-600 font-semibold">Current Balance</FormLabel>
+                    <FormLabel className="text-blue-600 font-semibold">Current Balance ($)</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter current balance" {...field} className="border-blue-300 focus:border-blue-500" />
+                      <div className="space-y-3">
+                        <Slider
+                          min={0}
+                          max={100000}
+                          step={100}
+                          value={[field.value]}
+                          onValueChange={(vals) => field.onChange(vals[0])}
+                          className="w-full"
+                        />
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-500">$0</span>
+                          <Input
+                            type="number"
+                            min={0}
+                            max={100000}
+                            {...field}
+                            onChange={(e) => field.onChange(Number(e.target.value))}
+                            className="w-24 text-center border-blue-300 focus:border-blue-500"
+                          />
+                          <span className="text-sm text-gray-500">$100,000</span>
+                        </div>
+                      </div>
                     </FormControl>
                     <FormDescription className="text-gray-500">
                       The current amount you owe on this debt.
@@ -130,7 +149,7 @@ export function DebtForm() {
               <FormField
                 control={form.control}
                 name="interestRate"
-                render={({ field: { value, onChange, ...field } }) => (
+                render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-blue-600 font-semibold">Interest Rate (%)</FormLabel>
                     <FormControl>
@@ -139,13 +158,13 @@ export function DebtForm() {
                           min={0}
                           max={100}
                           step={0.1}
-                          value={[value]}
-                          onValueChange={(vals) => onChange(vals[0])}
+                          value={[field.value]}
+                          onValueChange={(vals) => field.onChange(vals[0])}
                           className="w-full"
                         />
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-gray-500">0%</span>
-                          <span className="text-lg font-semibold text-blue-600">{value.toFixed(1)}%</span>
+                          <span className="text-lg font-semibold text-blue-600">{field.value.toFixed(1)}%</span>
                           <span className="text-sm text-gray-500">100%</span>
                         </div>
                       </div>
