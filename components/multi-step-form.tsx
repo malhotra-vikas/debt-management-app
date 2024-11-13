@@ -15,13 +15,6 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Slider } from '@/components/ui/slider'
 import { toast } from '@/components/ui/use-toast'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -135,22 +128,6 @@ export function MultiStepForm() {
       description: "Your debt information has been saved successfully.",
     })
 
-    // If it's a credit card, allow adding more
-    if (currentDebtType === 'creditCard') {
-      debtInfoForm.reset()
-    } else {
-      // Move to the next debt type or summary
-      const currentIndex = selectedDebtTypes.indexOf(currentDebtType)
-      if (currentIndex < selectedDebtTypes.length - 1) {
-        setCurrentDebtType(selectedDebtTypes[currentIndex + 1])
-        debtInfoForm.reset()
-      } else {
-        setStep('summary')
-      }
-    }
-  }
-
-  function addAnotherCreditCard() {
     debtInfoForm.reset()
   }
 
@@ -170,6 +147,17 @@ export function MultiStepForm() {
     return Math.round((currentIndex / (steps.length - 1)) * 100)
   }
 
+  const getDebtTypeLabel = (type: string) => {
+    switch (type) {
+      case 'creditCard': return 'Credit Card'
+      case 'personalLoan': return 'Personal Loan'
+      case 'medicalBill': return 'Medical Bill'
+      case 'studentLoan': return 'Student Loan'
+      case 'other': return 'Other Unsecured Debt'
+      default: return type
+    }
+  }
+
   return (
     <div className="min-h-screen bg-blue-100 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl space-y-4">
@@ -178,7 +166,7 @@ export function MultiStepForm() {
             <CardTitle className="text-2xl font-bold text-center">
               {step === 'userInfo' ? 'User Information' : 
                step === 'debtTypes' ? 'Types of Unsecured Debt' :
-               step === 'debtInfo' ? `${currentDebtType === 'creditCard' ? 'Credit Card' : currentDebtType === 'personalLoan' ? 'Personal Loan' : currentDebtType} Information` : 
+               step === 'debtInfo' ? `${getDebtTypeLabel(currentDebtType!)} Information` : 
                'Summary'}
             </CardTitle>
           </CardHeader>
@@ -260,91 +248,26 @@ export function MultiStepForm() {
             {step === 'debtTypes' && (
               <Form {...debtTypesForm}>
                 <form onSubmit={debtTypesForm.handleSubmit(onDebtTypesSubmit)} className="space-y-6">
-                  <FormField
-                    control={debtTypesForm.control}
-                    name="creditCard"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Credit Card</FormLabel>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={debtTypesForm.control}
-                    name="personalLoan"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Personal Loan</FormLabel>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={debtTypesForm.control}
-                    name="medicalBill"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Medical Bill</FormLabel>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={debtTypesForm.control}
-                    name="studentLoan"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Student Loan</FormLabel>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={debtTypesForm.control}
-                    name="other"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Other Unsecured Debt</FormLabel>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
+                  {Object.keys(debtTypesSchema.shape).map((debtType) => (
+                    <FormField
+                      key={debtType}
+                      control={debtTypesForm.control}
+                      name={debtType as keyof DebtTypes}
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>{getDebtTypeLabel(debtType)}</FormLabel>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                  ))}
                   <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white">Next</Button>
                 </form>
               </Form>
@@ -437,13 +360,11 @@ export function MultiStepForm() {
                   />
                   <div className="flex space-x-4">
                     <Button type="submit" className="flex-1 bg-blue-500 hover:bg-blue-600 text-white">
-                      {currentDebtType === 'creditCard' ? 'Add Credit Card' : 'Submit'}
+                      Add {getDebtTypeLabel(currentDebtType!)}
                     </Button>
-                    {currentDebtType === 'creditCard' && (
-                      <Button type="button" onClick={moveToNextDebtType} className="flex-1 bg-gray-500 hover:bg-gray-600 text-white">
-                        Next Debt Type
-                      </Button>
-                    )}
+                    <Button type="button" onClick={moveToNextDebtType} className="flex-1 bg-gray-500 hover:bg-gray-600 text-white">
+                      Next Debt Type
+                    </Button>
                   </div>
                 </form>
               </Form>
@@ -475,10 +396,7 @@ export function MultiStepForm() {
                       <React.Fragment key={index}>
                         <TableRow>
                           <TableCell className="font-medium" colSpan={2}>
-                            {debt.type === 'creditCard' ? 'Credit Card' : 
-                             debt.type === 'personalLoan' ? 'Personal Loan' : 
-                             debt.type === 'medicalBill' ? 'Medical Bill' : 
-                             debt.type === 'studentLoan' ? 'Student Loan' : 'Other'} {index + 1}
+                            {getDebtTypeLabel(debt.type)} {index + 1}
                           </TableCell>
                         </TableRow>
                         <TableRow>
