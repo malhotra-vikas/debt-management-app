@@ -34,6 +34,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Progress } from "@/components/ui/progress"
 
 const userInfoSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
@@ -250,6 +251,12 @@ export function MultiStepForm() {
     return steps[currentIndex - 1] as typeof step
   }
 
+  const getProgressPercentage = () => {
+    const steps = ['userInfo', 'debtInfo1', 'debtInfo2', 'debtInfo3', 'debtInfo4', 'summary']
+    const currentIndex = steps.indexOf(step)
+    return Math.round((currentIndex / (steps.length - 1)) * 100)
+  }
+
   return (
     <div className="min-h-screen bg-blue-100 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl space-y-4">
@@ -262,6 +269,9 @@ export function MultiStepForm() {
             </CardTitle>
           </CardHeader>
           <CardContent className="bg-white rounded-b-lg">
+            <div className="mb-6">
+              <Progress value={getProgressPercentage()} className="w-full h-2" />
+            </div>
             {step === 'userInfo' && (
               <Form {...userInfoForm}>
                 <form onSubmit={userInfoForm.handleSubmit(onUserInfoSubmit)} className="space-y-6">
