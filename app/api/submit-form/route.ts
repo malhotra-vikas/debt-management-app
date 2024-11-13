@@ -3,7 +3,7 @@ import mysql from 'mysql2/promise'
 
 const dbConfig = {
   host: 'localhost',
-  user: 'root',
+  user: 'dealingwithdebt_dev',
   password: 'india@12345',
   database: 'debt_management',
 }

@@ -46,3 +46,16 @@ CREATE TABLE additional_info (
     years_to_debt_free INT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
+
+-- Disconnect from any potential previous sessions to avoid errors
+-- (Run these in your MySQL command-line tool if needed before creating a new user)
+
+-- Create a new user 'sp' for managing the debt_management database
+CREATE USER 'dealingwithdebt_dev'@'localhost' IDENTIFIED BY 'india@12345'; -- Replace 'password' with a secure password
+
+-- Grant full access to the debt_management database to the new user
+GRANT ALL PRIVILEGES ON debt_management.* TO 'dealingwithdebt_dev'@'localhost';
+
+-- Apply the privilege changes
+FLUSH PRIVILEGES;
