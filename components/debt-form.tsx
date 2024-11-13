@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import * as z from 'zod'
 import { Button } from '@/components/ui/button'
 import {
@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Slider } from '@/components/ui/slider'
 import { toast } from '@/components/ui/use-toast'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -33,9 +34,7 @@ const formSchema = z.object({
   balance: z.string().refine((val) => !isNaN(Number(val)), {
     message: "Balance must be a valid number.",
   }),
-  interestRate: z.string().refine((val) => !isNaN(Number(val)), {
-    message: "Interest rate must be a valid number.",
-  }),
+  interestRate: z.number().min(0).max(100),
 })
 
 export function DebtForm() {
@@ -45,12 +44,11 @@ export function DebtForm() {
       creditorName: "",
       debtType: "credit_card",
       balance: "",
-      interestRate: "",
+      interestRate: 0,
     },
   })
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    // TODO: Implement the API call to save the debt information
     console.log(values)
     toast({
       title: "Debt information submitted",
@@ -132,11 +130,23 @@ export function DebtForm() {
               <FormField
                 control={form.control}
                 name="interestRate"
-                render={({ field }) => (
+                render={({ field: { value, onChange, ...field } }) => (
                   <FormItem>
                     <FormLabel className="text-blue-600 font-semibold">Interest Rate (%)</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter interest rate" {...field} className="border-blue-300 focus:border-blue-500" />
+                      <div className="space-y-2">
+                        <Slider
+                          min={0}
+                          max={100}
+                          step={0.1}
+                          value={[value]}
+                          onValueChange={(vals) => onChange(vals[0])}
+                          className="w-full"
+                        />
+                        <div className="text-right font-medium text-blue-600">
+                          {value.toFixed(1)}%
+                        </div>
+                      </div>
                     </FormControl>
                     <FormDescription className="text-gray-500">
                       The annual interest rate for this debt.
