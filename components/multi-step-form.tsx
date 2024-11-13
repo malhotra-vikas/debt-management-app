@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
@@ -35,6 +35,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Progress } from "@/components/ui/progress"
+import { Checkbox } from "@/components/ui/checkbox"
 
 const userInfoSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
@@ -43,22 +44,32 @@ const userInfoSchema = z.object({
   phoneNumber: z.string().regex(/^\d{10}$/, { message: "Phone number must be 10 digits" }),
 })
 
+const debtTypesSchema = z.object({
+  creditCard: z.boolean().default(false),
+  personalLoan: z.boolean().default(false),
+  medicalBill: z.boolean().default(false),
+  studentLoan: z.boolean().default(false),
+  other: z.boolean().default(false),
+})
+
 const debtFormSchema = z.object({
   creditorName: z.string().min(2, {
     message: "Creditor name must be at least 2 characters.",
   }),
-  debtType: z.enum(["credit_card", "personal_loan", "line_of_credit", "other"]),
-  balance: z.number().min(0).max(100000),
+  balance: z.number().min(0).max(1000000),
   interestRate: z.number().min(0).max(100),
 })
 
 type UserInfo = z.infer<typeof userInfoSchema>
+type DebtTypes = z.infer<typeof debtTypesSchema>
 type DebtInfo = z.infer<typeof debtFormSchema>
-type FullDebtInfo = UserInfo & DebtInfo
+type FullDebtInfo = DebtInfo & { type: string }
 
 export function MultiStepForm() {
-  const [step, setStep] = useState<'userInfo' | 'debtInfo1' | 'debtInfo2' | 'debtInfo3' | 'debtInfo4' | 'summary'>('userInfo')
+  const [step, setStep] = useState<'userInfo' | 'debtTypes' | 'debtInfo' | 'summary'>('userInfo')
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
+  const [selectedDebtTypes, setSelectedDebtTypes] = useState<string[]>([])
+  const [currentDebtType, setCurrentDebtType] = useState<string | null>(null)
   const [allDebts, setAllDebts] = useState<FullDebtInfo[]>([])
 
   const userInfoForm = useForm<UserInfo>({
@@ -71,11 +82,21 @@ export function MultiStepForm() {
     },
   })
 
+  const debtTypesForm = useForm<DebtTypes>({
+    resolver: zodResolver(debtTypesSchema),
+    defaultValues: {
+      creditCard: false,
+      personalLoan: false,
+      medicalBill: false,
+      studentLoan: false,
+      other: false,
+    },
+  })
+
   const debtInfoForm = useForm<DebtInfo>({
     resolver: zodResolver(debtFormSchema),
     defaultValues: {
       creditorName: "",
-      debtType: "credit_card",
       balance: 0,
       interestRate: 0,
     },
@@ -83,178 +104,68 @@ export function MultiStepForm() {
 
   function onUserInfoSubmit(values: UserInfo) {
     setUserInfo(values)
-    setStep('debtInfo1')
+    setStep('debtTypes')
+  }
+
+  function onDebtTypesSubmit(values: DebtTypes) {
+    const selected = Object.entries(values)
+      .filter(([_, value]) => value)
+      .map(([key, _]) => key)
+    setSelectedDebtTypes(selected)
+    if (selected.length > 0) {
+      setCurrentDebtType(selected[0])
+      setStep('debtInfo')
+    } else {
+      toast({
+        title: "No debt types selected",
+        description: "Please select at least one type of debt.",
+        variant: "destructive",
+      })
+    }
   }
 
   function onDebtInfoSubmit(values: DebtInfo) {
-    if (userInfo) {
-      const fullDebtInfo: FullDebtInfo = { ...userInfo, ...values }
+    if (currentDebtType) {
+      const fullDebtInfo: FullDebtInfo = { ...values, type: currentDebtType }
       setAllDebts([...allDebts, fullDebtInfo])
     }
-    console.log({ ...userInfo, ...values })
+
     toast({
-      title: "Information submitted",
-      description: "Your information has been saved successfully.",
+      title: "Debt information submitted",
+      description: "Your debt information has been saved successfully.",
     })
-    setStep('summary')
-  }
 
-  function resetForms() {
-    debtInfoForm.reset()
-    setStep('debtInfo1')
-  }
-
-  const renderDebtInfoStep = (currentStep: 'debtInfo1' | 'debtInfo2' | 'debtInfo3' | 'debtInfo4') => {
-    const stepContent = {
-      debtInfo1: (
-        <FormField
-          control={debtInfoForm.control}
-          name="creditorName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-blue-600 font-semibold">Creditor Name</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter creditor name" {...field} className="border-blue-300 focus:border-blue-500" />
-              </FormControl>
-              <FormDescription className="text-gray-500">
-                The name of the institution or person you owe money to.
-              </FormDescription>
-              <FormMessage className="text-red-500" />
-            </FormItem>
-          )}
-        />
-      ),
-      debtInfo2: (
-        <FormField
-          control={debtInfoForm.control}
-          name="debtType"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-blue-600 font-semibold">Debt Type</FormLabel>
-              <Select 
-                onValueChange={field.onChange} 
-                defaultValue={field.value}
-              >
-                <FormControl>
-                  <SelectTrigger className="border-blue-300 focus:border-blue-500">
-                    <SelectValue placeholder="Select a debt type" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="credit_card">Credit Card</SelectItem>
-                  <SelectItem value="personal_loan">Personal Loan</SelectItem>
-                  <SelectItem value="line_of_credit">Line of Credit</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormDescription className="text-gray-500">
-                The type of revolving debt you're recording.
-              </FormDescription>
-              <FormMessage className="text-red-500" />
-            </FormItem>
-          )}
-        />
-      ),
-      debtInfo3: (
-        <FormField
-          control={debtInfoForm.control}
-          name="balance"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-blue-600 font-semibold">Current Balance ($)</FormLabel>
-              <FormControl>
-                <div className="space-y-3">
-                  <Slider
-                    min={0}
-                    max={100000}
-                    step={100}
-                    value={[field.value]}
-                    onValueChange={(vals) => field.onChange(vals[0])}
-                    className="w-full"
-                  />
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-500">$0</span>
-                    <Input
-                      type="number"
-                      min={0}
-                      max={100000}
-                      {...field}
-                      onChange={(e) => field.onChange(Number(e.target.value))}
-                      className="w-24 text-center border-blue-300 focus:border-blue-500"
-                    />
-                    <span className="text-sm text-gray-500">$100,000</span>
-                  </div>
-                </div>
-              </FormControl>
-              <FormDescription className="text-gray-500">
-                The current amount you owe on this debt.
-              </FormDescription>
-              <FormMessage className="text-red-500" />
-            </FormItem>
-          )}
-        />
-      ),
-      debtInfo4: (
-        <FormField
-          control={debtInfoForm.control}
-          name="interestRate"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-blue-600 font-semibold">Interest Rate (%)</FormLabel>
-              <FormControl>
-                <div className="space-y-3">
-                  <Slider
-                    min={0}
-                    max={100}
-                    step={0.1}
-                    value={[field.value]}
-                    onValueChange={(vals) => field.onChange(vals[0])}
-                    className="w-full"
-                  />
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-500">0%</span>
-                    <span className="text-lg font-semibold text-blue-600">{field.value.toFixed(1)}%</span>
-                    <span className="text-sm text-gray-500">100%</span>
-                  </div>
-                </div>
-              </FormControl>
-              <FormDescription className="text-gray-500">
-                The annual interest rate for this debt.
-              </FormDescription>
-              <FormMessage className="text-red-500" />
-            </FormItem>
-          )}
-        />
-      ),
+    // If it's a credit card, allow adding more
+    if (currentDebtType === 'creditCard') {
+      debtInfoForm.reset()
+    } else {
+      // Move to the next debt type or summary
+      const currentIndex = selectedDebtTypes.indexOf(currentDebtType)
+      if (currentIndex < selectedDebtTypes.length - 1) {
+        setCurrentDebtType(selectedDebtTypes[currentIndex + 1])
+        debtInfoForm.reset()
+      } else {
+        setStep('summary')
+      }
     }
-
-    return (
-      <Form {...debtInfoForm}>
-        <form onSubmit={debtInfoForm.handleSubmit(currentStep === 'debtInfo4' ? onDebtInfoSubmit : () => setStep(getNextStep(currentStep)))} className="space-y-6">
-          {stepContent[currentStep]}
-          <div className="flex space-x-4">
-            <Button type="button" onClick={() => setStep(getPreviousStep(currentStep))} className="w-1/2 bg-gray-300 hover:bg-gray-400 text-gray-800">Back</Button>
-            <Button type="submit" className="w-1/2 bg-blue-500 hover:bg-blue-600 text-white">{currentStep === 'debtInfo4' ? 'Submit' : 'Next'}</Button>
-          </div>
-        </form>
-      </Form>
-    )
   }
 
-  const getNextStep = (currentStep: string) => {
-    const steps = ['userInfo', 'debtInfo1', 'debtInfo2', 'debtInfo3', 'debtInfo4', 'summary']
-    const currentIndex = steps.indexOf(currentStep)
-    return steps[currentIndex + 1] as typeof step
+  function addAnotherCreditCard() {
+    debtInfoForm.reset()
   }
 
-  const getPreviousStep = (currentStep: string) => {
-    const steps = ['userInfo', 'debtInfo1', 'debtInfo2', 'debtInfo3', 'debtInfo4', 'summary']
-    const currentIndex = steps.indexOf(currentStep)
-    return steps[currentIndex - 1] as typeof step
+  function moveToNextDebtType() {
+    const currentIndex = selectedDebtTypes.indexOf(currentDebtType!)
+    if (currentIndex < selectedDebtTypes.length - 1) {
+      setCurrentDebtType(selectedDebtTypes[currentIndex + 1])
+      debtInfoForm.reset()
+    } else {
+      setStep('summary')
+    }
   }
 
   const getProgressPercentage = () => {
-    const steps = ['userInfo', 'debtInfo1', 'debtInfo2', 'debtInfo3', 'debtInfo4', 'summary']
+    const steps = ['userInfo', 'debtTypes', 'debtInfo', 'summary']
     const currentIndex = steps.indexOf(step)
     return Math.round((currentIndex / (steps.length - 1)) * 100)
   }
@@ -266,7 +177,8 @@ export function MultiStepForm() {
           <CardHeader className="bg-blue-500 text-white rounded-t-lg">
             <CardTitle className="text-2xl font-bold text-center">
               {step === 'userInfo' ? 'User Information' : 
-               step.startsWith('debtInfo') ? `Debt Information (Step ${step.slice(-1)} of 4)` : 
+               step === 'debtTypes' ? 'Types of Unsecured Debt' :
+               step === 'debtInfo' ? `${currentDebtType === 'creditCard' ? 'Credit Card' : currentDebtType === 'personalLoan' ? 'Personal Loan' : currentDebtType} Information` : 
                'Summary'}
             </CardTitle>
           </CardHeader>
@@ -345,7 +257,197 @@ export function MultiStepForm() {
                 </form>
               </Form>
             )}
-            {(step === 'debtInfo1' || step === 'debtInfo2' || step === 'debtInfo3' || step === 'debtInfo4') && renderDebtInfoStep(step)}
+            {step === 'debtTypes' && (
+              <Form {...debtTypesForm}>
+                <form onSubmit={debtTypesForm.handleSubmit(onDebtTypesSubmit)} className="space-y-6">
+                  <FormField
+                    control={debtTypesForm.control}
+                    name="creditCard"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>Credit Card</FormLabel>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={debtTypesForm.control}
+                    name="personalLoan"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>Personal Loan</FormLabel>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={debtTypesForm.control}
+                    name="medicalBill"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>Medical Bill</FormLabel>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={debtTypesForm.control}
+                    name="studentLoan"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>Student Loan</FormLabel>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={debtTypesForm.control}
+                    name="other"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>Other Unsecured Debt</FormLabel>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white">Next</Button>
+                </form>
+              </Form>
+            )}
+            {step === 'debtInfo' && (
+              <Form {...debtInfoForm}>
+                <form onSubmit={debtInfoForm.handleSubmit(onDebtInfoSubmit)} className="space-y-6">
+                  <FormField
+                    control={debtInfoForm.control}
+                    name="creditorName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-blue-600 font-semibold">Creditor Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter creditor name" {...field} className="border-blue-300 focus:border-blue-500" />
+                        </FormControl>
+                        <FormDescription className="text-gray-500">
+                          The name of the institution or person you owe money to.
+                        </FormDescription>
+                        <FormMessage className="text-red-500" />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={debtInfoForm.control}
+                    name="balance"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-blue-600 font-semibold">Current Balance ($)</FormLabel>
+                        <FormControl>
+                          <div className="space-y-3">
+                            <Slider
+                              min={0}
+                              max={1000000}
+                              step={100}
+                              value={[field.value]}
+                              onValueChange={(vals) => field.onChange(vals[0])}
+                              className="w-full"
+                            />
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-gray-500">$0</span>
+                              <Input
+                                type="number"
+                                min={0}
+                                max={1000000}
+                                {...field}
+                                onChange={(e) => field.onChange(Number(e.target.value))}
+                                className="w-24 text-center border-blue-300 focus:border-blue-500"
+                              />
+                              <span className="text-sm text-gray-500">$1,000,000</span>
+                            </div>
+                          </div>
+                        </FormControl>
+                        <FormDescription className="text-gray-500">
+                          The current amount you owe on this debt.
+                        </FormDescription>
+                        <FormMessage className="text-red-500" />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={debtInfoForm.control}
+                    name="interestRate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-blue-600 font-semibold">Interest Rate (%)</FormLabel>
+                        <FormControl>
+                          <div className="space-y-3">
+                            <Slider
+                              min={0}
+                              max={100}
+                              step={0.1}
+                              value={[field.value]}
+                              onValueChange={(vals) => field.onChange(vals[0])}
+                              className="w-full"
+                            />
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-gray-500">0%</span>
+                              <span className="text-lg font-semibold text-blue-600">{field.value.toFixed(1)}%</span>
+                              <span className="text-sm text-gray-500">100%</span>
+                            </div>
+                          </div>
+                        </FormControl>
+                        <FormDescription className="text-gray-500">
+                          The annual interest rate for this debt.
+                        </FormDescription>
+                        <FormMessage className="text-red-500" />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="flex space-x-4">
+                    <Button type="submit" className="flex-1 bg-blue-500 hover:bg-blue-600 text-white">
+                      {currentDebtType === 'creditCard' ? 'Add Credit Card' : 'Submit'}
+                    </Button>
+                    {currentDebtType === 'creditCard' && (
+                      <Button type="button" onClick={moveToNextDebtType} className="flex-1 bg-gray-500 hover:bg-gray-600 text-white">
+                        Next Debt Type
+                      </Button>
+                    )}
+                  </div>
+                </form>
+              </Form>
+            )}
             {step === 'summary' && userInfo && (
               <div className="space-y-6">
                 <Table>
@@ -369,66 +471,39 @@ export function MultiStepForm() {
                       <TableCell className="font-medium">Phone Number</TableCell>
                       <TableCell>{userInfo.phoneNumber}</TableCell>
                     </TableRow>
-                    {allDebts.length > 0 && (
-                      <>
+                    {allDebts.map((debt, index) => (
+                      <React.Fragment key={index}>
                         <TableRow>
-                          <TableCell className="font-medium">Creditor Name</TableCell>
-                          <TableCell>{allDebts[allDebts.length - 1].creditorName}</TableCell>
+                          <TableCell className="font-medium" colSpan={2}>
+                            {debt.type === 'creditCard' ? 'Credit Card' : 
+                             debt.type === 'personalLoan' ? 'Personal Loan' : 
+                             debt.type === 'medicalBill' ? 'Medical Bill' : 
+                             debt.type === 'studentLoan' ? 'Student Loan' : 'Other'} {index + 1}
+                          </TableCell>
                         </TableRow>
                         <TableRow>
-                          <TableCell className="font-medium">Debt Type</TableCell>
-                          <TableCell>{allDebts[allDebts.length - 1].debtType}</TableCell>
+                          <TableCell className="font-medium">Creditor Name</TableCell>
+                          <TableCell>{debt.creditorName}</TableCell>
                         </TableRow>
                         <TableRow>
                           <TableCell className="font-medium">Balance</TableCell>
-                          <TableCell>${allDebts[allDebts.length - 1].balance.toFixed(2)}</TableCell>
+                          <TableCell>${debt.balance.toFixed(2)}</TableCell>
                         </TableRow>
                         <TableRow>
                           <TableCell className="font-medium">Interest Rate</TableCell>
-                          <TableCell>{allDebts[allDebts.length - 1].interestRate.toFixed(1)}%</TableCell>
+                          <TableCell>{debt.interestRate.toFixed(1)}%</TableCell>
                         </TableRow>
-                      </>
-                    )}
+                      </React.Fragment>
+                    ))}
                   </TableBody>
                 </Table>
-                <Button onClick={resetForms} className="w-full bg-blue-500 hover:bg-blue-600 text-white">
-                  Add Another Debt
+                <Button onClick={() => setStep('debtTypes')} className="w-full bg-blue-500 hover:bg-blue-600 text-white">
+                  Add More Debts
                 </Button>
               </div>
             )}
           </CardContent>
         </Card>
-        {step.startsWith('debtInfo') && (
-          <Card className="w-full shadow-lg">
-            <CardHeader className="bg-blue-500 text-white rounded-t-lg">
-              <CardTitle className="text-2xl font-bold text-center">All Debts</CardTitle>
-            </CardHeader>
-            <CardContent className="bg-white rounded-b-lg">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Creditor</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Balance</TableHead>
-                    <TableHead>Interest Rate</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {allDebts.map((debt, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{`${debt.firstName} ${debt.lastName}`}</TableCell>
-                      <TableCell>{debt.creditorName}</TableCell>
-                      <TableCell>{debt.debtType}</TableCell>
-                      <TableCell>${debt.balance.toFixed(2)}</TableCell>
-                      <TableCell>{debt.interestRate.toFixed(1)}%</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        )}
       </div>
     </div>
   )
