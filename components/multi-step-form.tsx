@@ -1,4 +1,4 @@
- 'use client'
+'use client'
 
 import React, { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -78,6 +78,7 @@ export function MultiStepForm() {
   const [currentDebtType, setCurrentDebtType] = useState<string | null>(null)
   const [allDebts, setAllDebts] = useState<FullDebtInfo[]>([])
   const [additionalInfo, setAdditionalInfo] = useState<AdditionalInfo | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const userInfoForm = useForm<UserInfo>({
     resolver: zodResolver(userInfoSchema),
@@ -186,6 +187,44 @@ export function MultiStepForm() {
       case 'studentLoan': return 'Student Loan'
       case 'other': return 'Other Unsecured Debt'
       default: return type
+    }
+  }
+
+  async function submitFormData() {
+    if (!userInfo || !additionalInfo) return
+
+    setIsSubmitting(true)
+
+    try {
+      const response = await fetch('/api/submit-form', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userInfo,
+          allDebts,
+          additionalInfo,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to submit form data')
+      }
+
+      toast({
+        title: "Form submitted successfully",
+        description: "Your debt management information has been saved.",
+      })
+    } catch (error) {
+      console.error('Error submitting form:', error)
+      toast({
+        title: "Error submitting form",
+        description: "There was a problem saving your information. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -670,6 +709,13 @@ export function MultiStepForm() {
                     </TableRow>
                   </TableBody>
                 </Table>
+                <Button 
+                  onClick={submitFormData} 
+                  className="w-full bg-green-500 hover:bg-green-600 text-white"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Submitting...' : 'Save to Database'}
+                </Button>
                 <Button onClick={() => setStep('debtTypes')} className="w-full bg-blue-500 hover:bg-blue-600 text-white">
                   Start Over
                 </Button>
