@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
@@ -29,6 +29,7 @@ import {
 const formSchema = z.object({
   principal: z.number().min(1, "Principal must be greater than 0"),
   apr: z.number().min(0, "APR must be 0 or greater").max(100, "APR must be 100 or less"),
+  monthlyInterestRate: z.number().min(0, "Monthly interest rate must be 0 or greater"),
   minimumPayment: z.number().min(1, "Minimum payment must be greater than 0"),
 })
 
@@ -43,32 +44,51 @@ type PaymentScheduleItem = {
   interest: number
 }
 
+type Summary = {
+  totalInterestPaid: number
+  totalPrincipalPaid: number
+  monthsToPayoff: number
+  yearsToPayoff: number
+}
+
 export default function CreditCardCalculator() {
   const [paymentSchedule, setPaymentSchedule] = useState<PaymentScheduleItem[]>([])
+  const [summary, setSummary] = useState<Summary | null>(null)
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       principal: 1000,
       apr: 18,
+      monthlyInterestRate: 1.5,
       minimumPayment: 25,
     },
   })
 
+  useEffect(() => {
+    const apr = form.watch('apr')
+    form.setValue('monthlyInterestRate', parseFloat((apr / 12).toFixed(3)))
+  }, [form.watch('apr')])
+
   function calculatePaymentSchedule(values: FormValues) {
     let balance = values.principal
-    const monthlyRate = values.apr / 100 / 12
+    const monthlyRate = values.monthlyInterestRate / 100
     const schedule: PaymentScheduleItem[] = []
     let month = 0
+    let totalInterestPaid = 0
+    let totalPrincipalPaid = 0
 
     while (balance > 0) {
       month++
       const startingBalance = balance
       const interest = balance * monthlyRate
-      let payment = Math.max(values.minimumPayment, balance * 0.01) // Minimum payment or 1% of balance, whichever is higher
-      payment = Math.min(payment, balance + interest) // Don't overpay
+      let payment = Math.max(values.minimumPayment, balance * 0.01)
+      payment = Math.min(payment, balance + interest)
       const principal = payment - interest
       balance -= principal
+
+      totalInterestPaid += interest
+      totalPrincipalPaid += principal
 
       schedule.push({
         month,
@@ -79,10 +99,16 @@ export default function CreditCardCalculator() {
         interest: parseFloat(interest.toFixed(2)),
       })
 
-      if (month > 600) break // Safeguard against infinite loops
+      if (month > 600) break
     }
 
     setPaymentSchedule(schedule)
+    setSummary({
+      totalInterestPaid: parseFloat(totalInterestPaid.toFixed(2)),
+      totalPrincipalPaid: parseFloat(totalPrincipalPaid.toFixed(2)),
+      monthsToPayoff: month,
+      yearsToPayoff: parseFloat((month / 12).toFixed(2)),
+    })
   }
 
   function onSubmit(values: FormValues) {
@@ -132,6 +158,22 @@ export default function CreditCardCalculator() {
               />
               <FormField
                 control={form.control}
+                name="monthlyInterestRate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Monthly Interest Rate (%)</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.001" {...field} readOnly />
+                    </FormControl>
+                    <FormDescription>
+                      This is automatically calculated as APR / 12.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
                 name="minimumPayment"
                 render={({ field }) => (
                   <FormItem>
@@ -151,6 +193,36 @@ export default function CreditCardCalculator() {
           </Form>
         </CardContent>
       </Card>
+
+      {summary && (
+        <Card className="w-full max-w-2xl mx-auto mt-8">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold">Payment Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableBody>
+                <TableRow>
+                  <TableCell className="font-medium">Total Interest Paid</TableCell>
+                  <TableCell className="text-right">${summary.totalInterestPaid.toFixed(2)}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">Total Principal Paid</TableCell>
+                  <TableCell className="text-right">${summary.totalPrincipalPaid.toFixed(2)}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">Months to Payoff</TableCell>
+                  <TableCell className="text-right">{summary.monthsToPayoff}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">Years to Payoff</TableCell>
+                  <TableCell className="text-right">{summary.yearsToPayoff}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
 
       {paymentSchedule.length > 0 && (
         <Card className="w-full max-w-5xl mx-auto mt-8 overflow-hidden">
