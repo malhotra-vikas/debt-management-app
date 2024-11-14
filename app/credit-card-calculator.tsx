@@ -25,6 +25,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Progress } from "@/components/ui/progress"
+import { ArrowDownIcon, ArrowUpIcon, CalendarIcon, DollarSignIcon } from 'lucide-react'
 
 const formSchema = z.object({
   principal: z.number().min(1, "Principal must be greater than 0"),
@@ -195,33 +197,106 @@ export default function CreditCardCalculator() {
       </Card>
 
       {summary && (
-        <Card className="w-full max-w-2xl mx-auto mt-8">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold">Payment Summary</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableBody>
-                <TableRow>
-                  <TableCell className="font-medium">Total Interest Paid</TableCell>
-                  <TableCell className="text-right">${summary.totalInterestPaid.toFixed(2)}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Total Principal Paid</TableCell>
-                  <TableCell className="text-right">${summary.totalPrincipalPaid.toFixed(2)}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Months to Payoff</TableCell>
-                  <TableCell className="text-right">{summary.monthsToPayoff}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Years to Payoff</TableCell>
-                  <TableCell className="text-right">{summary.yearsToPayoff}</TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        <div className="mt-8 space-y-8">
+          <Card className="w-full max-w-4xl mx-auto">
+            <CardHeader>
+              <CardTitle className="text-2xl font-bold">Repayment Dashboard</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      Total Repayment
+                    </CardTitle>
+                    <DollarSignIcon className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      ${(summary.totalInterestPaid + summary.totalPrincipalPaid).toFixed(2)}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Principal + Interest
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      Total Interest
+                    </CardTitle>
+                    <ArrowUpIcon className="h-4 w-4 text-red-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      ${summary.totalInterestPaid.toFixed(2)}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {((summary.totalInterestPaid / summary.totalPrincipalPaid) * 100).toFixed(1)}% of principal
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      Time to Pay Off
+                    </CardTitle>
+                    <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {summary.yearsToPayoff.toFixed(1)} years
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {summary.monthsToPayoff} months
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      Payoff Progress
+                    </CardTitle>
+                    <ArrowDownIcon className="h-4 w-4 text-green-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <Progress 
+                      value={100} 
+                      className="w-full mt-2"
+                      aria-label="100% of debt paid off"
+                    />
+                    <p className="text-xs text-muted-foreground mt-2">
+                      100% paid off at the end
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="w-full max-w-4xl mx-auto">
+            <CardHeader>
+              <CardTitle className="text-2xl font-bold">Payment Breakdown</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-between items-center">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-muted-foreground">Principal</p>
+                  <p className="text-2xl font-bold">${summary.totalPrincipalPaid.toFixed(2)}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-muted-foreground">Interest</p>
+                  <p className="text-2xl font-bold">${summary.totalInterestPaid.toFixed(2)}</p>
+                </div>
+              </div>
+              <Progress 
+                value={(summary.totalPrincipalPaid / (summary.totalPrincipalPaid + summary.totalInterestPaid)) * 100} 
+                className="w-full mt-4"
+                aria-label={`${((summary.totalPrincipalPaid / (summary.totalPrincipalPaid + summary.totalInterestPaid)) * 100).toFixed(1)}% principal, ${((summary.totalInterestPaid / (summary.totalPrincipalPaid + summary.totalInterestPaid)) * 100).toFixed(1)}% interest`}
+              />
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       {paymentSchedule.length > 0 && (
