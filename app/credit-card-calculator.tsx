@@ -36,6 +36,7 @@ type FormValues = z.infer<typeof formSchema>
 
 type PaymentScheduleItem = {
   month: number
+  startingBalance: number
   balance: number
   payment: number
   principal: number
@@ -62,6 +63,7 @@ export default function CreditCardCalculator() {
 
     while (balance > 0) {
       month++
+      const startingBalance = balance
       const interest = balance * monthlyRate
       let payment = Math.max(values.minimumPayment, balance * 0.01) // Minimum payment or 1% of balance, whichever is higher
       payment = Math.min(payment, balance + interest) // Don't overpay
@@ -70,6 +72,7 @@ export default function CreditCardCalculator() {
 
       schedule.push({
         month,
+        startingBalance: parseFloat(startingBalance.toFixed(2)),
         balance: parseFloat(balance.toFixed(2)),
         payment: parseFloat(payment.toFixed(2)),
         principal: parseFloat(principal.toFixed(2)),
@@ -150,34 +153,38 @@ export default function CreditCardCalculator() {
       </Card>
 
       {paymentSchedule.length > 0 && (
-        <Card className="w-full max-w-4xl mx-auto mt-8">
+        <Card className="w-full max-w-5xl mx-auto mt-8 overflow-hidden">
           <CardHeader>
             <CardTitle className="text-2xl font-bold">Payment Schedule</CardTitle>
           </CardHeader>
-          <CardContent>
-            <Table>
-              <TableCaption>Credit Card Payment Schedule</TableCaption>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Month</TableHead>
-                  <TableHead>Payment</TableHead>
-                  <TableHead>Principal</TableHead>
-                  <TableHead>Interest</TableHead>
-                  <TableHead>Remaining Balance</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paymentSchedule.map((item) => (
-                  <TableRow key={item.month}>
-                    <TableCell>{item.month}</TableCell>
-                    <TableCell>${item.payment.toFixed(2)}</TableCell>
-                    <TableCell>${item.principal.toFixed(2)}</TableCell>
-                    <TableCell>${item.interest.toFixed(2)}</TableCell>
-                    <TableCell>${item.balance.toFixed(2)}</TableCell>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableCaption>Credit Card Payment Schedule</TableCaption>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-left">Month</TableHead>
+                    <TableHead className="text-right">Starting Balance</TableHead>
+                    <TableHead className="text-right">Payment</TableHead>
+                    <TableHead className="text-right">Principal</TableHead>
+                    <TableHead className="text-right">Interest</TableHead>
+                    <TableHead className="text-right">Remaining Balance</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {paymentSchedule.map((item) => (
+                    <TableRow key={item.month}>
+                      <TableCell className="text-left">{item.month}</TableCell>
+                      <TableCell className="text-right">${item.startingBalance.toFixed(2)}</TableCell>
+                      <TableCell className="text-right">${item.payment.toFixed(2)}</TableCell>
+                      <TableCell className="text-right">${item.principal.toFixed(2)}</TableCell>
+                      <TableCell className="text-right">${item.interest.toFixed(2)}</TableCell>
+                      <TableCell className="text-right">${item.balance.toFixed(2)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       )}
