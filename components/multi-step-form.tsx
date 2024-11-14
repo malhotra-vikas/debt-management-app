@@ -241,8 +241,8 @@ export function MultiStepForm() {
             <Card className="w-full shadow-lg">
               <CardHeader className="bg-blue-500 text-white rounded-t-lg">
                 <CardTitle className="text-2xl font-bold text-center">
-                  {step === 'userInfo' ? 'User Information' : 
-                   step === 'debtTypes' ? 'Types of Unsecured Debt' :
+                  {step === 'userInfo' ? 'Tell us about you' : 
+                   step === 'debtTypes' ? 'Which of these Unsecured Debt do you carry?' :
                    step === 'debtInfo' ? `${getDebtTypeLabel(currentDebtType!)} Information` : 
                    step === 'additionalInfo' ? 'Additional Information' :
                    'Summary'}
@@ -441,7 +441,7 @@ export function MultiStepForm() {
                           Add {getDebtTypeLabel(currentDebtType!)}
                         </Button>
                         <Button type="button" onClick={moveToNextDebtType} className="flex-1 bg-gray-500 hover:bg-gray-600 text-white">
-                          Next Debt Type
+                          Next
                         </Button>
                       </div>
                     </form>
@@ -649,7 +649,6 @@ export function MultiStepForm() {
                 {step === 'summary' && userInfo && additionalInfo && (
                   <div className="space-y-6">
                     <Table>
-                      <TableCaption>Submitted Information Summary</TableCaption>
                       <TableHeader>
                         <TableRow>
                           <TableHead className="w-[200px]">Field</TableHead>
@@ -721,7 +720,7 @@ export function MultiStepForm() {
                       className="w-full bg-green-500 hover:bg-green-600 text-white"
                       disabled={isSubmitting}
                     >
-                      {isSubmitting ? 'Submitting...' : 'Save to Database'}
+                      {isSubmitting ? 'Submitting...' : 'Looks good'}
                     </Button>
                     <Button onClick={() => setStep('debtTypes')} className="w-full bg-blue-500 hover:bg-blue-600 text-white">
                       Start Over
