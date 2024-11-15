@@ -25,9 +25,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Progress } from "@/components/ui/progress"
 import { ArrowDownIcon, ArrowUpIcon, CalendarIcon, DollarSignIcon } from 'lucide-react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+
 
 const formSchema = z.object({
   principal: z.number().min(1, "Principal must be greater than 0"),
@@ -58,7 +57,6 @@ type Summary = {
 export default function CreditCardCalculator() {
   const [paymentSchedule, setPaymentSchedule] = useState<PaymentScheduleItem[]>([])
   const [summary, setSummary] = useState<Summary | null>(null)
-  const [chartData, setChartData] = useState<any[]>([])
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -81,7 +79,6 @@ export default function CreditCardCalculator() {
     const [schedule, calculatedSummary] = calculatePaymentSchedule(values)
     setPaymentSchedule(schedule)
     setSummary(calculatedSummary)
-    setChartData(generateChartData(schedule))
   }, [form.watch('principal'), form.watch('apr'), form.watch('minimumPayment'), form.watch('additionalPayment')])
 
   function calculatePaymentSchedule(values: FormValues): [PaymentScheduleItem[], Summary] {
@@ -126,12 +123,6 @@ export default function CreditCardCalculator() {
     return [schedule, summary]
   }
 
-  function generateChartData(schedule: PaymentScheduleItem[]) {
-    return schedule.filter((_, index) => index % 12 === 0).map(item => ({
-      month: item.month,
-      balance: item.balance,
-    }))
-  }
 
   return (
     <div className="container mx-auto p-4">
@@ -141,8 +132,8 @@ export default function CreditCardCalculator() {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form className="space-y-8">
-              <div className="grid grid-cols-2 gap-4">
+            <form className="space-y-4">
+              <div className="grid grid-cols-4 gap-4">
                 <FormField
                   control={form.control}
                   name="principal"
@@ -192,21 +183,23 @@ export default function CreditCardCalculator() {
                   )}
                 />
               </div>
-              <FormField
-                control={form.control}
-                name="additionalPayment"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Additional Monthly Payment ($)</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
-                    </FormControl>
-                    <FormDescription>
-                      Enter an additional amount you could pay each month to become debt-free faster.
-                    </FormDescription>
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-1">
+                <FormField
+                  control={form.control}
+                  name="additionalPayment"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Additional Monthly Payment ($)</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                      </FormControl>
+                      <FormDescription>
+                        Enter an additional amount you could pay each month to become debt-free faster.
+                      </FormDescription>
+                    </FormItem>
+                  )}
+                />
+              </div>
             </form>
           </Form>
         </CardContent>
@@ -214,112 +207,32 @@ export default function CreditCardCalculator() {
 
       {summary && (
         <div className="mt-8 space-y-8">
-          <Card className="w-full max-w-4xl mx-auto">
+          <Card className="w-full max-w-5xl mx-auto">
             <CardHeader>
               <CardTitle className="text-2xl font-bold">Repayment Dashboard</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      Total Repayment
-                    </CardTitle>
-                    <DollarSignIcon className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      ${(summary.totalInterestPaid + summary.totalPrincipalPaid).toFixed(2)}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Principal + Interest
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      Total Interest
-                    </CardTitle>
-                    <ArrowUpIcon className="h-4 w-4 text-red-500" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      ${summary.totalInterestPaid.toFixed(2)}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {((summary.totalInterestPaid / summary.totalPrincipalPaid) * 100).toFixed(1)}% of principal
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      Time to Pay Off
-                    </CardTitle>
-                    <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {summary.yearsToPayoff.toFixed(1)} years
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {summary.monthsToPayoff} months
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="w-full max-w-4xl mx-auto">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold">Payment Breakdown</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-between items-center">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-muted-foreground">Principal</p>
-                  <p className="text-2xl font-bold">${summary.totalPrincipalPaid.toFixed(2)}</p>
+              <div className="grid grid-cols-4 gap-4">
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium text-muted-foreground">Total Repayment</span>
+                  <span className="text-2xl font-bold">${(summary.totalInterestPaid + summary.totalPrincipalPaid).toFixed(2)}</span>
+                  <span className="text-xs text-muted-foreground">Principal + Interest</span>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-muted-foreground">Interest</p>
-                  <p className="text-2xl font-bold">${summary.totalInterestPaid.toFixed(2)}</p>
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium text-muted-foreground">Total Interest</span>
+                  <span className="text-2xl font-bold">${summary.totalInterestPaid.toFixed(2)}</span>
+                  <span className="text-xs text-muted-foreground">{((summary.totalInterestPaid / summary.totalPrincipalPaid) * 100).toFixed(1)}% of principal</span>
                 </div>
-              </div>
-              <div className="w-full h-4 bg-gray-200 rounded-full mt-4 overflow-hidden">
-                <div 
-                  className="h-full bg-green-500"
-                  style={{ width: `${(summary.totalPrincipalPaid / (summary.totalPrincipalPaid + summary.totalInterestPaid)) * 100}%` }}
-                />
-                <div 
-                  className="h-full bg-red-500 -mt-4"
-                  style={{ width: `${(summary.totalInterestPaid / (summary.totalPrincipalPaid + summary.totalInterestPaid)) * 100}%` }}
-                />
-              </div>
-              <div className="flex justify-between text-xs mt-1">
-                <span>Principal</span>
-                <span>Interest</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="w-full max-w-4xl mx-auto">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold">Balance Over Time</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[400px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" label={{ value: 'Months', position: 'insideBottom', offset: -5 }} />
-                    <YAxis label={{ value: 'Balance ($)', angle: -90, position: 'insideLeft' }} />
-                    <Tooltip />
-                    <Legend />
-                    <Line type="monotone" dataKey="balance" stroke="#8884d8" name="Balance" />
-                  </LineChart>
-                </ResponsiveContainer>
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium text-muted-foreground">Time to Pay Off</span>
+                  <span className="text-2xl font-bold">{summary.yearsToPayoff.toFixed(1)} years</span>
+                  <span className="text-xs text-muted-foreground">{summary.monthsToPayoff} months</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium text-muted-foreground">Total Principal Paid</span>
+                  <span className="text-2xl font-bold">${summary.totalPrincipalPaid.toFixed(2)}</span>
+                  <span className="text-xs text-muted-foreground">{((summary.totalPrincipalPaid / (summary.totalPrincipalPaid + summary.totalInterestPaid)) * 100).toFixed(1)}% of total repayment</span>
+                </div>
               </div>
             </CardContent>
           </Card>
