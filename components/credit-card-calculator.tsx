@@ -27,6 +27,8 @@ import {
 } from "@/components/ui/table"
 import { ArrowDownIcon, ArrowUpIcon, CalendarIcon, DollarSignIcon, CreditCard } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
+import { useToast } from "@/components/ui/use-toast"
+import { Toast } from "@/components/ui/toast"
 
 const formSchema = z.object({
   principal: z.number().min(1, "Principal must be greater than 0"),
@@ -57,6 +59,8 @@ type Summary = {
 export default function CreditCardCalculator() {
   const [paymentSchedule, setPaymentSchedule] = useState<PaymentScheduleItem[]>([])
   const [summary, setSummary] = useState<Summary | null>(null)
+  const [earlyPayoffSummary, setEarlyPayoffSummary] = useState<Summary | null>(null)
+  const { toast } = useToast()
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -79,6 +83,14 @@ export default function CreditCardCalculator() {
     const [schedule, calculatedSummary] = calculatePaymentSchedule(values)
     setPaymentSchedule(schedule)
     setSummary(calculatedSummary)
+
+    if (calculatedSummary) {
+      toast({
+        title: "Time to Pay Off",
+        description: `${calculatedSummary.yearsToPayoff.toFixed(1)} years (${calculatedSummary.monthsToPayoff} months)`,
+        action: <Button onClick={calculateEarlyPayoff}>Pay off earlier</Button>,
+      })
+    }
   }, [form.watch('principal'), form.watch('apr'), form.watch('minimumPayment'), form.watch('additionalPayment')])
 
   function calculatePaymentSchedule(values: FormValues): [PaymentScheduleItem[], Summary] {
@@ -123,8 +135,33 @@ export default function CreditCardCalculator() {
     return [schedule, summary]
   }
 
+  function calculateEarlyPayoff() {
+    const values = form.getValues()
+    let increasedPayment = values.minimumPayment + values.additionalPayment
+    let targetMonths = Math.floor(summary!.monthsToPayoff * 0.75) // Aim for 25% faster payoff
+
+    while (true) {
+      const [_, calculatedSummary] = calculatePaymentSchedule({
+        ...values,
+        minimumPayment: increasedPayment,
+        additionalPayment: 0,
+      })
+
+      if (calculatedSummary.monthsToPayoff <= targetMonths) {
+        setEarlyPayoffSummary(calculatedSummary)
+        toast({
+          title: "Early Payoff Calculation",
+          description: `Increase your monthly payment to $${increasedPayment.toFixed(2)} to pay off in ${calculatedSummary.yearsToPayoff.toFixed(1)} years (${calculatedSummary.monthsToPayoff} months)`,
+        })
+        break
+      }
+
+      increasedPayment += 10 // Increase by $10 and try again
+    }
+  }
+
   return (
-    <div className="container mx-auto p-4 space-y-8">
+    <div className="container mx-auto p-4 space-y-8 relative z-0">
       <Card className="w-full max-w-2xl mx-auto">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold flex items-center">
@@ -174,6 +211,7 @@ export default function CreditCardCalculator() {
                       <FormControl>
                         <Input type="number" step="0.001" {...field} readOnly />
                       </FormControl>
+                      <FormDescription>Automatically calculated as APR / 12</FormDescription>
                     </FormItem>
                   )}
                 />
@@ -202,7 +240,7 @@ export default function CreditCardCalculator() {
                       <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
                     </FormControl>
                     <FormDescription>
-                        Become debt-free faster. Enter an additional amount you could pay each month.
+                      Enter an additional amount you could pay each month to become debt-free faster.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -256,6 +294,50 @@ export default function CreditCardCalculator() {
               </div>
             </CardContent>
           </Card>
+
+          {earlyPayoffSummary && (
+            <Card className="w-full max-w-4xl mx-auto">
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold">Early Payoff Scenario</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="flex flex-col space-y-1.5 p-6 bg-primary/10 rounded-lg">
+                    <span className="text-sm font-medium text-muted-foreground flex items-center">
+                      <DollarSignIcon className="mr-2 h-4 w-4" />
+                      New Total Repayment
+                    </span>
+                    <span className="text-2xl font-bold">${(earlyPayoffSummary.totalInterestPaid + earlyPayoffSummary.totalPrincipalPaid).toFixed(2)}</span>
+                    <span className="text-xs text-muted-foreground">Principal + Interest</span>
+                  </div>
+                  <div className="flex flex-col space-y-1.5 p-6 bg-destructive/10 rounded-lg">
+                    <span className="text-sm font-medium text-muted-foreground flex items-center">
+                      <ArrowUpIcon className="mr-2 h-4 w-4" />
+                      New Total Interest
+                    </span>
+                    <span className="text-2xl font-bold">${earlyPayoffSummary.totalInterestPaid.toFixed(2)}</span>
+                    <span className="text-xs text-muted-foreground">{((earlyPayoffSummary.totalInterestPaid / earlyPayoffSummary.totalPrincipalPaid) * 100).toFixed(1)}% of principal</span>
+                  </div>
+                  <div className="flex flex-col space-y-1.5 p-6 bg-secondary/10 rounded-lg">
+                    <span className="text-sm font-medium text-muted-foreground flex items-center">
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      New Time to Pay Off
+                    </span>
+                    <span className="text-2xl font-bold">{earlyPayoffSummary.yearsToPayoff.toFixed(1)} years</span>
+                    <span className="text-xs text-muted-foreground">{earlyPayoffSummary.monthsToPayoff} months</span>
+                  </div>
+                  <div className="flex flex-col space-y-1.5 p-6 bg-accent/10 rounded-lg">
+                    <span className="text-sm font-medium text-muted-foreground flex items-center">
+                      <ArrowDownIcon className="mr-2 h-4 w-4" />
+                      Interest Saved
+                    </span>
+                    <span className="text-2xl font-bold">${(summary.totalInterestPaid - earlyPayoffSummary.totalInterestPaid).toFixed(2)}</span>
+                    <span className="text-xs text-muted-foreground">{((summary.totalInterestPaid - earlyPayoffSummary.totalInterestPaid) / summary.totalInterestPaid * 100).toFixed(1)}% of original interest</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <Card className="w-full max-w-5xl mx-auto overflow-hidden">
             <CardHeader>
