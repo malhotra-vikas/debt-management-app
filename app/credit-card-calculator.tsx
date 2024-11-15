@@ -34,14 +34,10 @@ const formSchema = z.object({
   apr: z.number().min(0, "APR must be 0 or greater").max(100, "APR must be 100 or less"),
   monthlyInterestRate: z.number().min(0, "Monthly interest rate must be 0 or greater"),
   minimumPayment: z.number().min(1, "Minimum payment must be greater than 0"),
-})
-
-const scenarioFormSchema = z.object({
   additionalPayment: z.number().min(0, "Additional payment must be 0 or greater"),
 })
 
 type FormValues = z.infer<typeof formSchema>
-type ScenarioFormValues = z.infer<typeof scenarioFormSchema>
 
 type PaymentScheduleItem = {
   month: number
@@ -62,7 +58,6 @@ type Summary = {
 export default function CreditCardCalculator() {
   const [paymentSchedule, setPaymentSchedule] = useState<PaymentScheduleItem[]>([])
   const [summary, setSummary] = useState<Summary | null>(null)
-  const [scenarioSummary, setScenarioSummary] = useState<Summary | null>(null)
   const [chartData, setChartData] = useState<any[]>([])
 
   const form = useForm<FormValues>({
@@ -72,12 +67,6 @@ export default function CreditCardCalculator() {
       apr: 18,
       monthlyInterestRate: 1.5,
       minimumPayment: 25,
-    },
-  })
-
-  const scenarioForm = useForm<ScenarioFormValues>({
-    resolver: zodResolver(scenarioFormSchema),
-    defaultValues: {
       additionalPayment: 0,
     },
   })
@@ -87,7 +76,15 @@ export default function CreditCardCalculator() {
     form.setValue('monthlyInterestRate', parseFloat((apr / 12).toFixed(3)))
   }, [form.watch('apr')])
 
-  function calculatePaymentSchedule(values: FormValues, additionalPayment: number = 0): [PaymentScheduleItem[], Summary] {
+  useEffect(() => {
+    const values = form.getValues()
+    const [schedule, calculatedSummary] = calculatePaymentSchedule(values)
+    setPaymentSchedule(schedule)
+    setSummary(calculatedSummary)
+    setChartData(generateChartData(schedule))
+  }, [form.watch('principal'), form.watch('apr'), form.watch('minimumPayment'), form.watch('additionalPayment')])
+
+  function calculatePaymentSchedule(values: FormValues): [PaymentScheduleItem[], Summary] {
     let balance = values.principal
     const monthlyRate = values.monthlyInterestRate / 100
     const schedule: PaymentScheduleItem[] = []
@@ -99,7 +96,7 @@ export default function CreditCardCalculator() {
       month++
       const startingBalance = balance
       const interest = balance * monthlyRate
-      let payment = Math.max(values.minimumPayment, balance * 0.01) + additionalPayment
+      let payment = Math.max(values.minimumPayment, balance * 0.01) + values.additionalPayment
       payment = Math.min(payment, balance + interest)
       const principal = payment - interest
       balance -= principal
@@ -129,39 +126,11 @@ export default function CreditCardCalculator() {
     return [schedule, summary]
   }
 
-  function onSubmit(values: FormValues) {
-    const [schedule, calculatedSummary] = calculatePaymentSchedule(values)
-    setPaymentSchedule(schedule)
-    setSummary(calculatedSummary)
-    setChartData(generateChartData(schedule, null))
-  }
-
-  function onScenarioSubmit(scenarioValues: ScenarioFormValues) {
-    const formValues = form.getValues()
-    const [_, calculatedScenarioSummary] = calculatePaymentSchedule(formValues, scenarioValues.additionalPayment)
-    setScenarioSummary(calculatedScenarioSummary)
-    setChartData(generateChartData(paymentSchedule, calculatedScenarioSummary))
-  }
-
-  function generateChartData(schedule: PaymentScheduleItem[], scenarioSummary: Summary | null) {
-    const data = schedule.filter((_, index) => index % 12 === 0).map(item => ({
+  function generateChartData(schedule: PaymentScheduleItem[]) {
+    return schedule.filter((_, index) => index % 12 === 0).map(item => ({
       month: item.month,
       balance: item.balance,
     }))
-
-    if (scenarioSummary) {
-      const scenarioData = Array.from({ length: Math.ceil(scenarioSummary.monthsToPayoff / 12) }, (_, i) => ({
-        month: (i + 1) * 12,
-        scenarioBalance: Math.max(0, form.getValues().principal * (1 - (i + 1) / Math.ceil(scenarioSummary.monthsToPayoff / 12))),
-      }))
-      
-      return data.map(item => ({
-        ...item,
-        scenarioBalance: scenarioData.find(d => d.month === item.month)?.scenarioBalance || 0,
-      }))
-    }
-
-    return data
   }
 
   return (
@@ -172,72 +141,72 @@ export default function CreditCardCalculator() {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <form className="space-y-8">
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="principal"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Principal Amount ($)</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="apr"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>APR (%)</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.1" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="monthlyInterestRate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Monthly Interest Rate (%)</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.001" {...field} readOnly />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="minimumPayment"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Minimum Monthly Payment ($)</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
               <FormField
                 control={form.control}
-                name="principal"
+                name="additionalPayment"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Principal Amount ($)</FormLabel>
+                    <FormLabel>Additional Monthly Payment ($)</FormLabel>
                     <FormControl>
                       <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
                     </FormControl>
                     <FormDescription>
-                      Enter the current balance on your credit card.
+                      Enter an additional amount you could pay each month to become debt-free faster.
                     </FormDescription>
-                    <FormMessage />
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="apr"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Annual Percentage Rate (APR) (%)</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.1" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
-                    </FormControl>
-                    <FormDescription>
-                      Enter the APR for your credit card.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="monthlyInterestRate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Monthly Interest Rate (%)</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.001" {...field} readOnly />
-                    </FormControl>
-                    <FormDescription>
-                      This is automatically calculated as APR / 12.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="minimumPayment"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Minimum Monthly Payment ($)</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
-                    </FormControl>
-                    <FormDescription>
-                      Enter the minimum monthly payment for your credit card.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit">Calculate</Button>
             </form>
           </Form>
         </CardContent>
@@ -299,24 +268,6 @@ export default function CreditCardCalculator() {
                     </p>
                   </CardContent>
                 </Card>
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      Payoff Progress
-                    </CardTitle>
-                    <ArrowDownIcon className="h-4 w-4 text-green-500" />
-                  </CardHeader>
-                  <CardContent>
-                    <Progress 
-                      value={100} 
-                      className="w-full mt-2"
-                      aria-label="100% of debt paid off"
-                    />
-                    <p className="text-xs text-muted-foreground mt-2">
-                      100% paid off at the end
-                    </p>
-                  </CardContent>
-                </Card>
               </div>
             </CardContent>
           </Card>
@@ -355,43 +306,6 @@ export default function CreditCardCalculator() {
 
           <Card className="w-full max-w-4xl mx-auto">
             <CardHeader>
-              <CardTitle className="text-2xl font-bold">Want to be debt-free earlier?</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Form {...scenarioForm}>
-                <form onSubmit={scenarioForm.handleSubmit(onScenarioSubmit)} className="space-y-8">
-                  <FormField
-                    control={scenarioForm.control}
-                    name="additionalPayment"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Additional Monthly Payment ($)</FormLabel>
-                        <FormControl>
-                          <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
-                        </FormControl>
-                        <FormDescription>
-                          Enter an additional amount you could pay each month to become debt-free faster.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button type="submit">Calculate Scenario</Button>
-                </form>
-              </Form>
-              {scenarioSummary && (
-                <div className="mt-4">
-                  <h3 className="text-lg font-semibold">New Payoff Time</h3>
-                  <p>{scenarioSummary.yearsToPayoff.toFixed(1)} years ({scenarioSummary.monthsToPayoff} months)</p>
-                  <h3 className="text-lg font-semibold mt-2">Total Interest Saved</h3>
-                  <p>${(summary.totalInterestPaid - scenarioSummary.totalInterestPaid).toFixed(2)}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="w-full max-w-4xl mx-auto">
-            <CardHeader>
               <CardTitle className="text-2xl font-bold">Balance Over Time</CardTitle>
             </CardHeader>
             <CardContent>
@@ -403,10 +317,7 @@ export default function CreditCardCalculator() {
                     <YAxis label={{ value: 'Balance ($)', angle: -90, position: 'insideLeft' }} />
                     <Tooltip />
                     <Legend />
-                    <Line type="monotone" dataKey="balance" stroke="#8884d8" name="Current Plan" />
-                    {scenarioSummary && (
-                      <Line type="monotone" dataKey="scenarioBalance" stroke="#82ca9d" name="With Additional Payment" />
-                    )}
+                    <Line type="monotone" dataKey="balance" stroke="#8884d8" name="Balance" />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
