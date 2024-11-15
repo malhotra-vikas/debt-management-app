@@ -25,8 +25,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { ArrowDownIcon, ArrowUpIcon, CalendarIcon, DollarSignIcon } from 'lucide-react'
-
+import { ArrowDownIcon, ArrowUpIcon, CalendarIcon, DollarSignIcon, CreditCard } from 'lucide-react'
+import { Separator } from '@/components/ui/separator'
 
 const formSchema = z.object({
   principal: z.number().min(1, "Principal must be greater than 0"),
@@ -123,17 +123,22 @@ export default function CreditCardCalculator() {
     return [schedule, summary]
   }
 
-
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-4 space-y-8">
       <Card className="w-full max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold">Credit Card Debt Calculator</CardTitle>
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold flex items-center">
+            <CreditCard className="mr-2 h-6 w-6" />
+            Credit Card Debt Calculator
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Calculate your credit card debt repayment plan and see how additional payments can help you become debt-free faster.
+          </p>
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form className="space-y-4">
-              <div className="grid grid-cols-4 gap-4">
+            <form className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="principal"
@@ -143,6 +148,7 @@ export default function CreditCardCalculator() {
                       <FormControl>
                         <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
                       </FormControl>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -155,6 +161,7 @@ export default function CreditCardCalculator() {
                       <FormControl>
                         <Input type="number" step="0.1" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
                       </FormControl>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -179,57 +186,70 @@ export default function CreditCardCalculator() {
                       <FormControl>
                         <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
                       </FormControl>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
-              <div className="grid grid-cols-1">
-                <FormField
-                  control={form.control}
-                  name="additionalPayment"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Additional Monthly Payment ($)</FormLabel>
-                      <FormControl>
-                        <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
-                      </FormControl>
-                      <FormDescription>
-                        Enter an additional amount you could pay each month to become debt-free faster.
-                      </FormDescription>
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <Separator className="my-4" />
+              <FormField
+                control={form.control}
+                name="additionalPayment"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Additional Monthly Payment ($)</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                    </FormControl>
+                    <FormDescription>
+                        Become debt-free faster. Enter an additional amount you could pay each month.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </form>
           </Form>
         </CardContent>
       </Card>
 
       {summary && (
-        <div className="mt-8 space-y-8">
-          <Card className="w-full max-w-5xl mx-auto">
+        <div className="space-y-8">
+          <Card className="w-full max-w-4xl mx-auto">
             <CardHeader>
               <CardTitle className="text-2xl font-bold">Repayment Dashboard</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-4 gap-4">
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium text-muted-foreground">Total Repayment</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="flex flex-col space-y-1.5 p-6 bg-primary/10 rounded-lg">
+                  <span className="text-sm font-medium text-muted-foreground flex items-center">
+                    <DollarSignIcon className="mr-2 h-4 w-4" />
+                    Total Repayment
+                  </span>
                   <span className="text-2xl font-bold">${(summary.totalInterestPaid + summary.totalPrincipalPaid).toFixed(2)}</span>
                   <span className="text-xs text-muted-foreground">Principal + Interest</span>
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium text-muted-foreground">Total Interest</span>
+                <div className="flex flex-col space-y-1.5 p-6 bg-destructive/10 rounded-lg">
+                  <span className="text-sm font-medium text-muted-foreground flex items-center">
+                    <ArrowUpIcon className="mr-2 h-4 w-4" />
+                    Total Interest
+                  </span>
                   <span className="text-2xl font-bold">${summary.totalInterestPaid.toFixed(2)}</span>
                   <span className="text-xs text-muted-foreground">{((summary.totalInterestPaid / summary.totalPrincipalPaid) * 100).toFixed(1)}% of principal</span>
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium text-muted-foreground">Time to Pay Off</span>
+                <div className="flex flex-col space-y-1.5 p-6 bg-secondary/10 rounded-lg">
+                  <span className="text-sm font-medium text-muted-foreground flex items-center">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    Time to Pay Off
+                  </span>
                   <span className="text-2xl font-bold">{summary.yearsToPayoff.toFixed(1)} years</span>
                   <span className="text-xs text-muted-foreground">{summary.monthsToPayoff} months</span>
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium text-muted-foreground">Total Principal Paid</span>
+                <div className="flex flex-col space-y-1.5 p-6 bg-accent/10 rounded-lg">
+                  <span className="text-sm font-medium text-muted-foreground flex items-center">
+                    <ArrowDownIcon className="mr-2 h-4 w-4" />
+                    Total Principal Paid
+                  </span>
                   <span className="text-2xl font-bold">${summary.totalPrincipalPaid.toFixed(2)}</span>
                   <span className="text-xs text-muted-foreground">{((summary.totalPrincipalPaid / (summary.totalPrincipalPaid + summary.totalInterestPaid)) * 100).toFixed(1)}% of total repayment</span>
                 </div>
@@ -237,7 +257,7 @@ export default function CreditCardCalculator() {
             </CardContent>
           </Card>
 
-          <Card className="w-full max-w-5xl mx-auto mt-8 overflow-hidden">
+          <Card className="w-full max-w-5xl mx-auto overflow-hidden">
             <CardHeader>
               <CardTitle className="text-2xl font-bold">Payment Schedule</CardTitle>
             </CardHeader>
