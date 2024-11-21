@@ -28,6 +28,9 @@ import {
 import { ArrowDownIcon, ArrowUpIcon, CalendarIcon, DollarSignIcon, CreditCard, PercentIcon } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { useToast } from "@/components/ui/use-toast"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -73,6 +76,7 @@ export default function CreditCardCalculator() {
   const [paymentSchedule, setPaymentSchedule] = useState<PaymentScheduleItem[]>([])
   const [summary, setSummary] = useState<Summary | null>(null)
   const [earlyPayoffSummary, setEarlyPayoffSummary] = useState<Summary | null>(null)
+  const [showChart, setShowChart] = useState(false)
   const { toast } = useToast()
 
   const form = useForm<FormValues>({
@@ -189,7 +193,7 @@ export default function CreditCardCalculator() {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form className="space-y-6">
+            <form className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -226,6 +230,7 @@ export default function CreditCardCalculator() {
                       <FormControl>
                         <Input type="number" step="0.001" {...field} readOnly />
                       </FormControl>
+                      <FormDescription>Automatically calculated as APR / 12</FormDescription>
                     </FormItem>
                   )}
                 />
@@ -242,9 +247,6 @@ export default function CreditCardCalculator() {
                     </FormItem>
                   )}
                 />
-              </div>
-              <Separator className="my-4" />
-              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="additionalPayment"
@@ -284,10 +286,10 @@ export default function CreditCardCalculator() {
       </Card>
 
       {summary && (
-        <div className="space-y-8">
+        <div className="space-y-4">
           <Card className="w-full max-w-4xl mx-auto">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold">Repayment Dashboard</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xl font-bold">Repayment Dashboard</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -318,7 +320,7 @@ export default function CreditCardCalculator() {
                 <div className="flex flex-col space-y-1.5 p-6 bg-green-100 dark:bg-green-900 rounded-lg">
                   <span className="text-sm font-medium text-muted-foreground flex items-center">
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    Debt-free Date
+                    You will be debt-free on
                   </span>
                   <span className="text-2xl font-bold">{calculateDebtFreeDate(summary.monthsToPayoff)}</span>
                   <span className="text-xs text-muted-foreground">Estimated payoff date</span>
@@ -329,8 +331,8 @@ export default function CreditCardCalculator() {
 
           {earlyPayoffSummary && (
             <Card className="w-full max-w-4xl mx-auto">
-              <CardHeader>
-                <CardTitle className="text-2xl font-bold">Early Payoff Scenario</CardTitle>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xl font-bold">Early Payoff Scenario</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -373,35 +375,71 @@ export default function CreditCardCalculator() {
 
           <Card className="w-full max-w-5xl mx-auto overflow-hidden">
             <CardHeader>
-              <CardTitle className="text-2xl font-bold">Payment Schedule</CardTitle>
+              <CardTitle className="text-2xl font-bold flex items-center justify-between">
+                Payment Schedule
+                <div className="flex items-center space-x-2">
+                  <Label htmlFor="chart-view" className="text-sm font-normal">Chart View</Label>
+                  <Switch
+                    id="chart-view"
+                    checked={showChart}
+                    onCheckedChange={setShowChart}
+                  />
+                </div>
+              </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/50">
-                      <TableHead className="text-left font-semibold">Month</TableHead>
-                      <TableHead className="text-right font-semibold">Starting Balance</TableHead>
-                      <TableHead className="text-right font-semibold">Payment</TableHead>
-                      <TableHead className="text-right font-semibold">Principal</TableHead>
-                      <TableHead className="text-right font-semibold">Interest</TableHead>
-                      <TableHead className="text-right font-semibold">Remaining Balance</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {paymentSchedule.map((item, index) => (
-                      <TableRow key={item.month} className={index % 2 === 0 ? 'bg-muted/20' : ''}>
-                        <TableCell className="text-left font-medium">{item.month}</TableCell>
-                        <TableCell className="text-right">{currencyFormatter.format(item.startingBalance)}</TableCell>
-                        <TableCell className="text-right">{currencyFormatter.format(item.payment)}</TableCell>
-                        <TableCell className="text-right">{currencyFormatter.format(item.principal)}</TableCell>
-                        <TableCell className="text-right">{currencyFormatter.format(item.interest)}</TableCell>
-                        <TableCell className="text-right">{currencyFormatter.format(item.balance)}</TableCell>
+              {showChart ? (
+                <div className="h-[400px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={paymentSchedule}
+                      margin={{
+                        top: 5,
+                        right: 30,
+                        left: 20,
+                        bottom: 5,
+                      }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis />
+                      <Tooltip formatter={(value) => currencyFormatter.format(value)} />
+                      <Legend />
+                      <Line type="monotone" dataKey="balance" stroke="#8884d8" name="Balance" />
+                      <Line type="monotone" dataKey="payment" stroke="#82ca9d" name="Payment" />
+                      <Line type="monotone" dataKey="interest" stroke="#ffc658" name="Interest" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableCaption>Credit Card Payment Schedule</TableCaption>
+                    <TableHeader>
+                      <TableRow className="bg-muted/50">
+                        <TableHead className="text-left font-semibold">Month</TableHead>
+                        <TableHead className="text-right font-semibold">Starting Balance</TableHead>
+                        <TableHead className="text-right font-semibold">Payment</TableHead>
+                        <TableHead className="text-right font-semibold">Principal</TableHead>
+                        <TableHead className="text-right font-semibold">Interest</TableHead>
+                        <TableHead className="text-right font-semibold">Remaining Balance</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                    </TableHeader>
+                    <TableBody>
+                      {paymentSchedule.map((item, index) => (
+                        <TableRow key={item.month} className={index % 2 === 0 ? 'bg-muted/20' : ''}>
+                          <TableCell className="text-left font-medium">{item.month}</TableCell>
+                          <TableCell className="text-right">{currencyFormatter.format(item.startingBalance)}</TableCell>
+                          <TableCell className="text-right">{currencyFormatter.format(item.payment)}</TableCell>
+                          <TableCell className="text-right">{currencyFormatter.format(item.principal)}</TableCell>
+                          <TableCell className="text-right">{currencyFormatter.format(item.interest)}</TableCell>
+                          <TableCell className="text-right">{currencyFormatter.format(item.balance)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
