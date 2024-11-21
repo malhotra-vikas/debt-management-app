@@ -63,6 +63,12 @@ type Summary = {
   yearsToPayoff: number
 }
 
+function calculateDebtFreeDate(monthsToPayoff: number): string {
+  const today = new Date();
+  const debtFreeDate = new Date(today.setMonth(today.getMonth() + monthsToPayoff));
+  return debtFreeDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
 export default function CreditCardCalculator() {
   const [paymentSchedule, setPaymentSchedule] = useState<PaymentScheduleItem[]>([])
   const [summary, setSummary] = useState<Summary | null>(null)
@@ -77,7 +83,7 @@ export default function CreditCardCalculator() {
       monthlyInterestRate: 1.5,
       minimumPayment: 25,
       additionalPayment: 0,
-      requiredPrincipalPercentage: 10, // Updated default value
+      requiredPrincipalPercentage: 10,
     },
   })
 
@@ -220,7 +226,6 @@ export default function CreditCardCalculator() {
                       <FormControl>
                         <Input type="number" step="0.001" {...field} readOnly />
                       </FormControl>
-                      <FormDescription>Automatically calculated as APR / 12</FormDescription>
                     </FormItem>
                   )}
                 />
@@ -261,12 +266,12 @@ export default function CreditCardCalculator() {
                   name="requiredPrincipalPercentage"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Minimum Principal Payment (%)</FormLabel> {/* Updated FormLabel */}
+                      <FormLabel>Minimum Principal Payment (%)</FormLabel>
                       <FormControl>
                         <Input type="number" step="0.1" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
                       </FormControl>
                       <FormDescription>
-                        Minimum percentage of the balance to be paid each month. {/* Updated FormDescription */}
+                        Minimum percentage of the balance to be paid each month.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -285,7 +290,7 @@ export default function CreditCardCalculator() {
               <CardTitle className="text-2xl font-bold">Repayment Dashboard</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="flex flex-col space-y-1.5 p-6 bg-primary/10 rounded-lg">
                   <span className="text-sm font-medium text-muted-foreground flex items-center">
                     <DollarSignIcon className="mr-2 h-4 w-4" />
@@ -302,13 +307,21 @@ export default function CreditCardCalculator() {
                   <span className="text-2xl font-bold">{currencyFormatter.format(summary.totalInterestPaid)}</span>
                   <span className="text-xs text-muted-foreground">{((summary.totalInterestPaid / summary.totalPrincipalPaid) * 100).toFixed(1)}% of principal</span>
                 </div>
-                <div className="flex flex-col space-y-1.5 p-6 bg-secondary/10 rounded-lg">
+                <div className="flex flex-col space-y-1.5 p-6 bg-primary/10 rounded-lg">
                   <span className="text-sm font-medium text-muted-foreground flex items-center">
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     Time to Pay Off
                   </span>
                   <span className="text-2xl font-bold">{summary.yearsToPayoff.toFixed(1)} years</span>
                   <span className="text-xs text-muted-foreground">{summary.monthsToPayoff} months</span>
+                </div>
+                <div className="flex flex-col space-y-1.5 p-6 bg-green-100 dark:bg-green-900 rounded-lg">
+                  <span className="text-sm font-medium text-muted-foreground flex items-center">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    Debt-free Date
+                  </span>
+                  <span className="text-2xl font-bold">{calculateDebtFreeDate(summary.monthsToPayoff)}</span>
+                  <span className="text-xs text-muted-foreground">Estimated payoff date</span>
                 </div>
               </div>
             </CardContent>
@@ -365,21 +378,20 @@ export default function CreditCardCalculator() {
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <Table>
-                  <TableCaption>Credit Card Payment Schedule</TableCaption>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead className="text-left">Month</TableHead>
-                      <TableHead className="text-right">Starting Balance</TableHead>
-                      <TableHead className="text-right">Payment</TableHead>
-                      <TableHead className="text-right">Principal</TableHead>
-                      <TableHead className="text-right">Interest</TableHead>
-                      <TableHead className="text-right">Remaining Balance</TableHead>
+                    <TableRow className="bg-muted/50">
+                      <TableHead className="text-left font-semibold">Month</TableHead>
+                      <TableHead className="text-right font-semibold">Starting Balance</TableHead>
+                      <TableHead className="text-right font-semibold">Payment</TableHead>
+                      <TableHead className="text-right font-semibold">Principal</TableHead>
+                      <TableHead className="text-right font-semibold">Interest</TableHead>
+                      <TableHead className="text-right font-semibold">Remaining Balance</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paymentSchedule.map((item) => (
-                      <TableRow key={item.month}>
-                        <TableCell className="text-left">{item.month}</TableCell>
+                    {paymentSchedule.map((item, index) => (
+                      <TableRow key={item.month} className={index % 2 === 0 ? 'bg-muted/20' : ''}>
+                        <TableCell className="text-left font-medium">{item.month}</TableCell>
                         <TableCell className="text-right">{currencyFormatter.format(item.startingBalance)}</TableCell>
                         <TableCell className="text-right">{currencyFormatter.format(item.payment)}</TableCell>
                         <TableCell className="text-right">{currencyFormatter.format(item.principal)}</TableCell>
