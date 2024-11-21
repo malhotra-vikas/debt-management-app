@@ -87,7 +87,7 @@ export default function CreditCardCalculator() {
       monthlyInterestRate: 1.5,
       minimumPayment: 25,
       additionalPayment: 0,
-      requiredPrincipalPercentage: 10,
+      requiredPrincipalPercentage: 1, // Update: Default minimum principal payment to 1%
     },
   })
 
@@ -320,7 +320,7 @@ export default function CreditCardCalculator() {
                 <div className="flex flex-col space-y-1.5 p-6 bg-green-100 dark:bg-green-900 rounded-lg">
                   <span className="text-sm font-medium text-muted-foreground flex items-center">
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    You will be debt-free on
+                    Debt Free Date
                   </span>
                   <span className="text-2xl font-bold">{calculateDebtFreeDate(summary.monthsToPayoff)}</span>
                   <span className="text-xs text-muted-foreground">Estimated payoff date</span>
@@ -414,7 +414,6 @@ export default function CreditCardCalculator() {
               ) : (
                 <div className="overflow-x-auto">
                   <Table>
-                    <TableCaption>Credit Card Payment Schedule</TableCaption>
                     <TableHeader>
                       <TableRow className="bg-muted/50">
                         <TableHead className="text-left font-semibold">Month</TableHead>
