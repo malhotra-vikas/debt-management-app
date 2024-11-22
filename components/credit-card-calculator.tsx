@@ -24,7 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { ArrowDownIcon, ArrowUpIcon, CalendarIcon, DollarSignIcon, CreditCard, PercentIcon } from 'lucide-react'
+import { ArrowDownIcon, ArrowUpIcon, CalendarIcon, DollarSignIcon, CreditCard, PercentIcon, ArrowRightIcon } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { useToast } from "@/components/ui/use-toast"
 import { Switch } from "@/components/ui/switch"
@@ -309,10 +309,14 @@ export default function CreditCardCalculator() {
                 </div>
               </div>
               <div className="mt-4 text-center">
-                <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                <Popover open={popoverOpen} onOpenChange={setPopoverOpen} modal>
                   <PopoverTrigger asChild>
-                    <Button variant="link" onClick={() => setPopoverOpen(true)}>
+                    <Button 
+                      variant="outline" 
+                      className="group text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200 transition-colors"
+                    >
                       Get Debt Free Faster
+                      <ArrowRightIcon className="inline-block ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-80">
@@ -324,7 +328,6 @@ export default function CreditCardCalculator() {
                             key={amount}
                             onClick={() => {
                               form.setValue('additionalPayment', form.getValues('additionalPayment') + amount);
-                              setPopoverOpen(false);
                             }}
                             variant="outline"
                           >
@@ -333,9 +336,14 @@ export default function CreditCardCalculator() {
                         ))}
                       </div>
                       {form.getValues('additionalPayment') > 0 && (
-                        <p className="text-sm text-muted-foreground mt-2">
-                          With an extra ${form.getValues('additionalPayment')}/month, you could be debt-free by {calculateDebtFreeDate(summary.monthsToPayoff)}, 
-                          saving {currencyFormatter.format(summary.totalInterestPaid)} in interest!
+                        <p className="text-sm mt-2">
+                          <span className="font-semibold text-green-600">
+                            With an extra ${form.getValues('additionalPayment')}/month, you could be debt-free by {calculateDebtFreeDate(summary.monthsToPayoff)},
+                          </span>
+                          <br />
+                          <span className="font-bold text-green-700">
+                            saving {currencyFormatter.format(summary.totalInterestPaid)} in interest!
+                          </span>
                         </p>
                       )}
                     </div>
