@@ -108,9 +108,9 @@ export default function CreditCardCalculator() {
     defaultValues: {
       principal: 1000,
       apr: 18,
-      minimumPayment: 25,
+      minimumPayment: 15,
       additionalPayment: 0,
-      requiredPrincipalPercentage: 1,
+      requiredPrincipalPercentage: 1.5,
     },
   })
 
@@ -198,7 +198,7 @@ export default function CreditCardCalculator() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="flex items-center group">
-                        Principal Amount ($)
+                        Outstanding Principal Balance ($)
                         <InfoTooltip content="The current balance outstanding of your credit card debt" />
                       </FormLabel>
                       <FormControl>
@@ -253,7 +253,7 @@ export default function CreditCardCalculator() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="flex items-center group">
-                        Minimum Monthly Payment ($)
+                      Alternative Minimum Payment ($)
                         <InfoTooltip content="Defined in the card agreement, this is lowest minimum payment the issuer accepts for cards with a balance. If your balance falls below this number the balance becomes the minimum payment. By default we have this set at $15" />
                       </FormLabel>
                       <FormControl>
