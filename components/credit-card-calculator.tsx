@@ -24,12 +24,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { ArrowDownIcon, ArrowUpIcon, CalendarIcon, DollarSignIcon, CreditCard, PercentIcon } from 'lucide-react'
+import { ArrowDownIcon, ArrowUpIcon, CalendarIcon, DollarSignIcon, CreditCard, PercentIcon, InfoIcon } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { useToast } from "@/components/ui/use-toast"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { Slider } from "@/components/ui/slider"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
@@ -75,9 +75,9 @@ function calculateDebtFreeDate(monthsToPayoff: number): string {
 export default function CreditCardCalculator() {
   const [paymentSchedule, setPaymentSchedule] = useState<PaymentScheduleItem[]>([])
   const [summary, setSummary] = useState<Summary | null>(null)
-  const [earlyPayoffSummary, setEarlyPayoffSummary] = useState<Summary | null>(null)
   const [showChart, setShowChart] = useState(false)
   const { toast } = useToast()
+  const [popoverOpen, setPopoverOpen] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -155,7 +155,7 @@ export default function CreditCardCalculator() {
 
   return (
     <div className="container mx-auto p-4 space-y-8">
-      <Card className="w-full max-w-2xl mx-auto">
+      <Card className="w-full max-w-4xl mx-auto">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold flex items-center">
             <CreditCard className="mr-2 h-6 w-6" />
@@ -167,8 +167,8 @@ export default function CreditCardCalculator() {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <form className="space-y-6">
+              <div className="grid grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
                   name="principal"
@@ -197,19 +197,6 @@ export default function CreditCardCalculator() {
                 />
                 <FormField
                   control={form.control}
-                  name="monthlyInterestRate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Monthly Interest Rate (%)</FormLabel>
-                      <FormControl>
-                        <Input type="number" step="0.001" {...field} readOnly />
-                      </FormControl>
-                      <FormDescription>Automatically calculated as APR / 12</FormDescription>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
                   name="minimumPayment"
                   render={({ field }) => (
                     <FormItem>
@@ -218,6 +205,21 @@ export default function CreditCardCalculator() {
                         <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
                       </FormControl>
                       <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="monthlyInterestRate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Monthly Interest Rate (%)</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.001" {...field} readOnly />
+                      </FormControl>
+                      <FormDescription>Automatically calculated as APR / 12</FormDescription>
                     </FormItem>
                   )}
                 />
@@ -237,9 +239,6 @@ export default function CreditCardCalculator() {
                     </FormItem>
                   )}
                 />
-              </div>
-              <Separator className="my-4" />
-              <div className="space-y-4">
                 <FormField
                   control={form.control}
                   name="additionalPayment"
@@ -247,21 +246,15 @@ export default function CreditCardCalculator() {
                     <FormItem>
                       <FormLabel>Additional Monthly Payment ($)</FormLabel>
                       <FormControl>
-                        <Slider
-                          min={0}
-                          max={500}
-                          step={10}
-                          value={[field.value]}
-                          onValueChange={(value) => field.onChange(value[0])}
+                        <Input
+                          type="number"
+                          step="0.01"
+                          {...field}
+                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                         />
                       </FormControl>
-                      <div className="flex justify-between text-sm text-muted-foreground">
-                        <span>$0</span>
-                        <span>${field.value}</span>
-                        <span>$500</span>
-                      </div>
                       <FormDescription>
-                        Adjust this slider to see how additional monthly payments can help you become debt-free faster.
+                        Enter an additional amount you could pay each month to become debt-free faster.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -305,19 +298,62 @@ export default function CreditCardCalculator() {
                   <span className="text-2xl font-bold">{summary.yearsToPayoff.toFixed(1)} years</span>
                   <span className="text-xs text-muted-foreground">{summary.monthsToPayoff} months</span>
                 </div>
-                <div className="flex flex-col space-y-1.5 p-6 bg-green-100 dark:bg-green-900 rounded-lg">
-                  <span className="text-sm font-medium text-muted-foreground flex items-center">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    Debt Free Date
-                  </span>
-                  <span className="text-2xl font-bold">{calculateDebtFreeDate(summary.monthsToPayoff)}</span>
-                  <span className="text-xs text-muted-foreground">Estimated payoff date</span>
-                </div>
+                <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <div className="flex flex-col space-y-1.5 p-6 bg-green-100 dark:bg-green-900 rounded-lg cursor-pointer hover:bg-green-200 dark:hover:bg-green-800 transition-colors">
+                      <span className="text-sm font-medium text-muted-foreground flex items-center">
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        Debt Free Date
+                      </span>
+                      <span className="text-2xl font-bold">{calculateDebtFreeDate(summary.monthsToPayoff)}</span>
+                      <span className="text-xs text-muted-foreground flex items-center">
+                        Estimated payoff date
+                        <InfoIcon className="ml-1 h-3 w-3" />
+                      </span>
+                    </div>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80">
+                    <div>
+                      <h3 className="font-semibold mb-2">Add extra monthly payment</h3>
+                      <div className="flex space-x-2">
+                        {[100, 200, 300].map((amount) => (
+                          <Button 
+                            key={amount}
+                            onClick={() => {
+                              form.setValue('additionalPayment', form.getValues('additionalPayment') + amount);
+                              setPopoverOpen(false);
+                            }}
+                            variant="outline"
+                          >
+                            ${amount}
+                          </Button>
+                        ))}
+                      </div>
+                      {form.getValues('additionalPayment') > 0 && (
+                        <p className="text-sm text-muted-foreground mt-2">
+                          With an extra ${form.getValues('additionalPayment')}/month, you could be debt-free by {calculateDebtFreeDate(summary.monthsToPayoff)}, 
+                          saving {currencyFormatter.format(summary.totalInterestPaid)} in interest!
+                        </p>
+                      )}
+                    </div>
+                    <Separator />
+                    <div>
+                      <h3 className="font-semibold">Tips to Pay Off Debt Faster</h3>
+                      <ul className="list-disc pl-4 space-y-1 mt-2">
+                        <li>Increase your monthly payment</li>
+                        <li>Pay more than the minimum due</li>
+                        <li>Consider a balance transfer to a lower-interest card</li>
+                        <li>Create a budget to find extra money for payments</li>
+                        <li>Use windfalls (tax refunds, bonuses) to pay down debt</li>
+                      </ul>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="w-full max-w-5xl mx-auto overflow-hidden">
+          <Card className="w-full max-w-4xl mx-auto overflow-hidden">
             <CardHeader>
               <CardTitle className="text-2xl font-bold flex items-center justify-between">
                 Payment Schedule
