@@ -29,7 +29,6 @@ import { Separator } from '@/components/ui/separator'
 import { useToast } from "@/components/ui/use-toast"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { Slider } from "@/components/ui/slider"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
@@ -43,7 +42,6 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
 const formSchema = z.object({
   principal: z.number().min(1, "Principal must be greater than 0"),
   apr: z.number().min(0, "APR must be 0 or greater").max(100, "APR must be 100 or less"),
-  monthlyInterestRate: z.number().min(0, "Monthly interest rate must be 0 or greater"),
   minimumPayment: z.number().min(1, "Minimum payment must be greater than 0"),
   additionalPayment: z.number().min(0, "Additional payment must be 0 or greater"),
   requiredPrincipalPercentage: z.number().min(0, "Percentage must be 0 or greater").max(100, "Percentage must be 100 or less"),
@@ -77,7 +75,7 @@ export default function CreditCardCalculator() {
   const [paymentSchedule, setPaymentSchedule] = useState<PaymentScheduleItem[]>([])
   const [summary, setSummary] = useState<Summary | null>(null)
   const [showChart, setShowChart] = useState(false)
-  const [popoverOpen, setPopoverOpen] = useState(false); // New state for controlling the popover
+  const [popoverOpen, setPopoverOpen] = useState(false);
   const { toast } = useToast()
 
   const form = useForm<FormValues>({
@@ -85,9 +83,8 @@ export default function CreditCardCalculator() {
     defaultValues: {
       principal: 1000,
       apr: 18,
-      monthlyInterestRate: 1.5,
       minimumPayment: 25,
-      additionalPayment: 0, // Updated to default to 0
+      additionalPayment: 0,
       requiredPrincipalPercentage: 1,
     },
   })
@@ -113,7 +110,7 @@ export default function CreditCardCalculator() {
 
   function calculatePaymentSchedule(values: FormValues): [PaymentScheduleItem[], Summary] {
     let balance = values.principal
-    const monthlyRate = values.monthlyInterestRate / 100
+    const monthlyRate = (values.apr / 100) / 12
     const schedule: PaymentScheduleItem[] = []
     let month = 0
     let totalInterestPaid = 0
@@ -198,50 +195,6 @@ export default function CreditCardCalculator() {
                 />
                 <FormField
                   control={form.control}
-                  name="minimumPayment"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Minimum Monthly Payment ($)</FormLabel>
-                      <FormControl>
-                        <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <FormField
-                  control={form.control}
-                  name="monthlyInterestRate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Monthly Interest Rate (%)</FormLabel>
-                      <FormControl>
-                        <Input type="number" step="0.001" {...field} readOnly />
-                      </FormControl>
-                      <FormDescription>Automatically calculated as APR / 12</FormDescription>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="requiredPrincipalPercentage"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Minimum Principal Payment (%)</FormLabel>
-                      <FormControl>
-                        <Input type="number" step="0.1" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
-                      </FormControl>
-                      <FormDescription>
-                        Minimum percentage of the balance to be paid each month.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
                   name="additionalPayment"
                   render={({ field }) => (
                     <FormItem>
@@ -256,6 +209,37 @@ export default function CreditCardCalculator() {
                       </FormControl>
                       <FormDescription>
                         Enter an additional amount you could pay each month to become debt-free faster.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="minimumPayment"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Minimum Monthly Payment ($)</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="requiredPrincipalPercentage"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Minimum Principal Payment (%)</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.1" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                      </FormControl>
+                      <FormDescription>
+                        Minimum percentage of the balance to be paid each month.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -308,8 +292,8 @@ export default function CreditCardCalculator() {
                   <span className="text-xs text-muted-foreground">Estimated payoff date</span>
                 </div>
               </div>
-              <div className="mt-4 text-center">
-                <Popover open={popoverOpen} onOpenChange={setPopoverOpen} modal>
+              <div className="mt-4 text-center flex justify-center space-x-4">
+                <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
                   <PopoverTrigger asChild>
                     <Button 
                       variant="outline" 
@@ -328,6 +312,7 @@ export default function CreditCardCalculator() {
                             key={amount}
                             onClick={() => {
                               form.setValue('additionalPayment', form.getValues('additionalPayment') + amount);
+                              setPopoverOpen(false);
                             }}
                             variant="outline"
                           >
@@ -336,14 +321,9 @@ export default function CreditCardCalculator() {
                         ))}
                       </div>
                       {form.getValues('additionalPayment') > 0 && (
-                        <p className="text-sm mt-2">
-                          <span className="font-semibold text-green-600">
-                            With an extra ${form.getValues('additionalPayment')}/month, you could be debt-free by {calculateDebtFreeDate(summary.monthsToPayoff)},
-                          </span>
-                          <br />
-                          <span className="font-bold text-green-700">
-                            saving {currencyFormatter.format(summary.totalInterestPaid)} in interest!
-                          </span>
+                        <p className="text-sm text-muted-foreground mt-2">
+                          With an extra ${form.getValues('additionalPayment')}/month, you could be debt-free by {calculateDebtFreeDate(summary.monthsToPayoff)}, 
+                          saving {currencyFormatter.format(summary.totalInterestPaid)} in interest!
                         </p>
                       )}
                     </div>
@@ -360,6 +340,9 @@ export default function CreditCardCalculator() {
                     </div>
                   </PopoverContent>
                 </Popover>
+                <Button variant="outline">
+                  Email me my report
+                </Button>
               </div>
             </CardContent>
           </Card>
