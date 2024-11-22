@@ -24,13 +24,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { ArrowDownIcon, ArrowUpIcon, CalendarIcon, DollarSignIcon, CreditCard, PercentIcon, InfoIcon } from 'lucide-react'
+import { ArrowDownIcon, ArrowUpIcon, CalendarIcon, DollarSignIcon, CreditCard, PercentIcon } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { useToast } from "@/components/ui/use-toast"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Slider } from "@/components/ui/slider"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -76,8 +77,8 @@ export default function CreditCardCalculator() {
   const [paymentSchedule, setPaymentSchedule] = useState<PaymentScheduleItem[]>([])
   const [summary, setSummary] = useState<Summary | null>(null)
   const [showChart, setShowChart] = useState(false)
+  const [popoverOpen, setPopoverOpen] = useState(false); // New state for controlling the popover
   const { toast } = useToast()
-  const [popoverOpen, setPopoverOpen] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -86,7 +87,7 @@ export default function CreditCardCalculator() {
       apr: 18,
       monthlyInterestRate: 1.5,
       minimumPayment: 25,
-      additionalPayment: 0,
+      additionalPayment: 0, // Updated to default to 0
       requiredPrincipalPercentage: 1,
     },
   })
@@ -298,19 +299,21 @@ export default function CreditCardCalculator() {
                   <span className="text-2xl font-bold">{summary.yearsToPayoff.toFixed(1)} years</span>
                   <span className="text-xs text-muted-foreground">{summary.monthsToPayoff} months</span>
                 </div>
+                <div className="flex flex-col space-y-1.5 p-6 bg-green-100 dark:bg-green-900 rounded-lg">
+                  <span className="text-sm font-medium text-muted-foreground flex items-center">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    Debt Free Date
+                  </span>
+                  <span className="text-2xl font-bold">{calculateDebtFreeDate(summary.monthsToPayoff)}</span>
+                  <span className="text-xs text-muted-foreground">Estimated payoff date</span>
+                </div>
+              </div>
+              <div className="mt-4 text-center">
                 <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
                   <PopoverTrigger asChild>
-                    <div className="flex flex-col space-y-1.5 p-6 bg-green-100 dark:bg-green-900 rounded-lg cursor-pointer hover:bg-green-200 dark:hover:bg-green-800 transition-colors">
-                      <span className="text-sm font-medium text-muted-foreground flex items-center">
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        Debt Free Date
-                      </span>
-                      <span className="text-2xl font-bold">{calculateDebtFreeDate(summary.monthsToPayoff)}</span>
-                      <span className="text-xs text-muted-foreground flex items-center">
-                        Estimated payoff date
-                        <InfoIcon className="ml-1 h-3 w-3" />
-                      </span>
-                    </div>
+                    <Button variant="link" onClick={() => setPopoverOpen(true)}>
+                      Get Debt Free Faster
+                    </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-80">
                     <div>
@@ -336,7 +339,7 @@ export default function CreditCardCalculator() {
                         </p>
                       )}
                     </div>
-                    <Separator />
+                    <Separator className="my-4" />
                     <div>
                       <h3 className="font-semibold">Tips to Pay Off Debt Faster</h3>
                       <ul className="list-disc pl-4 space-y-1 mt-2">
