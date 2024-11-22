@@ -24,13 +24,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { ArrowDownIcon, ArrowUpIcon, CalendarIcon, DollarSignIcon, CreditCard, PercentIcon, ArrowRightIcon } from 'lucide-react'
+import { ArrowDownIcon, ArrowUpIcon, CalendarIcon, DollarSignIcon, CreditCard, PercentIcon, ArrowRightIcon, Info } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { useToast } from "@/components/ui/use-toast"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  Tooltip as TooltipComponent,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { cn } from "@/lib/utils"
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -69,6 +76,24 @@ function calculateDebtFreeDate(monthsToPayoff: number): string {
   const today = new Date();
   const debtFreeDate = new Date(today.setMonth(today.getMonth() + monthsToPayoff));
   return debtFreeDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+function InfoTooltip({ content }: { content: string }) {
+  return (
+    <TooltipProvider>
+      <TooltipComponent>
+        <TooltipTrigger asChild>
+          <Info className="h-4 w-4 ml-1 inline-block text-muted-foreground hover:text-primary cursor-help transition-colors" />
+        </TooltipTrigger>
+        <TooltipContent 
+          className="bg-popover text-popover-foreground shadow-lg rounded-md px-3 py-2 text-sm max-w-xs"
+          sideOffset={5}
+        >
+          <p>{content}</p>
+        </TooltipContent>
+      </TooltipComponent>
+    </TooltipProvider>
+  )
 }
 
 export default function CreditCardCalculator() {
@@ -172,7 +197,10 @@ export default function CreditCardCalculator() {
                   name="principal"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Principal Amount ($)</FormLabel>
+                      <FormLabel className="flex items-center group">
+                        Principal Amount ($)
+                        <InfoTooltip content="The current balance outstanding of your credit card debt" />
+                      </FormLabel>
                       <FormControl>
                         <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
                       </FormControl>
@@ -185,7 +213,10 @@ export default function CreditCardCalculator() {
                   name="apr"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>APR (%)</FormLabel>
+                      <FormLabel className="flex items-center group">
+                        APR (%)
+                        <InfoTooltip content="Annual Percentage Rate - the yearly interest rate on your credit card" />
+                      </FormLabel>
                       <FormControl>
                         <Input type="number" step="0.1" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
                       </FormControl>
@@ -198,7 +229,10 @@ export default function CreditCardCalculator() {
                   name="additionalPayment"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Additional Monthly Payment ($)</FormLabel>
+                      <FormLabel className="flex items-center group">
+                        Additional Monthly Payment ($)
+                        <InfoTooltip content="Enter an additional amount you could pay each month to become debt-free faster." />
+                      </FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -207,9 +241,6 @@ export default function CreditCardCalculator() {
                           onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                         />
                       </FormControl>
-                      <FormDescription>
-                        Enter an additional amount you could pay each month to become debt-free faster.
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -221,7 +252,10 @@ export default function CreditCardCalculator() {
                   name="minimumPayment"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Minimum Monthly Payment ($)</FormLabel>
+                      <FormLabel className="flex items-center group">
+                        Minimum Monthly Payment ($)
+                        <InfoTooltip content="Defined in the card agreement, this is lowest minimum payment the issuer accepts for cards with a balance. If your balance falls below this number the balance becomes the minimum payment. By default we have this set at $15" />
+                      </FormLabel>
                       <FormControl>
                         <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
                       </FormControl>
@@ -234,13 +268,13 @@ export default function CreditCardCalculator() {
                   name="requiredPrincipalPercentage"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Minimum Principal Payment (%)</FormLabel>
+                      <FormLabel className="flex items-center group">
+                        Minimum Principal Payment (%)
+                        <InfoTooltip content="Defined in the card agreement, this is the percent of your outstanding balance the issuer requires you to pay each month. It is usually between 1% and 3% By default we have this set at 1.5%" />
+                      </FormLabel>
                       <FormControl>
                         <Input type="number" step="0.1" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
                       </FormControl>
-                      <FormDescription>
-                        Minimum percentage of the balance to be paid each month.
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
