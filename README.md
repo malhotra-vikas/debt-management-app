@@ -36,9 +36,35 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
 
-To deploy your app to Vercel, run:
+After the server restarts, run the following commands to check:
 
-```plaintext
- vercel
+For Nginx:
+
+bash
+Copy code
+sudo systemctl status nginx
+Ensure Nginx is active and running.
+
+For PM2:
+
+bash
+Copy code
+pm2 list
+Ensure your app (dealing-with-debt) is listed as online.
+
+
+Monitor Logs
+To view the logs for your app and ensure it's running as expected:
+
+bash
+Copy code
+pm2 logs dealing-with-debt
+
+Recap
+Nginx: Verified that it starts on boot (sudo systemctl enable nginx is already configured).
+PM2:
+Started the app with pm2 start.
+Saved the process list with pm2 save.
+Enabled PM2 startup with pm2 startup.
 ```
 
