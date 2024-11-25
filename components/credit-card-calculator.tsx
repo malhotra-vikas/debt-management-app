@@ -383,7 +383,7 @@ export default function Component() {
              Enter your card details below
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Calculate your credit card debt repayment plan and see how additional payments can help you become debt-free faster.
+            This calculator projects your payoff date and details and allows you to run simulations under various monthly payment scenarios.            
           </p>
         </CardHeader>
         <CardContent>
