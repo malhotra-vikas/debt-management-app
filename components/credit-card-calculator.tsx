@@ -63,6 +63,9 @@ type PaymentScheduleItem = {
   payment: number
   principal: number
   interest: number
+  cumulativePrincipal: number;
+  cumulativeInterest: number;
+  requiredMinimumPayment: number;
 }
 
 type Summary = {
@@ -147,6 +150,7 @@ export default function Component() {
       const startingBalance = balance
       const interest = balance * monthlyRate
       const requiredPrincipal = balance * (values.requiredPrincipalPercentage / 100)
+      const requiredMinimumPayment = Math.max(interest + requiredPrincipal, values.minimumPayment);
       let payment = Math.max(values.minimumPayment, interest + requiredPrincipal) + values.additionalPayment
       payment = Math.min(payment, balance + interest)
       const principal = payment - interest
@@ -155,6 +159,9 @@ export default function Component() {
       totalInterestPaid += interest
       totalPrincipalPaid += principal
 
+      const cumulativePrincipal = totalPrincipalPaid;
+      const cumulativeInterest = totalInterestPaid;
+
       schedule.push({
         month,
         startingBalance: parseFloat(startingBalance.toFixed(2)),
@@ -162,6 +169,9 @@ export default function Component() {
         payment: parseFloat(payment.toFixed(2)),
         principal: parseFloat(principal.toFixed(2)),
         interest: parseFloat(interest.toFixed(2)),
+        cumulativePrincipal: parseFloat(cumulativePrincipal.toFixed(2)),
+        cumulativeInterest: parseFloat(cumulativeInterest.toFixed(2)),
+        requiredMinimumPayment: parseFloat(requiredMinimumPayment.toFixed(2)),
       })
 
       if (month > 600) break
@@ -447,11 +457,14 @@ export default function Component() {
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="month" />
                       <YAxis />
-                      <Tooltip formatter={(value) => currencyFormatter.format(value)} />
+                      <Tooltip 
+                        formatter={(value, name) => [currencyFormatter.format(value), name]} 
+                        labelFormatter={(label) => `Month ${label}`}
+                      />
                       <Legend />
-                      <Line type="monotone" dataKey="balance" stroke="#8884d8" name="Balance" />
-                      <Line type="monotone" dataKey="payment" stroke="#82ca9d" name="Payment" />
-                      <Line type="monotone" dataKey="interest" stroke="#ffc658" name="Interest" />
+                      <Line type="monotone" dataKey="principal" stroke="#10b981" name="Principal" />
+                      <Line type="monotone" dataKey="interest" stroke="#ef4444" name="Interest" />
+                      <Line type="monotone" dataKey="payment" stroke="#3b82f6" name="Total Payment" />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -462,7 +475,7 @@ export default function Component() {
                       <TableRow className="bg-muted/50 sticky top-0">
                         <TableHead className="text-left font-semibold">Month</TableHead>
                         <TableHead className="text-right font-semibold">Starting Balance</TableHead>
-                        <TableHead className="text-right font-semibold">Payment</TableHead>
+                        <TableHead className="text-right font-semibold">Required Minimum Payment</TableHead>
                         <TableHead className="text-right font-semibold">Principal</TableHead>
                         <TableHead className="text-right font-semibold">Interest</TableHead>
                         <TableHead className="text-right font-semibold">Remaining Balance</TableHead>
@@ -473,7 +486,7 @@ export default function Component() {
                         <TableRow key={item.month} className={index % 2 === 0 ? 'bg-muted/20' : ''}>
                           <TableCell className="text-left font-medium">{item.month}</TableCell>
                           <TableCell className="text-right">{currencyFormatter.format(item.startingBalance)}</TableCell>
-                          <TableCell className="text-right">{currencyFormatter.format(item.payment)}</TableCell>
+                          <TableCell className="text-right">{currencyFormatter.format(item.requiredMinimumPayment)}</TableCell>
                           <TableCell className="text-right">{currencyFormatter.format(item.principal)}</TableCell>
                           <TableCell className="text-right">{currencyFormatter.format(item.interest)}</TableCell>
                           <TableCell className="text-right">{currencyFormatter.format(item.balance)}</TableCell>
