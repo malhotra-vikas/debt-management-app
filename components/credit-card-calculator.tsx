@@ -400,6 +400,19 @@ export default function Component() {
                     </div>
                   </PopoverContent>
                 </Popover>
+                <Button 
+                  variant="outline" 
+                  className="group text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200 transition-colors"
+                  onClick={() => {
+                    toast({
+                      title: "Report Sent",
+                      description: "Your debt repayment report has been sent to your email.",
+                    });
+                  }}
+                >
+                  Email my report
+                  <Send className="inline-block ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </Button>
               </div>
             </CardContent>
           </Card>
