@@ -101,6 +101,7 @@ export default function CreditCardCalculator() {
   const [summary, setSummary] = useState<Summary | null>(null)
   const [showChart, setShowChart] = useState(false)
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const [email, setEmail] = useState('');
   const { toast } = useToast()
 
   const form = useForm<FormValues>({
@@ -340,19 +341,27 @@ export default function CreditCardCalculator() {
                   <PopoverContent className="w-80">
                     <div>
                       <h3 className="font-semibold mb-2">Add extra monthly payment</h3>
-                      <div className="flex space-x-2">
-                        {[100, 200, 300].map((amount) => (
-                          <Button 
-                            key={amount}
-                            onClick={() => {
-                              form.setValue('additionalPayment', form.getValues('additionalPayment') + amount);
-                              setPopoverOpen(false);
-                            }}
-                            variant="outline"
-                          >
-                            ${amount}
-                          </Button>
-                        ))}
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm font-medium">$</span>
+                        <Input
+                          type="number"
+                          placeholder="Enter amount"
+                          className="w-32"
+                          min="0"
+                          step="0.01"
+                          onChange={(e) => {
+                            const value = parseFloat(e.target.value);
+                            if (!isNaN(value)) {
+                              form.setValue('additionalPayment', value);
+                            }
+                          }}
+                        />
+                        <Button 
+                          onClick={() => setPopoverOpen(false)}
+                          variant="outline"
+                        >
+                          Add
+                        </Button>
                       </div>
                       {form.getValues('additionalPayment') > 0 && (
                         <p className="text-sm text-muted-foreground mt-2">
@@ -362,21 +371,33 @@ export default function CreditCardCalculator() {
                       )}
                     </div>
                     <Separator className="my-4" />
-                    <div>
-                      <h3 className="font-semibold">Tips to Pay Off Debt Faster</h3>
-                      <ul className="list-disc pl-4 space-y-1 mt-2">
-                        <li>Increase your monthly payment</li>
-                        <li>Pay more than the minimum due</li>
-                        <li>Consider a balance transfer to a lower-interest card</li>
-                        <li>Create a budget to find extra money for payments</li>
-                        <li>Use windfalls (tax refunds, bonuses) to pay down debt</li>
-                      </ul>
+                    <div className="mt-4">
+                      <h3 className="font-semibold mb-2">Email me my report</h3>
+                      <div className="flex items-center space-x-2">
+                        <Input
+                          type="email"
+                          placeholder="Enter your email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="flex-grow"
+                        />
+                        <Button 
+                          onClick={() => {
+                            // TODO: Implement email sending functionality
+                            toast({
+                              title: "Report Sent",
+                              description: `A report has been sent to ${email}`,
+                            });
+                            setPopoverOpen(false);
+                          }}
+                          variant="outline"
+                        >
+                          Send Report
+                        </Button>
+                      </div>
                     </div>
                   </PopoverContent>
                 </Popover>
-                <Button variant="outline">
-                  Email me my report
-                </Button>
               </div>
             </CardContent>
           </Card>
@@ -420,10 +441,10 @@ export default function CreditCardCalculator() {
                   </ResponsiveContainer>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-muted/50">
+                <div className="overflow-x-auto max-h-[400px] overflow-y-auto relative">
+                  <Table className="relative">
+                    <TableHeader className="relative bg-background z-10">
+                      <TableRow className="bg-muted/50 sticky top-0">
                         <TableHead className="text-left font-semibold">Month</TableHead>
                         <TableHead className="text-right font-semibold">Starting Balance</TableHead>
                         <TableHead className="text-right font-semibold">Payment</TableHead>
