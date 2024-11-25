@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button'
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -24,7 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { ArrowDownIcon, ArrowUpIcon, CalendarIcon, DollarSignIcon, CreditCard, PercentIcon, ArrowRightIcon, Info, Send } from 'lucide-react'
+import { ArrowDownIcon, ArrowUpIcon, CalendarIcon, DollarSignIcon, CreditCard, PercentIcon, ArrowRightIcon, Info, Send, FileDown } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { useToast } from "@/components/ui/use-toast"
 import { Switch } from "@/components/ui/switch"
@@ -37,7 +36,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { cn } from "@/lib/utils"
+import { Document, Page, Text, View, StyleSheet, PDFDownloadLink } from '@react-pdf/renderer'
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -63,9 +62,10 @@ type PaymentScheduleItem = {
   payment: number
   principal: number
   interest: number
-  cumulativePrincipal: number;
-  cumulativeInterest: number;
-  requiredMinimumPayment: number;
+  cumulativePrincipal: number
+  cumulativeInterest: number
+  requiredMinimumPayment: number
+  totPaid: number
 }
 
 type Summary = {
@@ -76,9 +76,9 @@ type Summary = {
 }
 
 function calculateDebtFreeDate(monthsToPayoff: number): string {
-  const today = new Date();
-  const debtFreeDate = new Date(today.setMonth(today.getMonth() + monthsToPayoff));
-  return debtFreeDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const today = new Date()
+  const debtFreeDate = new Date(today.setMonth(today.getMonth() + monthsToPayoff))
+  return debtFreeDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
 }
 
 function InfoTooltip({ content }: { content: string }) {
@@ -99,12 +99,180 @@ function InfoTooltip({ content }: { content: string }) {
   )
 }
 
+const styles = StyleSheet.create({
+  page: {
+    flexDirection: 'column',
+    backgroundColor: '#ffffff',
+    padding: 30,
+  },
+  section: {
+    margin: 10,
+    padding: 10,
+    flexGrow: 1,
+  },
+  title: {
+    fontSize: 24,
+    marginBottom: 10,
+  },
+  subtitle: {
+    fontSize: 18,
+    marginBottom: 10,
+  },
+  text: {
+    fontSize: 12,
+    marginBottom: 5,
+  },
+  table: {
+    display: 'table',
+    width: 'auto',
+    borderStyle: 'solid',
+    borderWidth: 1,
+    borderRightWidth: 0,
+    borderBottomWidth: 0,
+  },
+  tableRow: {
+    margin: 'auto',
+    flexDirection: 'row',
+  },
+  tableCol: {
+    width: '16.66%',
+    borderStyle: 'solid',
+    borderWidth: 1,
+    borderLeftWidth: 0,
+    borderTopWidth: 0,
+  },
+  tableCell: {
+    margin: 'auto',
+    marginTop: 5,
+    fontSize: 10,
+  },
+  dashboardItem: {
+    marginBottom: 10,
+  },
+  dashboardLabel: {
+    fontSize: 10,
+    color: '#666',
+  },
+  dashboardValue: {
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  dashboardSubtext: {
+    fontSize: 8,
+    color: '#666',
+  },
+  tipTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginTop: 10,
+    marginBottom: 5,
+  },
+  tipText: {
+    fontSize: 10,
+    marginBottom: 5,
+  },
+})
+
+const PDFReport = ({ summary, paymentSchedule }: { summary: Summary, paymentSchedule: PaymentScheduleItem[] }) => (
+  <Document>
+    <Page size="A4" style={styles.page}>
+      <View style={styles.section}>
+        <Text style={styles.title}>Credit Card Debt Repayment Report</Text>
+        <Text style={styles.subtitle}>Summary</Text>
+        <Text style={styles.text}>Total Paid: {currencyFormatter.format(summary.totalInterestPaid + summary.totalPrincipalPaid)}</Text>
+        <Text style={styles.text}>Total Interest Paid: {currencyFormatter.format(summary.totalInterestPaid)}</Text>
+        <Text style={styles.text}>Total Principal Paid: {currencyFormatter.format(summary.totalPrincipalPaid)}</Text>
+        <Text style={styles.text}>Time to Pay Off: {summary.yearsToPayoff.toFixed(1)} years ({summary.monthsToPayoff} months)</Text>
+        <Text style={styles.text}>Debt Free Date: {calculateDebtFreeDate(summary.monthsToPayoff)}</Text>
+      </View>
+      <View style={styles.section}>
+        <Text style={styles.subtitle}>Repayment Dashboard</Text>
+        <View style={styles.dashboardItem}>
+          <Text style={styles.dashboardLabel}>Total Paid</Text>
+          <Text style={styles.dashboardValue}>{currencyFormatter.format(summary.totalInterestPaid + summary.totalPrincipalPaid)}</Text>
+          <Text style={styles.dashboardSubtext}>Principal + Interest</Text>
+        </View>
+        <View style={styles.dashboardItem}>
+          <Text style={styles.dashboardLabel}>Total Interest Paid</Text>
+          <Text style={styles.dashboardValue}>{currencyFormatter.format(summary.totalInterestPaid)}</Text>
+          <Text style={styles.dashboardSubtext}>{((summary.totalInterestPaid / summary.totalPrincipalPaid) * 100).toFixed(1)}% of principal</Text>
+        </View>
+        <View style={styles.dashboardItem}>
+          <Text style={styles.dashboardLabel}>Time to Pay Off</Text>
+          <Text style={styles.dashboardValue}>{summary.yearsToPayoff.toFixed(1)} years</Text>
+          <Text style={styles.dashboardSubtext}>{summary.monthsToPayoff} months</Text>
+        </View>
+        <View style={styles.dashboardItem}>
+          <Text style={styles.dashboardLabel}>Debt Free Date</Text>
+          <Text style={styles.dashboardValue}>{calculateDebtFreeDate(summary.monthsToPayoff)}</Text>
+          <Text style={styles.dashboardSubtext}>Estimated payoff date</Text>
+        </View>
+      </View>
+      <View style={styles.section}>
+        <Text style={styles.subtitle}>Payment Schedule</Text>
+        <View style={styles.table}>
+          <View style={styles.tableRow}>
+            <View style={styles.tableCol}><Text style={styles.tableCell}>Month</Text></View>
+            <View style={styles.tableCol}><Text style={styles.tableCell}>Starting Balance</Text></View>
+            <View style={styles.tableCol}><Text style={styles.tableCell}>Required Minimum Payment</Text></View>
+            <View style={styles.tableCol}><Text style={styles.tableCell}>Principal</Text></View>
+            <View style={styles.tableCol}><Text style={styles.tableCell}>Interest</Text></View>
+            <View style={styles.tableCol}><Text style={styles.tableCell}>Remaining Balance</Text></View>
+          </View>
+          {paymentSchedule.slice(0, 12).map((item) => (
+            <View style={styles.tableRow} key={item.month}>
+              <View style={styles.tableCol}><Text style={styles.tableCell}>{item.month}</Text></View>
+              <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.startingBalance)}</Text></View>
+              <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.requiredMinimumPayment)}</Text></View>
+              <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.principal)}</Text></View>
+              <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.interest)}</Text></View>
+              <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.balance)}</Text></View>
+            </View>
+          ))}
+        </View>
+      </View>
+      <View style={styles.section}>
+        <Text style={styles.subtitle}>10 Tips to Stay Debt-Free and Become Debt-Free Faster</Text>
+        <Text style={styles.tipTitle}>1. Create and Stick to a Budget</Text>
+        <Text style={styles.tipText}>Track your income and expenses, and allocate your money wisely to avoid overspending.</Text>
+        
+        <Text style={styles.tipTitle}>2. Build an Emergency Fund</Text>
+        <Text style={styles.tipText}>Save 3-6 months of living expenses to avoid relying on credit cards for unexpected costs.</Text>
+        
+        <Text style={styles.tipTitle}>3. Pay More Than the Minimum</Text>
+        <Text style={styles.tipText}>Always pay more than the minimum payment on your credit cards to reduce interest and pay off debt faster.</Text>
+        
+        <Text style={styles.tipTitle}>4. Use the Debt Avalanche Method</Text>
+        <Text style={styles.tipText}>Focus on paying off the debt with the highest interest rate first while making minimum payments on others.</Text>
+        
+        <Text style={styles.tipTitle}>5. Consider Balance Transfer Options</Text>
+        <Text style={styles.tipText}>Transfer high-interest debt to a card with a 0% introductory APR to save on interest charges.</Text>
+        
+        <Text style={styles.tipTitle}>6. Increase Your Income</Text>
+        <Text style={styles.tipText}>Look for ways to earn extra money through side hustles or asking for a raise at work.</Text>
+        
+        <Text style={styles.tipTitle}>7. Cut Unnecessary Expenses</Text>
+        <Text style={styles.tipText}>Identify and eliminate non-essential spending to free up more money for debt repayment.</Text>
+        
+        <Text style={styles.tipTitle}>8. Avoid New Debt</Text>
+        <Text style={styles.tipText}>While paying off existing debt, avoid taking on new debt to prevent further financial strain.</Text>
+        
+        <Text style={styles.tipTitle}>9. Negotiate Lower Interest Rates</Text>
+        <Text style={styles.tipText}>Contact your credit card companies and ask for lower interest rates to reduce your overall debt burden.</Text>
+        
+        <Text style={styles.tipTitle}>10. Educate Yourself on Personal Finance</Text>
+        <Text style={styles.tipText}>Continuously learn about money management to make informed financial decisions and avoid future debt.</Text>
+      </View>
+    </Page>
+  </Document>
+)
+
 export default function Component() {
   const [paymentSchedule, setPaymentSchedule] = useState<PaymentScheduleItem[]>([])
   const [summary, setSummary] = useState<Summary | null>(null)
   const [showChart, setShowChart] = useState(false)
-  const [popoverOpen, setPopoverOpen] = useState(false);
-  const [email, setEmail] = useState('');
+  const [popoverOpen, setPopoverOpen] = useState(false)
+  const [email, setEmail] = useState('')
   const { toast } = useToast()
 
   const form = useForm<FormValues>({
@@ -150,17 +318,17 @@ export default function Component() {
       const startingBalance = balance
       const interest = balance * monthlyRate
       const requiredPrincipal = balance * (values.requiredPrincipalPercentage / 100)
-      const requiredMinimumPayment = Math.max(interest + requiredPrincipal, values.minimumPayment);
+      const requiredMinimumPayment = Math.max(interest + requiredPrincipal, values.minimumPayment)
       let payment = Math.max(values.minimumPayment, interest + requiredPrincipal) + values.additionalPayment
       payment = Math.min(payment, balance + interest)
       const principal = payment - interest
       balance -= principal
-
+      const totPaid = payment
       totalInterestPaid += interest
       totalPrincipalPaid += principal
 
-      const cumulativePrincipal = totalPrincipalPaid;
-      const cumulativeInterest = totalInterestPaid;
+      const cumulativePrincipal = totalPrincipalPaid
+      const cumulativeInterest = totalInterestPaid
 
       schedule.push({
         month,
@@ -172,6 +340,7 @@ export default function Component() {
         cumulativePrincipal: parseFloat(cumulativePrincipal.toFixed(2)),
         cumulativeInterest: parseFloat(cumulativeInterest.toFixed(2)),
         requiredMinimumPayment: parseFloat(requiredMinimumPayment.toFixed(2)),
+        totPaid: parseFloat(totPaid.toFixed(2))
       })
 
       if (month > 600) break
@@ -193,7 +362,7 @@ export default function Component() {
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold flex items-center">
             <CreditCard className="mr-2 h-6 w-6" />
-            Credit Card Debt Calculator
+             Enter your card details below
           </CardTitle>
           <p className="text-sm text-muted-foreground">
             Calculate your credit card debt repayment plan and see how additional payments can help you become debt-free faster.
@@ -242,7 +411,7 @@ export default function Component() {
                     <FormItem>
                       <FormLabel className="flex items-center group">
                         Additional Monthly Payment ($)
-                        <InfoTooltip content="Enter an additional amount you could pay each month to become debt-free faster." />
+                        <InfoTooltip content="Enter an additional amount you could pay each month toward your principal balance." />
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -426,6 +595,21 @@ export default function Component() {
                   Email my report
                   <Send className="inline-block ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Button>
+                <PDFDownloadLink
+                  document={<PDFReport summary={summary} paymentSchedule={paymentSchedule} />}
+                  fileName="credit-card-debt-report.pdf"
+                >
+                  {({ blob, url, loading, error }) => (
+                    <Button 
+                      variant="outline" 
+                      className="group text-purple-600 hover:text-purple-700 hover:bg-purple-50 border-purple-200 transition-colors"
+                      disabled={loading}
+                    >
+                      {loading ? 'Loading document...' : 'Download PDF Report'}
+                      <FileDown className="inline-block ml-1 h-4 w-4 transition-transform group-hover:translate-y-1" />
+                    </Button>
+                  )}
+                </PDFDownloadLink>
               </div>
             </CardContent>
           </Card>
@@ -477,8 +661,8 @@ export default function Component() {
                     <TableHeader className="relative bg-background z-10">
                       <TableRow className="bg-muted/50 sticky top-0">
                         <TableHead className="text-left font-semibold">Month</TableHead>
-                        <TableHead className="text-right font-semibold">Starting Balance</TableHead>
-                        <TableHead className="text-right font-semibold">Required Minimum Payment</TableHead>
+                        <TableHead className="text-right font-semibold">Beg Bal</TableHead>
+                        <TableHead className="text-right font-semibold">Tot Paid</TableHead>
                         <TableHead className="text-right font-semibold">Principal</TableHead>
                         <TableHead className="text-right font-semibold">Interest</TableHead>
                         <TableHead className="text-right font-semibold">Remaining Balance</TableHead>
@@ -489,7 +673,7 @@ export default function Component() {
                         <TableRow key={item.month} className={index % 2 === 0 ? 'bg-muted/20' : ''}>
                           <TableCell className="text-left font-medium">{item.month}</TableCell>
                           <TableCell className="text-right">{currencyFormatter.format(item.startingBalance)}</TableCell>
-                          <TableCell className="text-right">{currencyFormatter.format(item.requiredMinimumPayment)}</TableCell>
+                          <TableCell className="text-right">{currencyFormatter.format(item.totPaid)}</TableCell>
                           <TableCell className="text-right">{currencyFormatter.format(item.principal)}</TableCell>
                           <TableCell className="text-right">{currencyFormatter.format(item.interest)}</TableCell>
                           <TableCell className="text-right">{currencyFormatter.format(item.balance)}</TableCell>

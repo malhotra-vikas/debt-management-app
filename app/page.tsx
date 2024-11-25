@@ -23,7 +23,7 @@ export default function Home() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Credit Card Debt Calculator</CardTitle>
+              <CardTitle>Credit Card Payoff Calculator</CardTitle>
               <CardDescription>Calculate your credit card debt repayment plan</CardDescription>
             </CardHeader>
             <CardContent>
