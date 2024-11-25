@@ -37,6 +37,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink } from '@react-pdf/renderer'
+import { pdf } from '@react-pdf/renderer'
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -173,99 +174,114 @@ const styles = StyleSheet.create({
   },
 })
 
-const PDFReport = ({ summary, paymentSchedule }: { summary: Summary, paymentSchedule: PaymentScheduleItem[] }) => (
-  <Document>
-    <Page size="A4" style={styles.page}>
-      <View style={styles.section}>
-        <Text style={styles.title}>Credit Card Debt Repayment Report</Text>
-        <Text style={styles.subtitle}>Summary</Text>
-        <Text style={styles.text}>Total Paid: {currencyFormatter.format(summary.totalInterestPaid + summary.totalPrincipalPaid)}</Text>
-        <Text style={styles.text}>Total Interest Paid: {currencyFormatter.format(summary.totalInterestPaid)}</Text>
-        <Text style={styles.text}>Total Principal Paid: {currencyFormatter.format(summary.totalPrincipalPaid)}</Text>
-        <Text style={styles.text}>Time to Pay Off: {summary.yearsToPayoff.toFixed(1)} years ({summary.monthsToPayoff} months)</Text>
-        <Text style={styles.text}>Debt Free Date: {calculateDebtFreeDate(summary.monthsToPayoff)}</Text>
-      </View>
-      <View style={styles.section}>
-        <Text style={styles.subtitle}>Repayment Dashboard</Text>
-        <View style={styles.dashboardItem}>
-          <Text style={styles.dashboardLabel}>Total Paid</Text>
-          <Text style={styles.dashboardValue}>{currencyFormatter.format(summary.totalInterestPaid + summary.totalPrincipalPaid)}</Text>
-          <Text style={styles.dashboardSubtext}>Principal + Interest</Text>
-        </View>
-        <View style={styles.dashboardItem}>
-          <Text style={styles.dashboardLabel}>Total Interest Paid</Text>
-          <Text style={styles.dashboardValue}>{currencyFormatter.format(summary.totalInterestPaid)}</Text>
-          <Text style={styles.dashboardSubtext}>{((summary.totalInterestPaid / summary.totalPrincipalPaid) * 100).toFixed(1)}% of principal</Text>
-        </View>
-        <View style={styles.dashboardItem}>
-          <Text style={styles.dashboardLabel}>Time to Pay Off</Text>
-          <Text style={styles.dashboardValue}>{summary.yearsToPayoff.toFixed(1)} years</Text>
-          <Text style={styles.dashboardSubtext}>{summary.monthsToPayoff} months</Text>
-        </View>
-        <View style={styles.dashboardItem}>
-          <Text style={styles.dashboardLabel}>Debt Free Date</Text>
-          <Text style={styles.dashboardValue}>{calculateDebtFreeDate(summary.monthsToPayoff)}</Text>
-          <Text style={styles.dashboardSubtext}>Estimated payoff date</Text>
-        </View>
-      </View>
-      <View style={styles.section}>
-        <Text style={styles.subtitle}>Payment Schedule</Text>
-        <View style={styles.table}>
-          <View style={styles.tableRow}>
-            <View style={styles.tableCol}><Text style={styles.tableCell}>Month</Text></View>
-            <View style={styles.tableCol}><Text style={styles.tableCell}>Starting Balance</Text></View>
-            <View style={styles.tableCol}><Text style={styles.tableCell}>Required Minimum Payment</Text></View>
-            <View style={styles.tableCol}><Text style={styles.tableCell}>Principal</Text></View>
-            <View style={styles.tableCol}><Text style={styles.tableCell}>Interest</Text></View>
-            <View style={styles.tableCol}><Text style={styles.tableCell}>Remaining Balance</Text></View>
+const PDFReport = ({ summary, paymentSchedule }: { summary: Summary, paymentSchedule: PaymentScheduleItem[] }) => {
+  try {
+    return (
+      <Document>
+        <Page size="A4" style={styles.page}>
+          <View style={styles.section}>
+            <Text style={styles.title}>Credit Card Debt Repayment Report</Text>
+            <Text style={styles.subtitle}>Summary</Text>
+            <Text style={styles.text}>Total Paid: {currencyFormatter.format(summary.totalInterestPaid + summary.totalPrincipalPaid)}</Text>
+            <Text style={styles.text}>Total Interest Paid: {currencyFormatter.format(summary.totalInterestPaid)}</Text>
+            <Text style={styles.text}>Total Principal Paid: {currencyFormatter.format(summary.totalPrincipalPaid)}</Text>
+            <Text style={styles.text}>Time to Pay Off: {summary.yearsToPayoff.toFixed(1)} years ({summary.monthsToPayoff} months)</Text>
+            <Text style={styles.text}>Debt Free Date: {calculateDebtFreeDate(summary.monthsToPayoff)}</Text>
           </View>
-          {paymentSchedule.slice(0, 12).map((item) => (
-            <View style={styles.tableRow} key={item.month}>
-              <View style={styles.tableCol}><Text style={styles.tableCell}>{item.month}</Text></View>
-              <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.startingBalance)}</Text></View>
-              <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.requiredMinimumPayment)}</Text></View>
-              <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.principal)}</Text></View>
-              <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.interest)}</Text></View>
-              <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.balance)}</Text></View>
+          <View style={styles.section}>
+            <Text style={styles.subtitle}>Repayment Dashboard</Text>
+            <View style={styles.dashboardItem}>
+              <Text style={styles.dashboardLabel}>Total Paid</Text>
+              <Text style={styles.dashboardValue}>{currencyFormatter.format(summary.totalInterestPaid + summary.totalPrincipalPaid)}</Text>
+              <Text style={styles.dashboardSubtext}>Principal + Interest</Text>
             </View>
-          ))}
-        </View>
-      </View>
-      <View style={styles.section}>
-        <Text style={styles.subtitle}>10 Tips to Stay Debt-Free and Become Debt-Free Faster</Text>
-        <Text style={styles.tipTitle}>1. Create and Stick to a Budget</Text>
-        <Text style={styles.tipText}>Track your income and expenses, and allocate your money wisely to avoid overspending.</Text>
-        
-        <Text style={styles.tipTitle}>2. Build an Emergency Fund</Text>
-        <Text style={styles.tipText}>Save 3-6 months of living expenses to avoid relying on credit cards for unexpected costs.</Text>
-        
-        <Text style={styles.tipTitle}>3. Pay More Than the Minimum</Text>
-        <Text style={styles.tipText}>Always pay more than the minimum payment on your credit cards to reduce interest and pay off debt faster.</Text>
-        
-        <Text style={styles.tipTitle}>4. Use the Debt Avalanche Method</Text>
-        <Text style={styles.tipText}>Focus on paying off the debt with the highest interest rate first while making minimum payments on others.</Text>
-        
-        <Text style={styles.tipTitle}>5. Consider Balance Transfer Options</Text>
-        <Text style={styles.tipText}>Transfer high-interest debt to a card with a 0% introductory APR to save on interest charges.</Text>
-        
-        <Text style={styles.tipTitle}>6. Increase Your Income</Text>
-        <Text style={styles.tipText}>Look for ways to earn extra money through side hustles or asking for a raise at work.</Text>
-        
-        <Text style={styles.tipTitle}>7. Cut Unnecessary Expenses</Text>
-        <Text style={styles.tipText}>Identify and eliminate non-essential spending to free up more money for debt repayment.</Text>
-        
-        <Text style={styles.tipTitle}>8. Avoid New Debt</Text>
-        <Text style={styles.tipText}>While paying off existing debt, avoid taking on new debt to prevent further financial strain.</Text>
-        
-        <Text style={styles.tipTitle}>9. Negotiate Lower Interest Rates</Text>
-        <Text style={styles.tipText}>Contact your credit card companies and ask for lower interest rates to reduce your overall debt burden.</Text>
-        
-        <Text style={styles.tipTitle}>10. Educate Yourself on Personal Finance</Text>
-        <Text style={styles.tipText}>Continuously learn about money management to make informed financial decisions and avoid future debt.</Text>
-      </View>
-    </Page>
-  </Document>
-)
+            <View style={styles.dashboardItem}>
+              <Text style={styles.dashboardLabel}>Total Interest Paid</Text>
+              <Text style={styles.dashboardValue}>{currencyFormatter.format(summary.totalInterestPaid)}</Text>
+              <Text style={styles.dashboardSubtext}>{((summary.totalInterestPaid / summary.totalPrincipalPaid) * 100).toFixed(1)}% of principal</Text>
+            </View>
+            <View style={styles.dashboardItem}>
+              <Text style={styles.dashboardLabel}>Time to Pay Off</Text>
+              <Text style={styles.dashboardValue}>{summary.yearsToPayoff.toFixed(1)} years</Text>
+              <Text style={styles.dashboardSubtext}>{summary.monthsToPayoff} months</Text>
+            </View>
+            <View style={styles.dashboardItem}>
+              <Text style={styles.dashboardLabel}>Debt Free Date</Text>
+              <Text style={styles.dashboardValue}>{calculateDebtFreeDate(summary.monthsToPayoff)}</Text>
+              <Text style={styles.dashboardSubtext}>Estimated payoff date</Text>
+            </View>
+          </View>
+          <View style={styles.section}>
+            <Text style={styles.subtitle}>Payment Schedule</Text>
+            <View style={styles.table}>
+              <View style={styles.tableRow}>
+                <View style={styles.tableCol}><Text style={styles.tableCell}>Month</Text></View>
+                <View style={styles.tableCol}><Text style={styles.tableCell}>Starting Balance</Text></View>
+                <View style={styles.tableCol}><Text style={styles.tableCell}>Required Minimum Payment</Text></View>
+                <View style={styles.tableCol}><Text style={styles.tableCell}>Principal</Text></View>
+                <View style={styles.tableCol}><Text style={styles.tableCell}>Interest</Text></View>
+                <View style={styles.tableCol}><Text style={styles.tableCell}>Remaining Balance</Text></View>
+              </View>
+              {paymentSchedule.slice(0, 12).map((item) => (
+                <View style={styles.tableRow} key={item.month}>
+                  <View style={styles.tableCol}><Text style={styles.tableCell}>{item.month}</Text></View>
+                  <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.startingBalance)}</Text></View>
+                  <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.requiredMinimumPayment)}</Text></View>
+                  <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.principal)}</Text></View>
+                  <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.interest)}</Text></View>
+                  <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.balance)}</Text></View>
+                </View>
+              ))}
+            </View>
+          </View>
+          <View style={styles.section}>
+            <Text style={styles.subtitle}>10 Tips to Stay Debt-Free and Become Debt-Free Faster</Text>
+            <Text style={styles.tipTitle}>1. Create and Stick to a Budget</Text>
+            <Text style={styles.tipText}>Track your income and expenses, and allocate your money wisely to avoid overspending.</Text>
+
+            <Text style={styles.tipTitle}>2. Build an Emergency Fund</Text>
+            <Text style={styles.tipText}>Save 3-6 months of living expenses to avoid relying on credit cards for unexpected costs.</Text>
+
+            <Text style={styles.tipTitle}>3. Pay More Than the Minimum</Text>
+            <Text style={styles.tipText}>Always pay more than the minimum payment on your credit cards to reduce interest and pay off debt faster.</Text>
+
+            <Text style={styles.tipTitle}>4. Use the Debt Avalanche Method</Text>
+            <Text style={styles.tipText}>Focus on paying off the debt with the highest interest rate first while making minimum payments on others.</Text>
+
+            <Text style={styles.tipTitle}>5. Consider Balance Transfer Options</Text>
+            <Text style={styles.tipText}>Transfer high-interest debt to a card with a 0% introductory APR to save on interest charges.</Text>
+
+            <Text style={styles.tipTitle}>6. Increase Your Income</Text>
+            <Text style={styles.tipText}>Look for ways to earn extra money through side hustles or asking for a raise at work.</Text>
+
+            <Text style={styles.tipTitle}>7. Cut Unnecessary Expenses</Text>
+            <Text style={styles.tipText}>Identify and eliminate non-essential spending to free up more money for debt repayment.</Text>
+
+            <Text style={styles.tipTitle}>8. Avoid New Debt</Text>
+            <Text style={styles.tipText}>While paying off existing debt, avoid taking on new debt to prevent further financial strain.</Text>
+
+            <Text style={styles.tipTitle}>9. Negotiate Lower Interest Rates</Text>
+            <Text style={styles.tipText}>Contact your credit card companies and ask for lower interest rates to reduce your overall debt burden.</Text>
+
+            <Text style={styles.tipTitle}>10. Educate Yourself on Personal Finance</Text>
+            <Text style={styles.tipText}>Continuously learn about money management to make informed financial decisions and avoid future debt.</Text>
+          </View>
+        </Page>
+      </Document>
+    );
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    return (
+      <Document>
+        <Page size="A4" style={styles.page}>
+          <View style={styles.section}>
+            <Text>An error occurred while generating the PDF. Please try again.</Text>
+          </View>
+        </Page>
+      </Document>
+    );
+  }
+};
 
 export default function Component() {
   const [paymentSchedule, setPaymentSchedule] = useState<PaymentScheduleItem[]>([])
@@ -273,6 +289,8 @@ export default function Component() {
   const [showChart, setShowChart] = useState(false)
   const [popoverOpen, setPopoverOpen] = useState(false)
   const [email, setEmail] = useState('')
+  // Remove this line
+  // const [isPdfGenerating, setIsPdfGenerating] = useState(false)
   const { toast } = useToast()
 
   const form = useForm<FormValues>({
@@ -595,21 +613,31 @@ export default function Component() {
                   Email my report
                   <Send className="inline-block ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Button>
-                <PDFDownloadLink
-                  document={<PDFReport summary={summary} paymentSchedule={paymentSchedule} />}
-                  fileName="credit-card-debt-report.pdf"
+                {/* PDF download button hidden for now
+                <Button 
+                  variant="outline" 
+                  className="group text-purple-600 hover:text-purple-700 hover:bg-purple-50 border-purple-200 transition-colors"
+                  onClick={() => {
+                    setIsPdfGenerating(true);
+                    setTimeout(() => {
+                      const pdfBlob = pdf(<PDFReport summary={summary} paymentSchedule={paymentSchedule} />).toBlob();
+                      pdfBlob.then((blob) => {
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = 'credit-card-debt-report.pdf';
+                        link.click();
+                        URL.revokeObjectURL(url);
+                        setIsPdfGenerating(false);
+                      });
+                    }, 100);
+                  }}
+                  disabled={isPdfGenerating}
                 >
-                  {({ blob, url, loading, error }) => (
-                    <Button 
-                      variant="outline" 
-                      className="group text-purple-600 hover:text-purple-700 hover:bg-purple-50 border-purple-200 transition-colors"
-                      disabled={loading}
-                    >
-                      {loading ? 'Loading document...' : 'Download PDF Report'}
-                      <FileDown className="inline-block ml-1 h-4 w-4 transition-transform group-hover:translate-y-1" />
-                    </Button>
-                  )}
-                </PDFDownloadLink>
+                  {isPdfGenerating ? 'Generating PDF...' : 'Download PDF Report'}
+                  <FileDown className="inline-block ml-1 h-4 w-4 transition-transform group-hover:translate-y-1" />
+                </Button>
+                */}
               </div>
             </CardContent>
           </Card>
