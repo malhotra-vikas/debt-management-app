@@ -366,6 +366,7 @@ export default function Component() {
                             const value = parseFloat(e.target.value);
                             if (!isNaN(value)) {
                               form.setValue('additionalPayment', value);
+                              form.trigger('additionalPayment');
                             }
                           }}
                         />
@@ -376,10 +377,12 @@ export default function Component() {
                           Add
                         </Button>
                       </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                        With an extra ${form.getValues('additionalPayment')}/month, you could be debt-free by <span className="font-bold text-green-600 dark:text-green-400">{calculateDebtFreeDate(summary.monthsToPayoff)}</span>, 
-                        saving <span className="font-bold text-green-600 dark:text-green-400">{currencyFormatter.format(summary.totalInterestPaid)}</span> in interest!
-                      </p>
+                      {form.getValues('additionalPayment') > 0 && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                          With an extra ${form.getValues('additionalPayment')}/month, you could be debt-free by <span className="font-bold text-green-600 dark:text-green-400">{calculateDebtFreeDate(summary.monthsToPayoff)}</span>, 
+                          saving <span className="font-bold text-green-600 dark:text-green-400">{currencyFormatter.format(summary.totalInterestPaid)}</span> in interest!
+                        </p>
+                      )}
                       <Separator className="my-4" />
                       <div className="mt-4">
                         <h4 className="font-semibold mb-2 text-sm text-gray-700 dark:text-gray-300">Email me Best Practices and my report</h4>
