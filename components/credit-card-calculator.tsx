@@ -24,7 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { ArrowDownIcon, ArrowUpIcon, CalendarIcon, DollarSignIcon, CreditCard, PercentIcon, ArrowRightIcon, Info } from 'lucide-react'
+import { ArrowDownIcon, ArrowUpIcon, CalendarIcon, DollarSignIcon, CreditCard, PercentIcon, ArrowRightIcon, Info, Send } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { useToast } from "@/components/ui/use-toast"
 import { Switch } from "@/components/ui/switch"
@@ -96,7 +96,7 @@ function InfoTooltip({ content }: { content: string }) {
   )
 }
 
-export default function CreditCardCalculator() {
+export default function Component() {
   const [paymentSchedule, setPaymentSchedule] = useState<PaymentScheduleItem[]>([])
   const [summary, setSummary] = useState<Summary | null>(null)
   const [showChart, setShowChart] = useState(false)
@@ -297,7 +297,7 @@ export default function CreditCardCalculator() {
                 <div className="flex flex-col space-y-1.5 p-6 bg-primary/10 rounded-lg">
                   <span className="text-sm font-medium text-muted-foreground flex items-center">
                     <DollarSignIcon className="mr-2 h-4 w-4" />
-                    Total Repayment
+                    Total Paid
                   </span>
                   <span className="text-2xl font-bold">{currencyFormatter.format(summary.totalInterestPaid + summary.totalPrincipalPaid)}</span>
                   <span className="text-xs text-muted-foreground">Principal + Interest</span>
@@ -305,7 +305,7 @@ export default function CreditCardCalculator() {
                 <div className="flex flex-col space-y-1.5 p-6 bg-destructive/10 rounded-lg">
                   <span className="text-sm font-medium text-muted-foreground flex items-center">
                     <ArrowUpIcon className="mr-2 h-4 w-4" />
-                    Total Interest
+                    Total Interest Paid
                   </span>
                   <span className="text-2xl font-bold">{currencyFormatter.format(summary.totalInterestPaid)}</span>
                   <span className="text-xs text-muted-foreground">{((summary.totalInterestPaid / summary.totalPrincipalPaid) * 100).toFixed(1)}% of principal</span>
@@ -338,15 +338,18 @@ export default function CreditCardCalculator() {
                       <ArrowRightIcon className="inline-block ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-80">
-                    <div>
-                      <h3 className="font-semibold mb-2">Add extra monthly payment</h3>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm font-medium">$</span>
+                  <PopoverContent className="w-96 p-0 bg-white dark:bg-gray-800 rounded-lg shadow-xl">
+                    <div className="p-4 bg-green-50 dark:bg-green-900 rounded-t-lg">
+                      <h3 className="font-semibold text-lg mb-2 text-green-800 dark:text-green-100">Accelerate Your Debt Payoff</h3>
+                      <p className="text-sm text-green-700 dark:text-green-200">Add an extra monthly payment to become debt-free faster.</p>
+                    </div>
+                    <div className="p-4">
+                      <div className="flex items-center space-x-2 mb-4">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">$</span>
                         <Input
                           type="number"
                           placeholder="Enter amount"
-                          className="w-32"
+                          className="w-32 border-gray-300 dark:border-gray-600"
                           min="0"
                           step="0.01"
                           onChange={(e) => {
@@ -358,42 +361,41 @@ export default function CreditCardCalculator() {
                         />
                         <Button 
                           onClick={() => setPopoverOpen(false)}
-                          variant="outline"
+                          className="bg-green-600 text-white hover:bg-green-700 transition-colors"
                         >
                           Add
                         </Button>
                       </div>
-                      {form.getValues('additionalPayment') > 0 && (
-                        <p className="text-sm text-muted-foreground mt-2">
-                          With an extra ${form.getValues('additionalPayment')}/month, you could be debt-free by {calculateDebtFreeDate(summary.monthsToPayoff)}, 
-                          saving {currencyFormatter.format(summary.totalInterestPaid)} in interest!
-                        </p>
-                      )}
-                    </div>
-                    <Separator className="my-4" />
-                    <div className="mt-4">
-                      <h3 className="font-semibold mb-2">Email me my report</h3>
-                      <div className="flex items-center space-x-2">
-                        <Input
-                          type="email"
-                          placeholder="Enter your email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          className="flex-grow"
-                        />
-                        <Button 
-                          onClick={() => {
-                            // TODO: Implement email sending functionality
-                            toast({
-                              title: "Report Sent",
-                              description: `A report has been sent to ${email}`,
-                            });
-                            setPopoverOpen(false);
-                          }}
-                          variant="outline"
-                        >
-                          Send Report
-                        </Button>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                        With an extra ${form.getValues('additionalPayment')}/month, you could be debt-free by <span className="font-bold text-green-600 dark:text-green-400">{calculateDebtFreeDate(summary.monthsToPayoff)}</span>, 
+                        saving <span className="font-bold text-green-600 dark:text-green-400">{currencyFormatter.format(summary.totalInterestPaid)}</span> in interest!
+                      </p>
+                      <Separator className="my-4" />
+                      <div className="mt-4">
+                        <h4 className="font-semibold mb-2 text-sm text-gray-700 dark:text-gray-300">Email me Best Practices and my report</h4>
+                        <div className="flex items-center space-x-2">
+                          <Input
+                            type="email"
+                            placeholder="Enter your email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="flex-grow border-gray-300 dark:border-gray-600"
+                          />
+                          <Button 
+                            onClick={() => {
+                              toast({
+                                title: "Report Sent",
+                                description: `A report has been sent to ${email}`,
+                              });
+                              setPopoverOpen(false);
+                            }}
+                            variant="outline"
+                            size="icon"
+                            className="border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            <Send className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </PopoverContent>
