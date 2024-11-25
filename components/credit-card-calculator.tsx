@@ -671,7 +671,7 @@ export default function Component() {
                     <TableBody>
                       {paymentSchedule.map((item, index) => (
                         <TableRow key={item.month} className={index % 2 === 0 ? 'bg-muted/20' : ''}>
-                          <TableCell className="text-left font-medium">{item.month}</TableCell>
+                          <TableCell className="text-left font-medium">M{item.month}</TableCell>
                           <TableCell className="text-right">{currencyFormatter.format(item.startingBalance)}</TableCell>
                           <TableCell className="text-right">{currencyFormatter.format(item.totPaid)}</TableCell>
                           <TableCell className="text-right">{currencyFormatter.format(item.principal)}</TableCell>
