@@ -289,9 +289,9 @@ export default function Component() {
   const [showChart, setShowChart] = useState(false)
   const [popoverOpen, setPopoverOpen] = useState(false)
   const [email, setEmail] = useState('')
-  // Remove this line
-  // const [isPdfGenerating, setIsPdfGenerating] = useState(false)
   const { toast } = useToast()
+  const [isPdfGenerating, setIsPdfGenerating] = useState(false)
+  const [originalTotalInterestPaid, setOriginalTotalInterestPaid] = useState<number | null>(null)
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -316,6 +316,9 @@ export default function Component() {
     setSummary(calculatedSummary)
 
     if (calculatedSummary) {
+      if (originalTotalInterestPaid === null) {
+        setOriginalTotalInterestPaid(calculatedSummary.totalInterestPaid)
+      }
       toast({
         title: "Time to Pay Off",
         description: `${calculatedSummary.yearsToPayoff.toFixed(1)} years (${calculatedSummary.monthsToPayoff} months)`,
@@ -564,10 +567,10 @@ export default function Component() {
                           Add
                         </Button>
                       </div>
-                      {form.getValues('additionalPayment') > 0 && (
+                      {form.getValues('additionalPayment') > 0 && originalTotalInterestPaid !== null && (
                         <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                           With an extra ${form.getValues('additionalPayment')}/month, you could be debt-free by <span className="font-bold text-green-600 dark:text-green-400">{calculateDebtFreeDate(summary.monthsToPayoff)}</span>, 
-                          saving <span className="font-bold text-green-600 dark:text-green-400">{currencyFormatter.format(summary.totalInterestPaid)}</span> in interest!
+                          saving <span className="font-bold text-green-600 dark:text-green-400">{currencyFormatter.format(originalTotalInterestPaid - summary.totalInterestPaid)}</span> in interest!
                         </p>
                       )}
                       <Separator className="my-4" />
@@ -613,7 +616,6 @@ export default function Component() {
                   Email my report
                   <Send className="inline-block ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Button>
-                {/* PDF download button hidden for now
                 <Button 
                   variant="outline" 
                   className="group text-purple-600 hover:text-purple-700 hover:bg-purple-50 border-purple-200 transition-colors"
@@ -637,7 +639,6 @@ export default function Component() {
                   {isPdfGenerating ? 'Generating PDF...' : 'Download PDF Report'}
                   <FileDown className="inline-block ml-1 h-4 w-4 transition-transform group-hover:translate-y-1" />
                 </Button>
-                */}
               </div>
             </CardContent>
           </Card>
