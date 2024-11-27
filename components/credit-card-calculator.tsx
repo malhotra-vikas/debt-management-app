@@ -39,6 +39,9 @@ import {
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, Font } from '@react-pdf/renderer'
 import { pdf } from '@react-pdf/renderer'
 
+// Import the CSS file
+import '@/styles/credit-card-payoff.css'
+
 // Register a custom font for the PDF
 Font.register({
   family: 'CustomFont',
@@ -47,6 +50,7 @@ Font.register({
     { src: 'https://fonts.gstatic.com/s/roboto/v27/KFOlCnqEu92Fr1MmEU9fBBc4AMP6lQ.woff2', fontWeight: 700 },
   ],
 })
+
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD',
