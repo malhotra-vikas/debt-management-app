@@ -36,9 +36,17 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { Document, Page, Text, View, StyleSheet, PDFDownloadLink } from '@react-pdf/renderer'
+import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, Font } from '@react-pdf/renderer'
 import { pdf } from '@react-pdf/renderer'
 
+// Use a generic sans-serif font
+Font.register({
+  family: 'CustomFont',
+  fonts: [
+    { src: 'https://fonts.gstatic.com/s/roboto/v27/KFOmCnqEu92Fr1Mu4mxKKTU1Kg.woff2', fontWeight: 400 },
+    { src: 'https://fonts.gstatic.com/s/roboto/v27/KFOlCnqEu92Fr1MmEU9fBBc4AMP6lQ.woff2', fontWeight: 700 },
+  ],
+})
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD',
@@ -105,6 +113,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     backgroundColor: '#ffffff',
     padding: 30,
+    fontFamily: 'CustomFont'
   },
   section: {
     margin: 10,
@@ -114,14 +123,17 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     marginBottom: 10,
+    color: '#1f2937',
   },
   subtitle: {
     fontSize: 18,
     marginBottom: 10,
+    color: '#4b5563',
   },
   text: {
     fontSize: 12,
     marginBottom: 5,
+    color: '#4b5563',
   },
   table: {
     display: 'table',
@@ -130,6 +142,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRightWidth: 0,
     borderBottomWidth: 0,
+    borderColor: '#e5e7eb',
   },
   tableRow: {
     margin: 'auto',
@@ -141,36 +154,45 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderLeftWidth: 0,
     borderTopWidth: 0,
+    borderColor: '#e5e7eb',
+  },
+  tableHeader: {
+    backgroundColor: '#f3f4f6',
   },
   tableCell: {
     margin: 'auto',
     marginTop: 5,
+    marginBottom: 5,
     fontSize: 10,
+    color: '#4b5563',
   },
   dashboardItem: {
     marginBottom: 10,
   },
   dashboardLabel: {
     fontSize: 10,
-    color: '#666',
+    color: '#6b7280',
   },
   dashboardValue: {
     fontSize: 14,
     fontWeight: 'bold',
+    color: '#1f2937',
   },
   dashboardSubtext: {
     fontSize: 8,
-    color: '#666',
+    color: '#6b7280',
   },
   tipTitle: {
     fontSize: 14,
     fontWeight: 'bold',
     marginTop: 10,
     marginBottom: 5,
+    color: '#1f2937',
   },
   tipText: {
     fontSize: 10,
     marginBottom: 5,
+    color: '#4b5563',
   },
 })
 
@@ -214,19 +236,19 @@ const PDFReport = ({ summary, paymentSchedule }: { summary: Summary, paymentSche
           <View style={styles.section}>
             <Text style={styles.subtitle}>Payment Schedule</Text>
             <View style={styles.table}>
-              <View style={styles.tableRow}>
+              <View style={[styles.tableRow, styles.tableHeader]}>
                 <View style={styles.tableCol}><Text style={styles.tableCell}>Month</Text></View>
-                <View style={styles.tableCol}><Text style={styles.tableCell}>Starting Balance</Text></View>
-                <View style={styles.tableCol}><Text style={styles.tableCell}>Required Minimum Payment</Text></View>
+                <View style={styles.tableCol}><Text style={styles.tableCell}>Beg Bal</Text></View>
+                <View style={styles.tableCol}><Text style={styles.tableCell}>Tot Paid</Text></View>
                 <View style={styles.tableCol}><Text style={styles.tableCell}>Principal</Text></View>
                 <View style={styles.tableCol}><Text style={styles.tableCell}>Interest</Text></View>
                 <View style={styles.tableCol}><Text style={styles.tableCell}>Remaining Balance</Text></View>
               </View>
-              {paymentSchedule.slice(0, 12).map((item) => (
-                <View style={styles.tableRow} key={item.month}>
-                  <View style={styles.tableCol}><Text style={styles.tableCell}>{item.month}</Text></View>
+              {paymentSchedule.map((item, index) => (
+                <View style={[styles.tableRow, { backgroundColor: index % 2 === 0 ? '#f9fafb' : '#ffffff' }]} key={item.month}>
+                  <View style={styles.tableCol}><Text style={styles.tableCell}>M{item.month}</Text></View>
                   <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.startingBalance)}</Text></View>
-                  <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.requiredMinimumPayment)}</Text></View>
+                  <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.totPaid)}</Text></View>
                   <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.principal)}</Text></View>
                   <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.interest)}</Text></View>
                   <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.balance)}</Text></View>
