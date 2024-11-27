@@ -310,7 +310,7 @@ export default function Component() {
       principal: 1000,
       apr: 18,
       minimumPayment: 25,
-      additionalPayment: 0,
+      additionalPayment: 0, // Keep this line
       requiredPrincipalPercentage: 1.5,
     },
   })
@@ -440,7 +440,7 @@ export default function Component() {
                   control={form.control}
                   name="additionalPayment"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="hidden">
                       <FormLabel className="flex items-center group">
                         Additional Monthly Payment ($)
                         <InfoTooltip content="Enter an additional amount you could pay each month toward your principal balance." />
@@ -448,7 +448,7 @@ export default function Component() {
                       <FormControl>
                         <Input
                           type="number"
-                          step="0.01"
+                          step="1"
                           {...field}
                           onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                         />
