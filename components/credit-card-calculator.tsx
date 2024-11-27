@@ -440,7 +440,7 @@ export default function Component() {
                   control={form.control}
                   name="additionalPayment"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem hidden>
                       <FormLabel className="flex items-center group">
                         Additional Monthly Payment ($)
                         <InfoTooltip content="Enter an additional amount you could pay each month toward your principal balance." />
@@ -478,7 +478,7 @@ export default function Component() {
                           <InfoTooltip content="Defined in the card agreement, this is lowest minimum payment the issuer accepts for cards with a balance. If your balance falls below this number the balance becomes the minimum payment. By default we have this set at $25" />
                         </FormLabel>
                         <FormControl>
-                          <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                          <Input type="number" step="1" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -494,7 +494,7 @@ export default function Component() {
                           <InfoTooltip content="Defined in the card agreement, this is the percent of your outstanding balance the issuer requires you to pay each month. It is usually between 1% and 3% By default we have this set at 1.5%" />
                         </FormLabel>
                         <FormControl>
-                          <Input type="number" step="0.1" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                          <Input type="number" step="10" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
