@@ -648,6 +648,11 @@ export default function Component() {
                   />
                 </div>
               </CardTitle>
+              <p className="text-sm text-muted-foreground mt-2">
+                {form.getValues('additionalPayment') > 0
+                  ? `Assuming Minimum Payment Plus ${currencyFormatter.format(form.getValues('additionalPayment'))} Are Made Each Month`
+                  : 'Assuming Only Minimum Payments Are Made Each Month'}
+              </p>
             </CardHeader>
             <CardContent className="p-0">
               {showChart ? (
