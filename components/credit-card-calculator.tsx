@@ -39,7 +39,7 @@ import {
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, Font } from '@react-pdf/renderer'
 import { pdf } from '@react-pdf/renderer'
 
-// Use a generic sans-serif font
+// Register a custom font for the PDF
 Font.register({
   family: 'CustomFont',
   fonts: [
@@ -113,7 +113,8 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     backgroundColor: '#ffffff',
     padding: 30,
-    fontFamily: 'CustomFont'
+    fontFamily: 'CustomFont',
+    color: '#002A65'
   },
   section: {
     margin: 10,
@@ -123,17 +124,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     marginBottom: 10,
-    color: '#1f2937',
   },
   subtitle: {
     fontSize: 18,
     marginBottom: 10,
-    color: '#4b5563',
   },
   text: {
     fontSize: 12,
     marginBottom: 5,
-    color: '#4b5563',
   },
   table: {
     display: 'table',
@@ -142,7 +140,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRightWidth: 0,
     borderBottomWidth: 0,
-    borderColor: '#e5e7eb',
+    borderColor: '#72A967',
   },
   tableRow: {
     margin: 'auto',
@@ -154,7 +152,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderLeftWidth: 0,
     borderTopWidth: 0,
-    borderColor: '#e5e7eb',
+    borderColor: '#72A967',
   },
   tableHeader: {
     backgroundColor: '#f3f4f6',
@@ -164,35 +162,29 @@ const styles = StyleSheet.create({
     marginTop: 5,
     marginBottom: 5,
     fontSize: 10,
-    color: '#4b5563',
   },
   dashboardItem: {
     marginBottom: 10,
   },
   dashboardLabel: {
     fontSize: 10,
-    color: '#6b7280',
   },
   dashboardValue: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#1f2937',
   },
   dashboardSubtext: {
     fontSize: 8,
-    color: '#6b7280',
   },
   tipTitle: {
     fontSize: 14,
     fontWeight: 'bold',
     marginTop: 10,
     marginBottom: 5,
-    color: '#1f2937',
   },
   tipText: {
     fontSize: 10,
     marginBottom: 5,
-    color: '#4b5563',
   },
 })
 
@@ -320,7 +312,7 @@ export default function Component() {
     defaultValues: {
       principal: 1000,
       apr: 18,
-      minimumPayment: 15,
+      minimumPayment: 25,
       additionalPayment: 0,
       requiredPrincipalPercentage: 1.5,
     },
@@ -477,7 +469,7 @@ export default function Component() {
                     <FormItem>
                       <FormLabel className="flex items-center group">
                       Alternative Minimum Payment ($)
-                        <InfoTooltip content="Defined in the card agreement, this is lowest minimum payment the issuer accepts for cards with a balance. If your balance falls below this number the balance becomes the minimum payment. By default we have this set at $15" />
+                        <InfoTooltip content="Defined in the card agreement, this is lowest minimum payment the issuer accepts for cards with a balance. If your balance falls below this number the balance becomes the minimum payment. By default we have this set at $25" />
                       </FormLabel>
                       <FormControl>
                         <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
@@ -512,7 +504,7 @@ export default function Component() {
         <div className="space-y-4">
           <Card className="w-full max-w-4xl mx-auto">
             <CardHeader className="pb-2">
-              <CardTitle className="text-xl font-bold">Repayment Dashboard</CardTitle>
+              <CardTitle className="text-xl font-bold">Payoff Details</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -556,14 +548,14 @@ export default function Component() {
                       variant="outline" 
                       className="group text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200 transition-colors"
                     >
-                      Get Debt Free Faster
+                      Reduce Payoff Time
                       <ArrowRightIcon className="inline-block ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-96 p-0 bg-white dark:bg-gray-800 rounded-lg shadow-xl">
                     <div className="p-4 bg-green-50 dark:bg-green-900 rounded-t-lg">
-                      <h3 className="font-semibold text-lg mb-2 text-green-800 dark:text-green-100">Accelerate Your Debt Payoff</h3>
-                      <p className="text-sm text-green-700 dark:text-green-200">Add an extra monthly payment to become debt-free faster.</p>
+                      <h3 className="font-semibold text-lg mb-2 text-green-800 dark:text-green-100">Reduce Time to Payoff</h3>
+                      <p className="text-sm text-green-700 dark:text-green-200">Enter an amount you can pay monthly in addition to the minimum amount due</p>
                     </div>
                     <div className="p-4">
                       <div className="flex items-center space-x-2 mb-4">
@@ -586,7 +578,7 @@ export default function Component() {
                           onClick={() => setPopoverOpen(false)}
                           className="bg-green-600 text-white hover:bg-green-700 transition-colors"
                         >
-                          Add
+                          Calculate Results
                         </Button>
                       </div>
                       {form.getValues('additionalPayment') > 0 && originalTotalInterestPaid !== null && (
@@ -596,32 +588,6 @@ export default function Component() {
                         </p>
                       )}
                       <Separator className="my-4" />
-                      <div className="mt-4">
-                        <h4 className="font-semibold mb-2 text-sm text-gray-700 dark:text-gray-300">Email me Best Practices and my report</h4>
-                        <div className="flex items-center space-x-2">
-                          <Input
-                            type="email"
-                            placeholder="Enter your email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="flex-grow border-gray-300 dark:border-gray-600"
-                          />
-                          <Button 
-                            onClick={() => {
-                              toast({
-                                title: "Report Sent",
-                                description: `A report has been sent to ${email}`,
-                              });
-                              setPopoverOpen(false);
-                            }}
-                            variant="outline"
-                            size="icon"
-                            className="border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
-                          >
-                            <Send className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                          </Button>
-                        </div>
-                      </div>
                     </div>
                   </PopoverContent>
                 </Popover>
