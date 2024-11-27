@@ -1,239 +1,87 @@
-:root {
-    --color-primary: #f6833b;
-    --color-primary-hover: #2563eb;
-    --color-destructive: #ef4444;
-    --color-muted: #6b7280;
-    --color-background: #ffffff;
-    --color-foreground: #000000;
-    --color-border: #e5e7eb;
-    --color-card-background: #f3f4f6;
-    --color-success: #10b981;
-    --color-warning: #f59e0b;
-    --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-}
-
-.dark {
-    --color-primary: #60a5fa;
-    --color-primary-hover: #3b82f6;
-    --color-destructive: #f87171;
-    --color-muted: #9ca3af;
-    --color-background: #1f2937;
-    --color-foreground: #ffffff;
-    --color-border: #374151;
-    --color-card-background: #111827;
-    --color-success: #34d399;
-    --color-warning: #fbbf24;
-}
-
-body {
-    font-family: var(--font-sans);
-    background-color: var(--color-background);
-    color: #002A65;
-}
-
-.container {
-    width: 100%;
-    max-width: 64rem;
-    margin-left: auto;
-    margin-right: auto;
-    padding: 1rem;
-}
-
-.card {
-    background-color: var(--color-card-background);
-    border-radius: 0.5rem;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-}
-
-.card-header {
-    padding: 1.5rem;
-    border-bottom: 1px solid var(--color-border);
-}
-
-.card-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-}
-
-.card-content {
-    padding: 1.5rem;
-}
-
-.form-group {
-    margin-bottom: 1rem;
-}
-
-.form-label {
-    display: block;
-    font-size: 0.875rem;
-    font-weight: 500;
-    margin-bottom: 0.5rem;
-}
-
-.form-input {
-    width: 100%;
-    padding: 0.5rem;
-    font-size: 1rem;
-    line-height: 1.5;
-    border: 1px solid var(--color-border);
-    border-radius: 0.25rem;
-    background-color: var(--color-background);
-    color: var(--color-foreground);
-}
-
-.btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.5rem 1rem;
-    font-size: 1rem;
-    font-weight: 500;
-    line-height: 1.5;
-    text-align: center;
-    white-space: nowrap;
-    vertical-align: middle;
-    cursor: pointer;
-    user-select: none;
-    border: 1px solid transparent;
-    border-radius: 0.25rem;
-    transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-}
-
-.btn-primary {
-    color: #ffffff;
-    background-color: var(--color-primary);
-    border-color: var(--color-primary);
-}
-
-.btn-primary:hover {
-    background-color: var(--color-primary-hover);
-    border-color: var(--color-primary-hover);
-}
-
-.btn-outline {
-    color: var(--color-primary);
-    background-color: transparent;
-    border-color: var(--color-primary);
-}
-
-.btn-outline:hover {
-    color: #ffffff;
-    background-color: var(--color-primary);
-    border-color: var(--color-primary);
-}
-
-.text-muted {
-    color: var(--color-muted);
-}
-
-.text-success {
-    color: var(--color-success);
-}
-
-.text-warning {
-    color: var(--color-warning);
-}
-
-.text-destructive {
-    color: var(--color-destructive);
-}
-
-.bg-success {
-    background-color: var(--color-success);
-}
-
-.bg-warning {
-    background-color: var(--color-warning);
-}
-
-.bg-destructive {
-    background-color: var(--color-destructive);
-}
-
-.grid {
-    display: grid;
-}
-
-.grid-cols-1 {
-    grid-template-columns: repeat(1, minmax(0, 1fr));
-}
-
-.grid-cols-2 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.grid-cols-3 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.grid-cols-4 {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.gap-4 {
-    gap: 1rem;
-}
-
-.gap-6 {
-    gap: 1.5rem;
-}
-
-.flex {
-    display: flex;
-}
-
-.flex-col {
-    flex-direction: column;
-}
-
-.items-center {
-    align-items: center;
-}
-
-.justify-center {
-    justify-content: center;
-}
-
-.space-x-2>*+* {
-    margin-left: 0.5rem;
-}
-
-.space-y-2>*+* {
-    margin-top: 0.5rem;
-}
-
-.rounded-lg {
-    border-radius: 0.5rem;
-}
-
-.shadow-lg {
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-}
-
-.overflow-hidden {
-    overflow: hidden;
-}
-
-.transition-colors {
-    transition-property: background-color, border-color, color, fill, stroke;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 150ms;
-}
-
-@media (min-width: 640px) {
-    .sm\:grid-cols-2 {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-
-@media (min-width: 768px) {
-    .md\:grid-cols-3 {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-}
-
-@media (min-width: 1024px) {
-    .lg\:grid-cols-4 {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-}
+.card-calculator-container {
+    @apply container mx-auto p-4 space-y-8;
+  }
+  
+  .card-calculator-card {
+    @apply w-full max-w-4xl mx-auto;
+  }
+  
+  .card-calculator-title {
+    @apply text-2xl font-bold flex items-center;
+  }
+  
+  .card-calculator-description {
+    @apply text-sm text-muted-foreground;
+  }
+  
+  .card-calculator-form {
+    @apply space-y-6;
+  }
+  
+  .card-calculator-grid {
+    @apply grid grid-cols-3 gap-4;
+  }
+  
+  .card-calculator-advanced-options {
+    @apply flex items-center space-x-2;
+  }
+  
+  .card-calculator-payoff-details {
+    @apply space-y-4;
+  }
+  
+  .card-calculator-summary-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6;
+  }
+  
+  .card-calculator-summary-item {
+    @apply flex flex-col space-y-1.5 p-6 rounded-lg;
+  }
+  
+  .card-calculator-summary-label {
+    @apply text-sm font-medium text-muted-foreground flex items-center;
+  }
+  
+  .card-calculator-summary-value {
+    @apply text-2xl font-bold;
+  }
+  
+  .card-calculator-summary-subtext {
+    @apply text-xs text-muted-foreground;
+  }
+  
+  .card-calculator-actions {
+    @apply mt-4 text-center flex justify-center space-x-4;
+  }
+  
+  .card-calculator-chart {
+    @apply h-[400px] w-full;
+  }
+  
+  .card-calculator-table-container {
+    @apply overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700;
+  }
+  
+  .card-calculator-table-wrapper {
+    @apply max-h-[400px] overflow-y-auto;
+  }
+  
+  .card-calculator-table {
+    @apply w-full border-collapse bg-white dark:bg-gray-800;
+  }
+  
+  .card-calculator-table-header {
+    @apply sticky top-0 z-10 bg-gray-50 dark:bg-gray-700;
+  }
+  
+  .card-calculator-table-header-cell {
+    @apply p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider;
+  }
+  
+  .card-calculator-table-row {
+    @apply hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150;
+  }
+  
+  .card-calculator-table-cell {
+    @apply p-3 text-sm text-gray-500 dark:text-gray-400;
+  }
