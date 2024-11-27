@@ -310,7 +310,7 @@ export default function Component() {
       principal: 1000,
       apr: 18,
       minimumPayment: 25,
-      additionalPayment: 0, // Keep this line
+      additionalPayment: 0,
       requiredPrincipalPercentage: 1.5,
     },
   })
@@ -685,28 +685,28 @@ export default function Component() {
                   </ResponsiveContainer>
                 </div>
               ) : (
-                <div className="overflow-hidden">
+                <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
                   <div className="max-h-[400px] overflow-y-auto">
-                    <table className="w-full border-collapse">
-                      <thead className="sticky top-0 z-10 bg-background">
-                        <tr className="bg-muted/50">
-                          <th className="p-2 text-left font-semibold">Month</th>
-                          <th className="p-2 text-right font-semibold">Beg Bal</th>
-                          <th className="p-2 text-right font-semibold">Tot Paid</th>
-                          <th className="p-2 text-right font-semibold">Principal</th>
-                          <th className="p-2 text-right font-semibold">Interest</th>
-                          <th className="p-2 text-right font-semibold">Remaining Balance</th>
+                    <table className="w-full border-collapse bg-white dark:bg-gray-800">
+                      <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                          <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Month</th>
+                          <th className="p-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Beginning Balance</th>
+                          <th className="p-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Total Paid</th>
+                          <th className="p-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Principal</th>
+                          <th className="p-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Interest</th>
+                          <th className="p-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Remaining Balance</th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                         {paymentSchedule.map((item, index) => (
-                          <tr key={item.month} className={index % 2 === 0 ? 'bg-muted/20' : ''}>
-                            <td className="p-2 text-left font-medium">M{item.month}</td>
-                            <td className="p-2 text-right">{currencyFormatter.format(item.startingBalance)}</td>
-                            <td className="p-2 text-right">{currencyFormatter.format(item.totPaid)}</td>
-                            <td className="p-2 text-right">{currencyFormatter.format(item.principal)}</td>
-                            <td className="p-2 text-right">{currencyFormatter.format(item.interest)}</td>
-                            <td className="p-2 text-right">{currencyFormatter.format(item.balance)}</td>
+                          <tr key={item.month} className={index % 2 === 0 ? 'bg-gray-50 dark:bg-gray-800' : 'bg-white dark:bg-gray-900'}>
+                            <td className="p-3 text-left text-sm font-medium text-gray-900 dark:text-white">M {item.month}</td>
+                            <td className="p-3 text-right text-sm text-gray-500 dark:text-gray-400">{currencyFormatter.format(item.startingBalance)}</td>
+                            <td className="p-3 text-right text-sm text-gray-500 dark:text-gray-400">{currencyFormatter.format(item.totPaid)}</td>
+                            <td className="p-3 text-right text-sm text-gray-500 dark:text-gray-400">{currencyFormatter.format(item.principal)}</td>
+                            <td className="p-3 text-right text-sm text-gray-500 dark:text-gray-400">{currencyFormatter.format(item.interest)}</td>
+                            <td className="p-3 text-right text-sm text-gray-500 dark:text-gray-400">{currencyFormatter.format(item.balance)}</td>
                           </tr>
                         ))}
                       </tbody>
