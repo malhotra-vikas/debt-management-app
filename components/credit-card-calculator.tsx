@@ -40,7 +40,7 @@ import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, Font } from '@
 import { pdf } from '@react-pdf/renderer'
 
 // Import the CSS file
-import '@/styles/credit-card-payoff.css'
+import '@/styles/credit-card-calculator.css'
 
 // Register a custom font for the PDF
 Font.register({
@@ -310,6 +310,7 @@ export default function Component() {
   const { toast } = useToast()
   const [isPdfGenerating, setIsPdfGenerating] = useState(false)
   const [originalTotalInterestPaid, setOriginalTotalInterestPaid] = useState<number | null>(null)
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false)
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -465,40 +466,50 @@ export default function Component() {
                   )}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="minimumPayment"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center group">
-                      Alternative Minimum Payment ($)
-                        <InfoTooltip content="Defined in the card agreement, this is lowest minimum payment the issuer accepts for cards with a balance. If your balance falls below this number the balance becomes the minimum payment. By default we have this set at $25" />
-                      </FormLabel>
-                      <FormControl>
-                        <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="advanced-options"
+                  checked={showAdvancedOptions}
+                  onCheckedChange={setShowAdvancedOptions}
                 />
-                <FormField
-                  control={form.control}
-                  name="requiredPrincipalPercentage"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center group">
-                        Minimum Principal Payment (%)
-                        <InfoTooltip content="Defined in the card agreement, this is the percent of your outstanding balance the issuer requires you to pay each month. It is usually between 1% and 3% By default we have this set at 1.5%" />
-                      </FormLabel>
-                      <FormControl>
-                        <Input type="number" step="0.1" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <Label htmlFor="advanced-options">Advanced Options</Label>
               </div>
+              {showAdvancedOptions && (
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="minimumPayment"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center group">
+                        Alternative Minimum Payment ($)
+                          <InfoTooltip content="Defined in the card agreement, this is lowest minimum payment the issuer accepts for cards with a balance. If your balance falls below this number the balance becomes the minimum payment. By default we have this set at $25" />
+                        </FormLabel>
+                        <FormControl>
+                          <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="requiredPrincipalPercentage"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center group">
+                          Minimum Principal Payment (%)
+                          <InfoTooltip content="Defined in the card agreement, this is the percent of your outstanding balance the issuer requires you to pay each month. It is usually between 1% and 3% By default we have this set at 1.5%" />
+                        </FormLabel>
+                        <FormControl>
+                          <Input type="number" step="0.1" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
             </form>
           </Form>
         </CardContent>
