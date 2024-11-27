@@ -15,14 +15,6 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import { ArrowDownIcon, ArrowUpIcon, CalendarIcon, DollarSignIcon, CreditCard, PercentIcon, ArrowRightIcon, Info, Send, FileDown } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { useToast } from "@/components/ui/use-toast"
@@ -693,31 +685,33 @@ export default function Component() {
                   </ResponsiveContainer>
                 </div>
               ) : (
-                <div className="overflow-x-auto max-h-[400px] overflow-y-auto relative">
-                  <Table className="relative">
-                    <TableHeader className="relative bg-background z-10">
-                      <TableRow className="bg-muted/50 sticky top-0">
-                        <TableHead className="text-left font-semibold">Month</TableHead>
-                        <TableHead className="text-right font-semibold">Beg Bal</TableHead>
-                        <TableHead className="text-right font-semibold">Tot Paid</TableHead>
-                        <TableHead className="text-right font-semibold">Principal</TableHead>
-                        <TableHead className="text-right font-semibold">Interest</TableHead>
-                        <TableHead className="text-right font-semibold">Remaining Balance</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {paymentSchedule.map((item, index) => (
-                        <TableRow key={item.month} className={index % 2 === 0 ? 'bg-muted/20' : ''}>
-                          <TableCell className="text-left font-medium">M{item.month}</TableCell>
-                          <TableCell className="text-right">{currencyFormatter.format(item.startingBalance)}</TableCell>
-                          <TableCell className="text-right">{currencyFormatter.format(item.totPaid)}</TableCell>
-                          <TableCell className="text-right">{currencyFormatter.format(item.principal)}</TableCell>
-                          <TableCell className="text-right">{currencyFormatter.format(item.interest)}</TableCell>
-                          <TableCell className="text-right">{currencyFormatter.format(item.balance)}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                <div className="overflow-hidden">
+                  <div className="max-h-[400px] overflow-y-auto">
+                    <table className="w-full border-collapse">
+                      <thead className="sticky top-0 z-10 bg-background">
+                        <tr className="bg-muted/50">
+                          <th className="p-2 text-left font-semibold">Month</th>
+                          <th className="p-2 text-right font-semibold">Beg Bal</th>
+                          <th className="p-2 text-right font-semibold">Tot Paid</th>
+                          <th className="p-2 text-right font-semibold">Principal</th>
+                          <th className="p-2 text-right font-semibold">Interest</th>
+                          <th className="p-2 text-right font-semibold">Remaining Balance</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {paymentSchedule.map((item, index) => (
+                          <tr key={item.month} className={index % 2 === 0 ? 'bg-muted/20' : ''}>
+                            <td className="p-2 text-left font-medium">M{item.month}</td>
+                            <td className="p-2 text-right">{currencyFormatter.format(item.startingBalance)}</td>
+                            <td className="p-2 text-right">{currencyFormatter.format(item.totPaid)}</td>
+                            <td className="p-2 text-right">{currencyFormatter.format(item.principal)}</td>
+                            <td className="p-2 text-right">{currencyFormatter.format(item.interest)}</td>
+                            <td className="p-2 text-right">{currencyFormatter.format(item.balance)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </CardContent>
