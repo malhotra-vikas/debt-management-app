@@ -700,8 +700,12 @@ export default function Component() {
                       </thead>
                       <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                         {paymentSchedule.map((item, index) => (
-                          <tr key={item.month} className={index % 2 === 0 ? 'bg-gray-50 dark:bg-gray-800' : 'bg-white dark:bg-gray-900'}>
-                            <td className="p-3 text-left text-sm font-medium text-gray-900 dark:text-white">M {item.month}</td>
+                          <tr 
+                            key={item.month} 
+                            className={`${index % 2 === 0 ? 'bg-gray-50 dark:bg-gray-800' : 'bg-white dark:bg-gray-900'} hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150`}
+                            title={`Month: ${item.month}, Total Paid: ${currencyFormatter.format(item.totPaid)}, Req Minimum: ${currencyFormatter.format(item.requiredMinimumPayment)}, Add'l Principal: ${currencyFormatter.format(form.getValues('additionalPayment'))}`}
+                          >
+                            <td className="p-3 text-left text-sm font-medium text-gray-900 dark:text-white">Month {item.month}</td>
                             <td className="p-3 text-right text-sm text-gray-500 dark:text-gray-400">{currencyFormatter.format(item.startingBalance)}</td>
                             <td className="p-3 text-right text-sm text-gray-500 dark:text-gray-400">{currencyFormatter.format(item.totPaid)}</td>
                             <td className="p-3 text-right text-sm text-gray-500 dark:text-gray-400">{currencyFormatter.format(item.principal)}</td>
