@@ -28,7 +28,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { Document, Page, Text, View, StyleSheet, Svg, Path, Rect } from '@react-pdf/renderer'
+import { Document, Page, Text, View, StyleSheet, Svg, Path, Rect, Font } from '@react-pdf/renderer'
 import { pdf } from '@react-pdf/renderer'
 
 // Import the CSS file
@@ -124,6 +124,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     color: '#002A65',
     fontWeight: 'bold',
+    textAlign: 'center',
   },
   text: {
     fontSize: 12,
@@ -139,8 +140,13 @@ const styles = StyleSheet.create({
     borderColor: '#72A967',
   },
   tableRow: {
-    margin: 'auto',
     flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+    borderBottomStyle: 'solid',
+    alignItems: 'center',
+    height: 24,
+    fontStyle: 'bold',
   },
   summaryTableCol: {
     width: '20%',
@@ -161,12 +167,21 @@ const styles = StyleSheet.create({
   tableHeader: {
     backgroundColor: '#f3f4f6',
     fontWeight: 'bold',
+    flexDirection: 'row',
   },
   tableCell: {
     margin: 'auto',
+    textAlign: 'left',
     marginTop: 5,
     marginBottom: 5,
     fontSize: 10,
+  },
+  tableCellHeader: {
+    width: '16.66%',
+    textAlign: 'left',
+    fontSize: 10,
+    padding: 4,
+    fontWeight: 'bold',
   },
   scenarioTitle: {
     fontSize: 14,
@@ -174,6 +189,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     color: '#002A65',
     fontWeight: 'bold',
+    flex: 1,
   },
   debtFreeDate: {
     fontWeight: 'bold',
@@ -296,6 +312,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 10,
+  },
+  arrow: {
+    width: 20,
+    height: 20,
+    marginRight: 5,
   },
 })
 
@@ -464,6 +485,17 @@ const PDFReport = ({ summary, paymentSchedule, formValues }: { summary: Summary,
     );
   };
 
+  const TableHeader = () => (
+    <View style={styles.tableHeader} fixed>
+      <Text style={styles.tableCellHeader}>Month</Text>
+      <Text style={styles.tableCellHeader}>Beg Balance</Text>
+      <Text style={styles.tableCellHeader}>Tot Paid</Text>
+      <Text style={styles.tableCellHeader}>Principal</Text>
+      <Text style={styles.tableCellHeader}>Interest</Text>
+      <Text style={styles.tableCellHeader}>Bal Remaining</Text>
+    </View>
+  );
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -520,55 +552,42 @@ const PDFReport = ({ summary, paymentSchedule, formValues }: { summary: Summary,
             const interestSaved = summary.totalInterestPaid - scenarioSummary.totalInterestPaid;
             return (
               <View key={additionalPayment}>
-                <Text style={styles.scenarioTitle}>
-                  With an extra ${additionalPayment}/month, you could be debt-free by {' '}
-                  <Text style={styles.debtFreeDate}>
-                    {scenarioSummary.revisedDebtFreeDate}
-                  </Text>, 
-                  saving {' '}
-                  <Text style={styles.savings}>
-                    {currencyFormatter.format(interestSaved)}
-                  </Text> in interest!
-                </Text>
-                <View style={{ marginTop: 5 }} />                              
-                {renderScenarioCharts(scenarioSummary)}
-                <View style={styles.legend}>
-                  <View style={styles.legendItem}>
-                    <View style={[styles.legendColor, { backgroundColor: '#4CAF50' }]} />
-                    <Text style={styles.legendText}>Principal: {currencyFormatter.format(summary.totalPrincipalPaid)} ({((summary.totalPrincipalPaid / (summary.totalPrincipalPaid + summary.totalInterestPaid)) * 100).toFixed(1)}%)</Text>
-                  </View>
-                  <View style={styles.legendItem}>
-                    <View style={[styles.legendColor, { backgroundColor: '#FF5722' }]} />
-                    <Text style={styles.legendText}>Interest: {currencyFormatter.format(summary.totalInterestPaid)} ({((summary.totalInterestPaid / (summary.totalPrincipalPaid + summary.totalInterestPaid)) * 100).toFixed(1)}%)</Text>
-                  </View>
-                  <View style={styles.legendItem}>
-                    <View style={[styles.legendColor, { backgroundColor: '#3B82F6' }]} />
-                    <Text style={styles.legendText}>Total Paid: {currencyFormatter.format(summary.totalPrincipalPaid + summary.totalInterestPaid)}</Text>
-                  </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Svg style={styles.arrow} viewBox="0 0 24 24">
+                    <Path d="M16.01 11H4v2h12.01v3L20 12l-3.99-4v3z" fill="#4CAF50" />
+                  </Svg>
+                  <Text style={styles.scenarioTitle}>
+                    With an extra <Text style={styles.bold}>${additionalPayment}/month</Text>, you could be debt-free by {' '}
+                    <Text style={[styles.debtFreeDate, styles.bold]}>
+                      {calculateDebtFreeDate(scenarioSummary.monthsToPayoff)}
+                    </Text>, 
+                    saving {' '}
+                    <Text style={[styles.savings, styles.bold]}>
+                      {currencyFormatter.format(interestSaved)}
+                    </Text> in interest!
+                  </Text>
                 </View>
-              </View>
+                {renderScenarioCharts(scenarioSummary)}
+                <View style={{ marginTop: 10, marginBottom: 10 }} />
+                </View>
+              
             );
           })}
         </View>
         <View style={styles.section}>
+          <View style={{ marginBottom: 140 }} />
+
           <Text style={styles.subtitle}>Original Payment Schedule</Text>
           <View style={styles.table}>
-            <View style={[styles.tableRow, styles.tableHeader]}>
-              <View style={styles.tableCol}><Text style={styles.tableCell}>Month</Text></View>
-              <View style={styles.tableCol}><Text style={styles.tableCell}>Beginning Balance</Text></View>
-              <View style={styles.tableCol}><Text style={styles.tableCell}>Total Paid</Text></View>
-              <View style={styles.tableCol}><Text style={styles.tableCell}>Principal</Text></View>
-              <View style={styles.tableCol}><Text style={styles.tableCell}>Interest</Text></View>
-              <View style={styles.tableCol}><Text style={styles.tableCell}>Remaining Balance</Text></View>
-            </View>
+            <TableHeader />
             {paymentSchedule.map((item, index) => (
               <View style={[styles.tableRow, { backgroundColor: index % 2 === 0 ? '#f9fafb' : '#ffffff' }]} key={item.month}>
-                <View style={styles.tableCol}><Text style={styles.tableCell}>{item.month}</Text></View>
-                <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.startingBalance)}</Text></View>
-                <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.totPaid)}</Text></View>
-                <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.principal)}</Text></View>
-                <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.interest)}</Text></View>
-                <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.balance)}</Text></View>
+                <Text style={styles.tableCell}>Month-{item.month}</Text>
+                <Text style={styles.tableCell}>{currencyFormatter.format(item.startingBalance)}</Text>
+                <Text style={styles.tableCell}>{currencyFormatter.format(item.totPaid)}</Text>
+                <Text style={styles.tableCell}>{currencyFormatter.format(item.principal)}</Text>
+                <Text style={styles.tableCell}>{currencyFormatter.format(item.interest)}</Text>
+                <Text style={styles.tableCell}>{currencyFormatter.format(item.balance)}</Text>
               </View>
             ))}
           </View>
