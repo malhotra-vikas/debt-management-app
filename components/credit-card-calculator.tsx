@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     backgroundColor: '#ffffff',
     padding: 30,
-    fontFamily: 'CustomFont',
+    fontFamily: 'Helvetica',
     color: '#002A65'
   },
   section: {
@@ -152,6 +152,7 @@ const styles = StyleSheet.create({
   },
   tableHeader: {
     backgroundColor: '#f3f4f6',
+    fontWeight: 'bold',
   },
   tableCell: {
     margin: 'auto',
@@ -190,7 +191,7 @@ const PDFReport = ({ summary, paymentSchedule }: { summary: Summary, paymentSche
       <Document>
         <Page size="A4" style={styles.page}>
           <View style={styles.section}>
-            <Text style={styles.title}>Credit Card Debt Repayment Report</Text>
+            <Text style={styles.title}>Credit Card Payoff Report</Text>
             <Text style={styles.subtitle}>Summary</Text>
             <Text style={styles.text}>Total Paid: {currencyFormatter.format(summary.totalInterestPaid + summary.totalPrincipalPaid)}</Text>
             <Text style={styles.text}>Total Interest Paid: {currencyFormatter.format(summary.totalInterestPaid)}</Text>
@@ -199,26 +200,20 @@ const PDFReport = ({ summary, paymentSchedule }: { summary: Summary, paymentSche
             <Text style={styles.text}>Debt Free Date: {calculateDebtFreeDate(summary.monthsToPayoff)}</Text>
           </View>
           <View style={styles.section}>
-            <Text style={styles.subtitle}>Repayment Dashboard</Text>
-            <View style={styles.dashboardItem}>
-              <Text style={styles.dashboardLabel}>Total Paid</Text>
-              <Text style={styles.dashboardValue}>{currencyFormatter.format(summary.totalInterestPaid + summary.totalPrincipalPaid)}</Text>
-              <Text style={styles.dashboardSubtext}>Principal + Interest</Text>
-            </View>
-            <View style={styles.dashboardItem}>
-              <Text style={styles.dashboardLabel}>Total Interest Paid</Text>
-              <Text style={styles.dashboardValue}>{currencyFormatter.format(summary.totalInterestPaid)}</Text>
-              <Text style={styles.dashboardSubtext}>{((summary.totalInterestPaid / summary.totalPrincipalPaid) * 100).toFixed(1)}% of principal</Text>
-            </View>
-            <View style={styles.dashboardItem}>
-              <Text style={styles.dashboardLabel}>Time to Pay Off</Text>
-              <Text style={styles.dashboardValue}>{summary.yearsToPayoff.toFixed(1)} years</Text>
-              <Text style={styles.dashboardSubtext}>{summary.monthsToPayoff} months</Text>
-            </View>
-            <View style={styles.dashboardItem}>
-              <Text style={styles.dashboardLabel}>Debt Free Date</Text>
-              <Text style={styles.dashboardValue}>{calculateDebtFreeDate(summary.monthsToPayoff)}</Text>
-              <Text style={styles.dashboardSubtext}>Estimated payoff date</Text>
+            <Text style={styles.subtitle}>Payoff Details</Text>
+            <View style={styles.table}>
+              <View style={[styles.tableRow, styles.tableHeader]}>
+                <View style={styles.tableCol}><Text style={styles.tableCell}>Total Paid</Text></View>
+                <View style={styles.tableCol}><Text style={styles.tableCell}>Total Interest Paid</Text></View>
+                <View style={styles.tableCol}><Text style={styles.tableCell}>Time to Pay Off</Text></View>
+                <View style={styles.tableCol}><Text style={styles.tableCell}>Debt Free Date</Text></View>
+              </View>
+              <View style={styles.tableRow}>
+                <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(summary.totalInterestPaid + summary.totalPrincipalPaid)}</Text></View>
+                <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(summary.totalInterestPaid)}</Text></View>
+                <View style={styles.tableCol}><Text style={styles.tableCell}>{summary.yearsToPayoff.toFixed(1)} years</Text></View>
+                <View style={styles.tableCol}><Text style={styles.tableCell}>{calculateDebtFreeDate(summary.monthsToPayoff)}</Text></View>
+              </View>
             </View>
           </View>
           <View style={styles.section}>
@@ -226,15 +221,15 @@ const PDFReport = ({ summary, paymentSchedule }: { summary: Summary, paymentSche
             <View style={styles.table}>
               <View style={[styles.tableRow, styles.tableHeader]}>
                 <View style={styles.tableCol}><Text style={styles.tableCell}>Month</Text></View>
-                <View style={styles.tableCol}><Text style={styles.tableCell}>Beg Bal</Text></View>
-                <View style={styles.tableCol}><Text style={styles.tableCell}>Tot Paid</Text></View>
+                <View style={styles.tableCol}><Text style={styles.tableCell}>Beginning Balance</Text></View>
+                <View style={styles.tableCol}><Text style={styles.tableCell}>Total Paid</Text></View>
                 <View style={styles.tableCol}><Text style={styles.tableCell}>Principal</Text></View>
                 <View style={styles.tableCol}><Text style={styles.tableCell}>Interest</Text></View>
                 <View style={styles.tableCol}><Text style={styles.tableCell}>Remaining Balance</Text></View>
               </View>
               {paymentSchedule.map((item, index) => (
                 <View style={[styles.tableRow, { backgroundColor: index % 2 === 0 ? '#f9fafb' : '#ffffff' }]} key={item.month}>
-                  <View style={styles.tableCol}><Text style={styles.tableCell}>M{item.month}</Text></View>
+                  <View style={styles.tableCol}><Text style={styles.tableCell}>{item.month}</Text></View>
                   <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.startingBalance)}</Text></View>
                   <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.totPaid)}</Text></View>
                   <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.principal)}</Text></View>
@@ -243,38 +238,6 @@ const PDFReport = ({ summary, paymentSchedule }: { summary: Summary, paymentSche
                 </View>
               ))}
             </View>
-          </View>
-          <View style={styles.section}>
-            <Text style={styles.subtitle}>10 Tips to Stay Debt-Free and Become Debt-Free Faster</Text>
-            <Text style={styles.tipTitle}>1. Create and Stick to a Budget</Text>
-            <Text style={styles.tipText}>Track your income and expenses, and allocate your money wisely to avoid overspending.</Text>
-
-            <Text style={styles.tipTitle}>2. Build an Emergency Fund</Text>
-            <Text style={styles.tipText}>Save 3-6 months of living expenses to avoid relying on credit cards for unexpected costs.</Text>
-
-            <Text style={styles.tipTitle}>3. Pay More Than the Minimum</Text>
-            <Text style={styles.tipText}>Always pay more than the minimum payment on your credit cards to reduce interest and pay off debt faster.</Text>
-
-            <Text style={styles.tipTitle}>4. Use the Debt Avalanche Method</Text>
-            <Text style={styles.tipText}>Focus on paying off the debt with the highest interest rate first while making minimum payments on others.</Text>
-
-            <Text style={styles.tipTitle}>5. Consider Balance Transfer Options</Text>
-            <Text style={styles.tipText}>Transfer high-interest debt to a card with a 0% introductory APR to save on interest charges.</Text>
-
-            <Text style={styles.tipTitle}>6. Increase Your Income</Text>
-            <Text style={styles.tipText}>Look for ways to earn extra money through side hustles or asking for a raise at work.</Text>
-
-            <Text style={styles.tipTitle}>7. Cut Unnecessary Expenses</Text>
-            <Text style={styles.tipText}>Identify and eliminate non-essential spending to free up more money for debt repayment.</Text>
-
-            <Text style={styles.tipTitle}>8. Avoid New Debt</Text>
-            <Text style={styles.tipText}>While paying off existing debt, avoid taking on new debt to prevent further financial strain.</Text>
-
-            <Text style={styles.tipTitle}>9. Negotiate Lower Interest Rates</Text>
-            <Text style={styles.tipText}>Contact your credit card companies and ask for lower interest rates to reduce your overall debt burden.</Text>
-
-            <Text style={styles.tipTitle}>10. Educate Yourself on Personal Finance</Text>
-            <Text style={styles.tipText}>Continuously learn about money management to make informed financial decisions and avoid future debt.</Text>
           </View>
         </Page>
       </Document>
