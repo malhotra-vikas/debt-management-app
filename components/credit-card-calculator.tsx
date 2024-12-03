@@ -72,6 +72,7 @@ type Summary = {
   originalTotalInterestPaid: number
   apr: number
   monthlyPayment: number
+  revisedDebtFreeDate: string
 }
 
 function calculateDebtFreeDate(monthsToPayoff: number): string {
@@ -273,6 +274,29 @@ const styles = StyleSheet.create({
   pieChartLegendText: {
     fontSize: 8,
   },
+  scenarioTable: {
+    display: 'table',
+    width: 'auto',
+    borderStyle: 'solid',
+    borderWidth: 1,
+    borderColor: '#72A967',
+    marginBottom: 20,
+  },
+  scenarioTableRow: {
+    flexDirection: 'row',
+  },
+  scenarioTableCell: {
+    width: '50%',
+    borderStyle: 'solid',
+    borderWidth: 1,
+    borderColor: '#72A967',
+    padding: 5,
+  },
+  scenarioChartContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
 })
 
 function calculateNewPayoffTimeForPDF(principal: number, apr: number, monthlyPayment: number, additionalPayment: number): number {
@@ -313,47 +337,139 @@ function calculateInterestSavedForPDF(principal: number, apr: number, monthlyPay
   return originalInterest - newInterest;
 }
 
+const calculateScenarioSummary = (principal: number, apr: number, minimumPayment: number, additionalPayment: number, requiredPrincipalPercentage: number): Summary => {
+  let balance = principal
+  const monthlyRate = (apr / 100) / 12
+  let month = 0
+  let totalInterestPaid = 0
+  let totalPrincipalPaid = 0
+  let monthlyPayment = 0;
+
+  while (balance > 0) {
+    month++
+    const interest = balance * monthlyRate
+    const requiredPrincipal = balance * (requiredPrincipalPercentage / 100)
+    const requiredMinimumPayment = Math.max(interest + requiredPrincipal, minimumPayment)
+    let payment = Math.max(minimumPayment, interest + requiredPrincipal) + additionalPayment
+    payment = Math.min(payment, balance + interest)
+    const principal = payment - interest
+    balance -= principal
+    totalInterestPaid += interest
+    totalPrincipalPaid += principal
+    monthlyPayment = payment;
+
+    if (month > 600) break
+  }
+
+  return {
+    totalInterestPaid: parseFloat(totalInterestPaid.toFixed(2)),
+    totalPrincipalPaid: parseFloat(totalPrincipalPaid.toFixed(2)),
+    monthsToPayoff: month,
+    yearsToPayoff: parseFloat((month / 12).toFixed(2)),
+    originalTotalInterestPaid: totalInterestPaid,
+    apr: apr,
+    monthlyPayment: monthlyPayment,
+    revisedDebtFreeDate: calculateDebtFreeDate(month)
+  }
+}
+
 const PDFReport = ({ summary, paymentSchedule, formValues }: { summary: Summary, paymentSchedule: PaymentScheduleItem[], formValues: FormValues }) => {
   const scenarios = [10, 25, 50];
 
-  const totalAmount = summary.totalPrincipalPaid + summary.totalInterestPaid;
-  const principalPercentage = (summary.totalPrincipalPaid / totalAmount) * 100;
-  const interestPercentage = (summary.totalInterestPaid / totalAmount) * 100;
+  const renderScenarioCharts = (scenarioSummary: Summary) => {
+    const totalAmount = scenarioSummary.totalPrincipalPaid + scenarioSummary.totalInterestPaid;
+    const principalPercentage = (scenarioSummary.totalPrincipalPaid / totalAmount) * 100;
+    const interestPercentage = (scenarioSummary.totalInterestPaid / totalAmount) * 100;
 
-  // Function to calculate pie chart path
-  const calculatePieChartPath = (startAngle: number, endAngle: number) => {
-    const centerX = 60;
-    const centerY = 60;
-    const radius = 60;
+    // Function to calculate pie chart path
+    const calculatePieChartPath = (startAngle: number, endAngle: number) => {
+      const centerX = 60;
+      const centerY = 60;
+      const radius = 60;
 
-    const startX = centerX + radius * Math.cos(startAngle);
-    const startY = centerY + radius * Math.sin(startAngle);
-    const endX = centerX + radius * Math.cos(endAngle);
-    const endY = centerY + radius * Math.sin(endAngle);
+      const startX = centerX + radius * Math.cos(startAngle);
+      const startY = centerY + radius * Math.sin(startAngle);
+      const endX = centerX + radius * Math.cos(endAngle);
+      const endY = centerY + radius * Math.sin(endAngle);
 
-    const largeArcFlag = endAngle - startAngle <= Math.PI ? "0" : "1";
+      const largeArcFlag = endAngle - startAngle <= Math.PI ? "0" : "1";
 
-    return `M ${centerX} ${centerY} L ${startX} ${startY} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${endX} ${endY} Z`;
+      return `M ${centerX} ${centerY} L ${startX} ${startY} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${endX} ${endY} Z`;
+    };
+
+    // Calculate paths for pie chart
+    const principalPath = calculatePieChartPath(0, (principalPercentage / 100) * 2 * Math.PI);
+    const interestPath = calculatePieChartPath((principalPercentage / 100) * 2 * Math.PI, 2 * Math.PI);
+
+    // Prepare data for bar chart
+    const barChartData = [
+      { label: 'Total Paid', value: scenarioSummary.totalPrincipalPaid + scenarioSummary.totalInterestPaid },
+      { label: 'Principal', value: scenarioSummary.totalPrincipalPaid },
+      { label: 'Interest', value: scenarioSummary.totalInterestPaid },
+    ];
+    const maxValue = Math.max(...barChartData.map(item => item.value));
+
+    return (
+      <View style={styles.scenarioChartContainer}>
+        <View style={styles.chartTableCell}>
+          <Svg height={120} width={120}>
+            <Path d={principalPath} fill="#4CAF50" />
+            <Path d={interestPath} fill="#FF5722" />
+          </Svg>
+          <View style={styles.pieChartLegend}>
+            <View style={styles.pieChartLegendItem}>
+              <View style={[styles.pieChartLegendColor, { backgroundColor: '#4CAF50' }]} />
+              <Text style={styles.pieChartLegendText}>Principal</Text>
+            </View>
+            <View style={styles.pieChartLegendItem}>
+              <View style={[styles.pieChartLegendColor, { backgroundColor: '#FF5722' }]} />
+              <Text style={styles.pieChartLegendText}>Interest</Text>
+            </View>
+          </View>
+        </View>
+        <View style={styles.chartTableCell}>
+          <Svg height={200} width="100%">
+            {barChartData.map((item, index) => {
+              const barHeight = (item.value / maxValue) * 150;
+              const barY = 175 - barHeight;
+              return (
+                <React.Fragment key={item.label}>
+                  <Rect
+                    x={index * 60 + 10}
+                    y={barY}
+                    width={30}
+                    height={barHeight}
+                    fill={item.label === 'Principal' ? '#4CAF50' : item.label === 'Interest' ? '#FF5722' : '#3B82F6'}
+                  />
+                  <Text
+                    x={index * 60 + 25}
+                    y={185}
+                    style={styles.barChartLabel}
+                  >
+                    {item.label}
+                  </Text>
+                  <Text
+                    x={index * 60 + 25}
+                    y={barY - 10}
+                    style={styles.barChartLabel}
+                  >
+                    {currencyFormatter.format(item.value)}
+                  </Text>
+                </React.Fragment>
+              );
+            })}
+          </Svg>
+        </View>
+      </View>
+    );
   };
-
-  // Calculate paths for pie chart
-  const principalPath = calculatePieChartPath(0, (principalPercentage / 100) * 2 * Math.PI);
-  const interestPath = calculatePieChartPath((principalPercentage / 100) * 2 * Math.PI, 2 * Math.PI);
-
-  // Prepare data for bar chart
-  const barChartData = [
-    { label: 'Total Paid', value: summary.totalPrincipalPaid + summary.totalInterestPaid },
-    { label: 'Principal', value: summary.totalPrincipalPaid },
-    { label: 'Interest', value: summary.totalInterestPaid },
-  ];
-  const maxValue = Math.max(...barChartData.map(item => item.value));
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         <View style={styles.section}>
           <Text style={styles.title}>Credit Card Payoff Report</Text>
-          <Text style={styles.subtitle}>Payoff Details</Text>
+          <Text style={styles.subtitle}>Current Payoff Details</Text>
           <View style={styles.table}>
             <View style={[styles.tableRow, styles.tableHeader]}>
               <View style={styles.summaryTableCol}><Text style={styles.tableCell}>Total Paid</Text></View>
@@ -373,65 +489,17 @@ const PDFReport = ({ summary, paymentSchedule, formValues }: { summary: Summary,
           <View style={{ marginTop: 20 }} />
           <View style={styles.chartTable}>
             <View style={styles.chartTableRow}>
-              <View style={styles.chartTableCell}>
-                <Svg height={120} width={120}>
-                  <Path d={principalPath} fill="#4CAF50" />
-                  <Path d={interestPath} fill="#FF5722" />
-                </Svg>
-                <View style={styles.pieChartLegend}>
-                  <View style={styles.pieChartLegendItem}>
-                    <View style={[styles.pieChartLegendColor, { backgroundColor: '#4CAF50' }]} />
-                    <Text style={styles.pieChartLegendText}>Principal</Text>
-                  </View>
-                  <View style={styles.pieChartLegendItem}>
-                    <View style={[styles.pieChartLegendColor, { backgroundColor: '#FF5722' }]} />
-                    <Text style={styles.pieChartLegendText}>Interest</Text>
-                  </View>
-                </View>
-              </View>
-              <View style={styles.chartTableCell}>
-                <Svg height={200} width="100%">
-                  {barChartData.map((item, index) => {
-                    const barHeight = (item.value / maxValue) * 150;
-                    const barY = 175 - barHeight;
-                    return (
-                      <React.Fragment key={item.label}>
-                        <Rect
-                          x={index * 60 + 10}
-                          y={barY}
-                          width={30}
-                          height={barHeight}
-                          fill={item.label === 'Principal' ? '#4CAF50' : item.label === 'Interest' ? '#FF5722' : '#3B82F6'}
-                        />
-                        <Text
-                          x={index * 60 + 25}
-                          y={185}
-                          style={styles.barChartLabel}
-                        >
-                          {item.label}
-                        </Text>
-                        <Text
-                          x={index * 60 + 25}
-                          y={barY - 10}
-                          style={styles.barChartLabel}
-                        >
-                          {currencyFormatter.format(item.value)}
-                        </Text>
-                      </React.Fragment>
-                    );
-                  })}
-                </Svg>
-              </View>
+              {renderScenarioCharts(summary)}
             </View>
           </View>
           <View style={styles.legend}>
             <View style={styles.legendItem}>
               <View style={[styles.legendColor, { backgroundColor: '#4CAF50' }]} />
-              <Text style={styles.legendText}>Principal: {currencyFormatter.format(summary.totalPrincipalPaid)} ({principalPercentage.toFixed(1)}%)</Text>
+              <Text style={styles.legendText}>Principal: {currencyFormatter.format(summary.totalPrincipalPaid)} ({((summary.totalPrincipalPaid / (summary.totalPrincipalPaid + summary.totalInterestPaid)) * 100).toFixed(1)}%)</Text>
             </View>
             <View style={styles.legendItem}>
               <View style={[styles.legendColor, { backgroundColor: '#FF5722' }]} />
-              <Text style={styles.legendText}>Interest: {currencyFormatter.format(summary.totalInterestPaid)} ({interestPercentage.toFixed(1)}%)</Text>
+              <Text style={styles.legendText}>Interest: {currencyFormatter.format(summary.totalInterestPaid)} ({((summary.totalInterestPaid / (summary.totalPrincipalPaid + summary.totalInterestPaid)) * 100).toFixed(1)}%)</Text>
             </View>
             <View style={styles.legendItem}>
               <View style={[styles.legendColor, { backgroundColor: '#3B82F6' }]} />
@@ -442,27 +510,48 @@ const PDFReport = ({ summary, paymentSchedule, formValues }: { summary: Summary,
         <View style={styles.section}>
           <Text style={styles.subtitle}>Additional Payment Scenarios</Text>
           {scenarios.map((additionalPayment) => {
-            const requiredMinimumPayment = Math.max(formValues.apr/12 + formValues.principal, formValues.minimumPayment)
-            const newMonths = calculateNewPayoffTimeForPDF(formValues.principal, formValues.apr, requiredMinimumPayment, additionalPayment);
-            const interestSaved = calculateInterestSavedForPDF(formValues.principal, formValues.apr, requiredMinimumPayment, summary.monthsToPayoff, newMonths);
-            return (              
+            const scenarioSummary = calculateScenarioSummary(
+              formValues.principal,
+              formValues.apr,
+              formValues.minimumPayment,
+              additionalPayment,
+              formValues.requiredPrincipalPercentage
+            );
+            const interestSaved = summary.totalInterestPaid - scenarioSummary.totalInterestPaid;
+            return (
               <View key={additionalPayment}>
                 <Text style={styles.scenarioTitle}>
-                  With an extra ${additionalPayment}/month, you could be debt-free by {' '}
+                → With an extra ${additionalPayment}/month, you could be debt-free by {' '}
                   <Text style={styles.debtFreeDate}>
-                    {calculateDebtFreeDate(newMonths)}
+                    {scenarioSummary.revisedDebtFreeDate}
                   </Text>, 
                   saving {' '}
                   <Text style={styles.savings}>
                     {currencyFormatter.format(interestSaved)}
                   </Text> in interest!
                 </Text>
+                <View style={{ marginTop: 5 }} />                              
+                {renderScenarioCharts(scenarioSummary)}
+                <View style={styles.legend}>
+                  <View style={styles.legendItem}>
+                    <View style={[styles.legendColor, { backgroundColor: '#4CAF50' }]} />
+                    <Text style={styles.legendText}>Principal: {currencyFormatter.format(summary.totalPrincipalPaid)} ({((summary.totalPrincipalPaid / (summary.totalPrincipalPaid + summary.totalInterestPaid)) * 100).toFixed(1)}%)</Text>
+                  </View>
+                  <View style={styles.legendItem}>
+                    <View style={[styles.legendColor, { backgroundColor: '#FF5722' }]} />
+                    <Text style={styles.legendText}>Interest: {currencyFormatter.format(summary.totalInterestPaid)} ({((summary.totalInterestPaid / (summary.totalPrincipalPaid + summary.totalInterestPaid)) * 100).toFixed(1)}%)</Text>
+                  </View>
+                  <View style={styles.legendItem}>
+                    <View style={[styles.legendColor, { backgroundColor: '#3B82F6' }]} />
+                    <Text style={styles.legendText}>Total Paid: {currencyFormatter.format(summary.totalPrincipalPaid + summary.totalInterestPaid)}</Text>
+                  </View>
+                </View>
               </View>
             );
           })}
         </View>
         <View style={styles.section}>
-          <Text style={styles.subtitle}>Payment Schedule</Text>
+          <Text style={styles.subtitle}>Original Payment Schedule</Text>
           <View style={styles.table}>
             <View style={[styles.tableRow, styles.tableHeader]}>
               <View style={styles.tableCol}><Text style={styles.tableCell}>Month</Text></View>
