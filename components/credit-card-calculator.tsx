@@ -614,7 +614,7 @@ export default function Component() {
                   Email my report
                   <Send className="inline-block ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Button>
-                {/*
+                {
                 <Button 
                   variant="outline" 
                   className="group hover:text-[hsl(var(--custom-text))] border-[hsl(var(--custom-border))] transition-colors"
@@ -638,7 +638,7 @@ export default function Component() {
                   {isPdfGenerating ? 'Generating PDF...' : 'Download PDF Report'}
                   <FileDown className="inline-block ml-1 h-4 w-4 transition-transform group-hover:translate-y-1" />
                 </Button>
-                */}
+                }
               </div>
             </CardContent>
           </Card>
