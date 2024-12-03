@@ -194,20 +194,12 @@ function calculateNewPayoffTimeForPDF(principal: number, apr: number, monthlyPay
   const monthlyRate = apr / 12 / 100;
   let months = 0;
 
-  console.log(`Initial Principal: ${principal}`);
-  console.log(`APR: ${apr}`);
-  console.log(`Monthly Payment: ${monthlyPayment}`);
-  console.log(`Additional Payment: ${additionalPayment}`);
-  console.log(`Monthly Interest Rate: ${monthlyRate}`);
-
   while (balance > 0 && months < 600) {
     months++;
     const interest = balance * monthlyRate;
     const totalPayment = Math.min(monthlyPayment + additionalPayment, balance + interest);
     balance = balance - (totalPayment - interest);
   }
-
-  console.log(`Total Months to Pay Off: ${months}`);
 
   return months;
 }
@@ -269,16 +261,26 @@ const PDFReport = ({ summary, paymentSchedule, formValues }: { summary: Summary,
             const requiredMinimumPayment = Math.max(formValues.apr/12 + formValues.principal, formValues.minimumPayment)
 
             printStuff(formValues, summary)
+
+
+
+            console.log("requiredMinimumPayment ", requiredMinimumPayment)
+            const newMonths = calculateNewPayoffTimeForPDF(formValues.principal, formValues.apr, requiredMinimumPayment, additionalPayment);
+            console.log("newMonths ", newMonths)
+
+            const interestSaved = calculateInterestSavedForPDF(formValues.principal, formValues.apr, requiredMinimumPayment, summary.monthsToPayoff, newMonths);
+            console.log("interestSaved ", interestSaved)
+
             return (              
               <View key={additionalPayment}>
                 <Text style={styles.scenarioTitle}>
                   With an extra ${additionalPayment}/month, you could be debt-free by {' '}
                   <Text style={styles.debtFreeDate}>
-                    {calculateDebtFreeDate(calculateNewPayoffTimeForPDF(formValues.principal, formValues.apr, requiredMinimumPayment, additionalPayment))}
+                    {calculateDebtFreeDate(newMonths)}
                   </Text>, 
                   saving {' '}
                   <Text style={styles.savings}>
-                    {currencyFormatter.format(summary.originalTotalInterestPaid - summary.totalInterestPaid)}
+                    {currencyFormatter.format(interestSaved)}
                   </Text> in interest!
                 </Text>
               </View>
