@@ -33,6 +33,9 @@
     --ring: 222.2 84% 4.9%;
  
     --radius: 0.5rem;
+    
+    --custom-text: 211 100% 20%;
+    --custom-border: 105 30% 53%;
   }
  
   .dark {
@@ -68,9 +71,9 @@
  
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border border-[hsl(var(--custom-border))];
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-[hsl(var(--custom-text))];
   }
 }
