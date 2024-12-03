@@ -1,7 +1,3 @@
-.card-calculator-container,
-.card-calculator-container * {
-  color: #002A65;
-}
 
 .card-calculator-container {
     @apply container mx-auto p-4 space-y-8;
