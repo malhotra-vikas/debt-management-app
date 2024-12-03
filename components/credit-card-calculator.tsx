@@ -555,7 +555,7 @@ export default function Component() {
                   <PopoverTrigger asChild>
                     <Button 
                       variant="outline" 
-                      className="group hover:text-[hsl(var(--custom-text))] border-[hsl(var(--custom-border))] transition-colors"
+                      className="group text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200 border-[hsl(var(--custom-border))] transition-colors"
                     >
                       Reduce Payoff Time
                       <ArrowRightIcon className="inline-block ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -602,7 +602,8 @@ export default function Component() {
                 </Popover>
                 <Button 
                   variant="outline" 
-                  className="group hover:text-[hsl(var(--custom-text))] border-[hsl(var(--custom-border))] transition-colors"
+                  className="group text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200 border-[hsl(var(--custom-border))] transition-colors"
+                  
                   onClick={() => {
                     toast({
                       title: "Report Sent",
