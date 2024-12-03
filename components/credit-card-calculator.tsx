@@ -28,20 +28,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, Font } from '@react-pdf/renderer'
+import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
 import { pdf } from '@react-pdf/renderer'
 
 // Import the CSS file
 import '@/styles/credit-card-calculator.css'
-
-// Register a custom font for the PDF
-Font.register({
-  family: 'CustomFont',
-  fonts: [
-    { src: 'https://fonts.gstatic.com/s/roboto/v27/KFOmCnqEu92Fr1Mu4mxKKTU1Kg.woff2', fontWeight: 400 },
-    { src: 'https://fonts.gstatic.com/s/roboto/v27/KFOlCnqEu92Fr1MmEU9fBBc4AMP6lQ.woff2', fontWeight: 700 },
-  ],
-})
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -78,6 +69,9 @@ type Summary = {
   totalPrincipalPaid: number
   monthsToPayoff: number
   yearsToPayoff: number
+  originalTotalInterestPaid: number
+  apr: number
+  monthlyPayment: number
 }
 
 function calculateDebtFreeDate(monthsToPayoff: number): string {
@@ -110,7 +104,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     padding: 30,
     fontFamily: 'Helvetica',
-    color: '#002A65'
+    color: '#333333'
   },
   section: {
     margin: 10,
@@ -119,11 +113,16 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    marginBottom: 10,
+    marginBottom: 20,
+    textAlign: 'center',
+    color: '#002A65',
+    fontWeight: 'bold',
   },
   subtitle: {
     fontSize: 18,
     marginBottom: 10,
+    color: '#002A65',
+    fontWeight: 'bold',
   },
   text: {
     fontSize: 12,
@@ -141,6 +140,14 @@ const styles = StyleSheet.create({
   tableRow: {
     margin: 'auto',
     flexDirection: 'row',
+  },
+  summaryTableCol: {
+    width: '20%',
+    borderStyle: 'solid',
+    borderWidth: 1,
+    borderLeftWidth: 0,
+    borderTopWidth: 0,
+    borderColor: '#72A967',
   },
   tableCol: {
     width: '16.66%',
@@ -160,100 +167,150 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     fontSize: 10,
   },
-  dashboardItem: {
-    marginBottom: 10,
-  },
-  dashboardLabel: {
-    fontSize: 10,
-  },
-  dashboardValue: {
+  scenarioTitle: {
     fontSize: 14,
+    marginTop: 15,
+    marginBottom: 5,
+    color: '#002A65',
     fontWeight: 'bold',
   },
-  dashboardSubtext: {
-    fontSize: 8,
-  },
-  tipTitle: {
-    fontSize: 14,
+  debtFreeDate: {
     fontWeight: 'bold',
-    marginTop: 10,
-    marginBottom: 5,
+    color: '#4CAF50', // a shade of green, adjust as needed
   },
-  tipText: {
-    fontSize: 10,
-    marginBottom: 5,
-  },
+  savings: {
+    fontWeight: 'bold',
+    color: '#4CAF50', // a shade of green, adjust as needed
+  }
 })
 
-const PDFReport = ({ summary, paymentSchedule }: { summary: Summary, paymentSchedule: PaymentScheduleItem[] }) => {
-  try {
-    return (
-      <Document>
-        <Page size="A4" style={styles.page}>
-          <View style={styles.section}>
-            <Text style={styles.title}>Credit Card Payoff Report</Text>
-            <Text style={styles.subtitle}>Summary</Text>
-            <Text style={styles.text}>Total Paid: {currencyFormatter.format(summary.totalInterestPaid + summary.totalPrincipalPaid)}</Text>
-            <Text style={styles.text}>Total Interest Paid: {currencyFormatter.format(summary.totalInterestPaid)}</Text>
-            <Text style={styles.text}>Total Principal Paid: {currencyFormatter.format(summary.totalPrincipalPaid)}</Text>
-            <Text style={styles.text}>Time to Pay Off: {summary.yearsToPayoff.toFixed(1)} years ({summary.monthsToPayoff} months)</Text>
-            <Text style={styles.text}>Debt Free Date: {calculateDebtFreeDate(summary.monthsToPayoff)}</Text>
-          </View>
-          <View style={styles.section}>
-            <Text style={styles.subtitle}>Payoff Details</Text>
-            <View style={styles.table}>
-              <View style={[styles.tableRow, styles.tableHeader]}>
-                <View style={styles.tableCol}><Text style={styles.tableCell}>Total Paid</Text></View>
-                <View style={styles.tableCol}><Text style={styles.tableCell}>Total Interest Paid</Text></View>
-                <View style={styles.tableCol}><Text style={styles.tableCell}>Time to Pay Off</Text></View>
-                <View style={styles.tableCol}><Text style={styles.tableCell}>Debt Free Date</Text></View>
-              </View>
-              <View style={styles.tableRow}>
-                <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(summary.totalInterestPaid + summary.totalPrincipalPaid)}</Text></View>
-                <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(summary.totalInterestPaid)}</Text></View>
-                <View style={styles.tableCol}><Text style={styles.tableCell}>{summary.yearsToPayoff.toFixed(1)} years</Text></View>
-                <View style={styles.tableCol}><Text style={styles.tableCell}>{calculateDebtFreeDate(summary.monthsToPayoff)}</Text></View>
-              </View>
-            </View>
-          </View>
-          <View style={styles.section}>
-            <Text style={styles.subtitle}>Payment Schedule</Text>
-            <View style={styles.table}>
-              <View style={[styles.tableRow, styles.tableHeader]}>
-                <View style={styles.tableCol}><Text style={styles.tableCell}>Month</Text></View>
-                <View style={styles.tableCol}><Text style={styles.tableCell}>Beginning Balance</Text></View>
-                <View style={styles.tableCol}><Text style={styles.tableCell}>Total Paid</Text></View>
-                <View style={styles.tableCol}><Text style={styles.tableCell}>Principal</Text></View>
-                <View style={styles.tableCol}><Text style={styles.tableCell}>Interest</Text></View>
-                <View style={styles.tableCol}><Text style={styles.tableCell}>Remaining Balance</Text></View>
-              </View>
-              {paymentSchedule.map((item, index) => (
-                <View style={[styles.tableRow, { backgroundColor: index % 2 === 0 ? '#f9fafb' : '#ffffff' }]} key={item.month}>
-                  <View style={styles.tableCol}><Text style={styles.tableCell}>{item.month}</Text></View>
-                  <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.startingBalance)}</Text></View>
-                  <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.totPaid)}</Text></View>
-                  <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.principal)}</Text></View>
-                  <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.interest)}</Text></View>
-                  <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.balance)}</Text></View>
-                </View>
-              ))}
-            </View>
-          </View>
-        </Page>
-      </Document>
-    );
-  } catch (error) {
-    console.error('Error generating PDF:', error);
-    return (
-      <Document>
-        <Page size="A4" style={styles.page}>
-          <View style={styles.section}>
-            <Text>An error occurred while generating the PDF. Please try again.</Text>
-          </View>
-        </Page>
-      </Document>
-    );
+function printStuff(formValues, summary) {
+  console.log("Form Values are ", formValues)
+  console.log("Summary Values are ", summary)
+}
+
+function calculateNewPayoffTimeForPDF(principal: number, apr: number, monthlyPayment: number, additionalPayment: number): number {
+  let balance = principal;
+  const monthlyRate = apr / 12 / 100;
+  let months = 0;
+
+  console.log(`Initial Principal: ${principal}`);
+  console.log(`APR: ${apr}`);
+  console.log(`Monthly Payment: ${monthlyPayment}`);
+  console.log(`Additional Payment: ${additionalPayment}`);
+  console.log(`Monthly Interest Rate: ${monthlyRate}`);
+
+  while (balance > 0 && months < 600) {
+    months++;
+    const interest = balance * monthlyRate;
+    const totalPayment = Math.min(monthlyPayment + additionalPayment, balance + interest);
+    balance = balance - (totalPayment - interest);
   }
+
+  console.log(`Total Months to Pay Off: ${months}`);
+
+  return months;
+}
+
+function calculateInterestSavedForPDF(principal: number, apr: number, monthlyPayment: number, originalMonths: number, newMonths: number): number {
+  const monthlyRate = apr / 12 / 100;
+  let originalInterest = 0;
+  let newInterest = 0;
+  let originalBalance = principal;
+  let newBalance = principal;
+
+  for (let i = 1; i <= Math.max(originalMonths, newMonths); i++) {
+    if (i <= originalMonths) {
+      const interest = originalBalance * monthlyRate;
+      originalInterest += interest;
+      originalBalance = Math.max(0, originalBalance - (monthlyPayment - interest));
+    }
+    if (i <= newMonths) {
+      const interest = newBalance * monthlyRate;
+      newInterest += interest;
+      newBalance = Math.max(0, newBalance - (monthlyPayment - interest));
+    }
+  }
+
+  return originalInterest - newInterest;
+}
+
+const PDFReport = ({ summary, paymentSchedule, formValues }: { summary: Summary, paymentSchedule: PaymentScheduleItem[], formValues: FormValues }) => {
+  const scenarios = [10, 25, 50];
+
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        <View style={styles.section}>
+          <Text style={styles.title}>Credit Card Payoff Report</Text>
+          <Text style={styles.subtitle}>Payoff Details</Text>
+          <View style={styles.table}>
+            <View style={[styles.tableRow, styles.tableHeader]}>
+              <View style={styles.summaryTableCol}><Text style={styles.tableCell}>Total Paid</Text></View>
+              <View style={styles.summaryTableCol}><Text style={styles.tableCell}>Total Interest</Text></View>
+              <View style={styles.summaryTableCol}><Text style={styles.tableCell}>Total Principal</Text></View>
+              <View style={styles.summaryTableCol}><Text style={styles.tableCell}>Time to Pay Off</Text></View>
+              <View style={styles.summaryTableCol}><Text style={styles.tableCell}>Debt Free Date</Text></View>
+            </View>
+            <View style={styles.tableRow}>
+              <View style={styles.summaryTableCol}><Text style={styles.tableCell}>{currencyFormatter.format(summary.totalInterestPaid + summary.totalPrincipalPaid)}</Text></View>
+              <View style={styles.summaryTableCol}><Text style={styles.tableCell}>{currencyFormatter.format(summary.totalInterestPaid)}</Text></View>
+              <View style={styles.summaryTableCol}><Text style={styles.tableCell}>{currencyFormatter.format(summary.totalPrincipalPaid)}</Text></View>
+              <View style={styles.summaryTableCol}><Text style={styles.tableCell}>{summary.yearsToPayoff.toFixed(1)} years ({summary.monthsToPayoff} months)</Text></View>
+              <View style={styles.summaryTableCol}><Text style={styles.tableCell}>{calculateDebtFreeDate(summary.monthsToPayoff)}</Text></View>
+            </View>
+          </View>
+        </View>
+        <View style={styles.section}>
+          <Text style={styles.subtitle}>Additional Payment Scenarios</Text>
+          {scenarios.map((additionalPayment) => {
+            //const newMonths = calculateNewPayoffTime(formValues.principal, formValues.apr, formValues.minimumPayment, additionalPayment);
+            //const interestSaved = calculateInterestSaved(formValues.principal, formValues.apr, formValues.minimumPayment, summary.monthsToPayoff, newMonths);
+            const requiredMinimumPayment = Math.max(formValues.apr/12 + formValues.principal, formValues.minimumPayment)
+
+            printStuff(formValues, summary)
+            return (              
+              <View key={additionalPayment}>
+                <Text style={styles.scenarioTitle}>
+                  With an extra ${additionalPayment}/month, you could be debt-free by {' '}
+                  <Text style={styles.debtFreeDate}>
+                    {calculateDebtFreeDate(calculateNewPayoffTimeForPDF(formValues.principal, formValues.apr, requiredMinimumPayment, additionalPayment))}
+                  </Text>, 
+                  saving {' '}
+                  <Text style={styles.savings}>
+                    {currencyFormatter.format(summary.originalTotalInterestPaid - summary.totalInterestPaid)}
+                  </Text> in interest!
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+        <View style={styles.section}>
+          <Text style={styles.subtitle}>Payment Schedule</Text>
+          <View style={styles.table}>
+            <View style={[styles.tableRow, styles.tableHeader]}>
+              <View style={styles.tableCol}><Text style={styles.tableCell}>Month</Text></View>
+              <View style={styles.tableCol}><Text style={styles.tableCell}>Beginning Balance</Text></View>
+              <View style={styles.tableCol}><Text style={styles.tableCell}>Total Paid</Text></View>
+              <View style={styles.tableCol}><Text style={styles.tableCell}>Principal</Text></View>
+              <View style={styles.tableCol}><Text style={styles.tableCell}>Interest</Text></View>
+              <View style={styles.tableCol}><Text style={styles.tableCell}>Remaining Balance</Text></View>
+            </View>
+            {paymentSchedule.map((item, index) => (
+              <View style={[styles.tableRow, { backgroundColor: index % 2 === 0 ? '#f9fafb' : '#ffffff' }]} key={item.month}>
+                <View style={styles.tableCol}><Text style={styles.tableCell}>{item.month}</Text></View>
+                <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.startingBalance)}</Text></View>
+                <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.totPaid)}</Text></View>
+                <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.principal)}</Text></View>
+                <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.interest)}</Text></View>
+                <View style={styles.tableCol}><Text style={styles.tableCell}>{currencyFormatter.format(item.balance)}</Text></View>
+              </View>
+            ))}
+          </View>
+        </View>
+      </Page>
+    </Document>
+  );
 };
 
 export default function Component() {
@@ -566,7 +623,6 @@ export default function Component() {
                 <Button 
                   variant="outline" 
                   className="group text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200 border-[hsl(var(--custom-border))] transition-colors"
-                  
                   onClick={() => {
                     toast({
                       title: "Report Sent",
@@ -584,7 +640,7 @@ export default function Component() {
                   onClick={() => {
                     setIsPdfGenerating(true);
                     setTimeout(() => {
-                      const pdfBlob = pdf(<PDFReport summary={summary} paymentSchedule={paymentSchedule} />).toBlob();
+                      const pdfBlob = pdf(<PDFReport summary={summary} paymentSchedule={paymentSchedule} formValues={form.getValues()} />).toBlob();
                       pdfBlob.then((blob) => {
                         const url = URL.createObjectURL(blob);
                         const link = document.createElement('a');
