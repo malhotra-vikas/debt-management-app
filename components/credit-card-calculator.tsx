@@ -197,12 +197,14 @@ const styles = StyleSheet.create({
   legend: {
     flexDirection: 'row',
     justifyContent: 'center',
+    flexWrap: 'wrap',
     marginTop: 10,
   },
   legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
     marginRight: 20,
+    marginBottom: 5,
   },
   legendColor: {
     width: 12,
@@ -232,7 +234,26 @@ const styles = StyleSheet.create({
     fontSize: 8,
     textAnchor: 'middle',
     alignItems: 'center',
-  },  
+  },
+  chartTable: {
+    display: 'table',
+    width: 'auto',
+    borderStyle: 'solid',
+    borderWidth: 1,
+    borderColor: '#72A967',
+    marginBottom: 10,
+  },
+  chartTableRow: {
+    flexDirection: 'row',
+  },
+  chartTableCell: {
+    width: '50%',
+    borderStyle: 'solid',
+    borderWidth: 1,
+    borderColor: '#72A967',
+    padding: 5,
+  },
+
 })
 
 function printStuff(formValues, summary) {
@@ -334,58 +355,58 @@ const PDFReport = ({ summary, paymentSchedule, formValues }: { summary: Summary,
               <View style={styles.summaryTableCol}><Text style={styles.tableCell}>{calculateDebtFreeDate(summary.monthsToPayoff)}</Text></View>
             </View>
           </View>
-          <View style={styles.chartsContainer}>
-            {/* Pie Chart */}
-            <View style={styles.chart}>
-              <Svg height={100} width={100}>
-                <Path d={principalPath} fill="#4CAF50" />
-                <Path d={interestPath} fill="#FF5722" />
-              </Svg>
-              <View style={styles.legend}>
-                <View style={styles.legendItem}>
-                  <View style={[styles.legendColor, { backgroundColor: '#4CAF50' }]} />
-                  <Text style={styles.legendText}>Principal: {principalPercentage.toFixed(1)}%</Text>
-                </View>
-                <View style={styles.legendItem}>
-                  <View style={[styles.legendColor, { backgroundColor: '#FF5722' }]} />
-                  <Text style={styles.legendText}>Interest: {interestPercentage.toFixed(1)}%</Text>
+          <View style={{ marginTop: 20 }} />          
+          <View style={styles.chartTable}>
+            <View style={styles.chartTableRow}>
+              <View style={styles.chartTableCell}>
+                <Svg height={100} width={100}>
+                  <Path d={principalPath} fill="#4CAF50" />
+                  <Path d={interestPath} fill="#FF5722" />
+                </Svg>
+              </View>
+              <View style={styles.chartTableCell}>
+                <Svg height={200} width="100%">
+                    {barChartData.map((item, index) => {
+                      const barHeight = (item.value / maxValue) * 150;
+                      const barY = 200 - barHeight;
+                      return (
+                        <React.Fragment key={item.label}>
+                          <Rect
+                            x={index * 60 + 10}
+                            y={barY}
+                            width={40}
+                            height={barHeight}
+                            fill={item.label === 'Principal' ? '#4CAF50' : '#FF5722'}
+                          />
+                          <Text
+                            x={index * 60 + 30}
+                            y={190}
+                            style={styles.barChartLabel}
+                          >
+                            {item.label}
+                          </Text>
+                          <Text
+                            x={index * 60 + 30}
+                            y={barY - 10}
+                            style={styles.barChartLabel}
+                          >
+                            {currencyFormatter.format(item.value)}
+                          </Text>
+                        </React.Fragment>
+                      );
+                    })}
+                  </Svg>
                 </View>
               </View>
+          </View>
+          <View style={styles.legend}>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendColor, { backgroundColor: '#4CAF50' }]} />
+              <Text style={styles.legendText}>Principal: {currencyFormatter.format(summary.totalPrincipalPaid)} ({principalPercentage.toFixed(1)}%)</Text>
             </View>
-            
-            {/* Bar Chart */}
-            <View style={styles.chart}>
-              <Svg height={200} width="100%">
-                {barChartData.map((item, index) => {
-                  const barHeight = (item.value / maxValue) * 150;
-                  const barY = 200 - barHeight;
-                  return (
-                    <React.Fragment key={item.label}>
-                      <Rect
-                        x={index * 60 + 10}
-                        y={barY}
-                        width={40}
-                        height={barHeight}
-                        fill={item.label === 'Principal' ? '#4CAF50' : '#FF5722'}
-                      />
-                      <Text
-                        x={index * 60 + 30}
-                        y={190}
-                        style={styles.barChartLabel}
-                      >
-                        {item.label}
-                      </Text>
-                      <Text
-                        x={index * 60 + 30}
-                        y={barY - 10}
-                        style={styles.barChartLabel}
-                      >
-                        {currencyFormatter.format(item.value)}
-                      </Text>
-                    </React.Fragment>
-                  );
-                })}
-              </Svg>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendColor, { backgroundColor: '#FF5722' }]} />
+              <Text style={styles.legendText}>Interest: {currencyFormatter.format(summary.totalInterestPaid)} ({interestPercentage.toFixed(1)}%)</Text>
             </View>
           </View>
         </View>
