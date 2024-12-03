@@ -28,8 +28,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
+import { Document, Page, Text, View, StyleSheet, Circle, Svg, Path, Rect } from '@react-pdf/renderer'
 import { pdf } from '@react-pdf/renderer'
+import PieChart from 'react-pdf-charts'
 
 // Import the CSS file
 import '@/styles/credit-card-calculator.css'
@@ -181,7 +182,55 @@ const styles = StyleSheet.create({
   savings: {
     fontWeight: 'bold',
     color: '#4CAF50', // a shade of green, adjust as needed
-  }
+  },
+  chartContainer: {
+    marginTop: 20,
+    marginBottom: 20,
+    height: 200,
+    width: 400,
+    alignSelf: 'center',
+  },
+  chart: {
+    width: 200,
+    height: 200,
+    alignSelf: 'center',
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  pieChart: {
+    width: 200,
+    height: 200,
+    alignSelf: 'center',
+  },
+  legend: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 20,
+  },
+  legendColor: {
+    width: 12,
+    height: 12,
+    marginRight: 5,
+  },
+  legendText: {
+    fontSize: 10,
+  },
+  barChart: {
+    width: '100%',
+    height: 200,
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  barChartLabel: {
+    fontSize: 8,
+    textAnchor: 'middle',
+    alignItems: 'center',
+  },  
 })
 
 function printStuff(formValues, summary) {
@@ -230,6 +279,37 @@ function calculateInterestSavedForPDF(principal: number, apr: number, monthlyPay
 const PDFReport = ({ summary, paymentSchedule, formValues }: { summary: Summary, paymentSchedule: PaymentScheduleItem[], formValues: FormValues }) => {
   const scenarios = [10, 25, 50];
 
+  const totalAmount = summary.totalPrincipalPaid + summary.totalInterestPaid;
+  const principalPercentage = (summary.totalPrincipalPaid / totalAmount) * 100;
+  const interestPercentage = (summary.totalInterestPaid / totalAmount) * 100;
+
+  // Function to calculate pie chart path
+  const calculatePieChartPath = (startAngle: number, endAngle: number) => {
+    const centerX = 100;
+    const centerY = 100;
+    const radius = 80;
+
+    const startX = centerX + radius * Math.cos(startAngle);
+    const startY = centerY + radius * Math.sin(startAngle);
+    const endX = centerX + radius * Math.cos(endAngle);
+    const endY = centerY + radius * Math.sin(endAngle);
+
+    const largeArcFlag = endAngle - startAngle <= Math.PI ? "0" : "1";
+
+    return `M ${centerX} ${centerY} L ${startX} ${startY} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${endX} ${endY} Z`;
+  };
+
+  // Calculate paths for pie chart
+  const principalPath = calculatePieChartPath(0, (principalPercentage / 100) * 2 * Math.PI);
+  const interestPath = calculatePieChartPath((principalPercentage / 100) * 2 * Math.PI, 2 * Math.PI);
+
+  // Prepare data for bar chart
+  const barChartData = [
+    { label: 'Principal', value: summary.totalPrincipalPaid },
+    { label: 'Interest', value: summary.totalInterestPaid },
+  ];
+  const maxValue = Math.max(...barChartData.map(item => item.value));
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -252,12 +332,63 @@ const PDFReport = ({ summary, paymentSchedule, formValues }: { summary: Summary,
               <View style={styles.summaryTableCol}><Text style={styles.tableCell}>{calculateDebtFreeDate(summary.monthsToPayoff)}</Text></View>
             </View>
           </View>
+          {/* Pie Chart */}
+          <View style={styles.chart}>
+            <Svg height={200} width={200}>
+              <Path d={principalPath} fill="#4CAF50" />
+              <Path d={interestPath} fill="#FF5722" />
+            </Svg>
+          </View>
+          <View style={styles.legend}>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendColor, { backgroundColor: '#4CAF50' }]} />
+              <Text style={styles.legendText}>Principal: {currencyFormatter.format(summary.totalPrincipalPaid)} ({principalPercentage.toFixed(1)}%)</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendColor, { backgroundColor: '#FF5722' }]} />
+              <Text style={styles.legendText}>Interest: {currencyFormatter.format(summary.totalInterestPaid)} ({interestPercentage.toFixed(1)}%)</Text>
+            </View>
+          </View>
+
+          {/* Bar Chart */}
+          <View style={styles.barChart}>
+            <Svg height={200} width="100%">
+              {barChartData.map((item, index) => {
+                const barHeight = (item.value / maxValue) * 150;
+                const barY = 200 - barHeight;
+                return (
+                  <React.Fragment key={item.label}>
+                    <Rect
+                      x={index * 120 + 20}
+                      y={barY}
+                      width={80}
+                      height={barHeight}
+                      fill={item.label === 'Principal' ? '#4CAF50' : '#FF5722'}
+                    />
+                    <Text
+                      x={index * 120 + 60}
+                      y={190}
+                      style={styles.barChartLabel}
+                    >
+                      {item.label}
+                    </Text>
+                    <Text
+                      x={index * 120 + 60}
+                      y={barY - 10}
+                      style={styles.barChartLabel}
+                    >
+                      {currencyFormatter.format(item.value)}
+                    </Text>
+                  </React.Fragment>
+                );
+              })}
+            </Svg>
+          </View>
+          
         </View>
         <View style={styles.section}>
           <Text style={styles.subtitle}>Additional Payment Scenarios</Text>
           {scenarios.map((additionalPayment) => {
-            //const newMonths = calculateNewPayoffTime(formValues.principal, formValues.apr, formValues.minimumPayment, additionalPayment);
-            //const interestSaved = calculateInterestSaved(formValues.principal, formValues.apr, formValues.minimumPayment, summary.monthsToPayoff, newMonths);
             const requiredMinimumPayment = Math.max(formValues.apr/12 + formValues.principal, formValues.minimumPayment)
 
             printStuff(formValues, summary)
@@ -366,6 +497,7 @@ export default function Component() {
     let month = 0
     let totalInterestPaid = 0
     let totalPrincipalPaid = 0
+    let monthlyPayment = 0;
 
     while (balance > 0) {
       month++
@@ -380,6 +512,7 @@ export default function Component() {
       const totPaid = payment
       totalInterestPaid += interest
       totalPrincipalPaid += principal
+      monthlyPayment = payment;
 
       const cumulativePrincipal = totalPrincipalPaid
       const cumulativeInterest = totalInterestPaid
@@ -405,6 +538,9 @@ export default function Component() {
       totalPrincipalPaid: parseFloat(totalPrincipalPaid.toFixed(2)),
       monthsToPayoff: month,
       yearsToPayoff: parseFloat((month / 12).toFixed(2)),
+      originalTotalInterestPaid: originalTotalInterestPaid ? originalTotalInterestPaid : 0,
+      apr: values.apr,
+      monthlyPayment: monthlyPayment
     }
 
     return [schedule, summary]
@@ -625,6 +761,7 @@ export default function Component() {
                 <Button 
                   variant="outline" 
                   className="group text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200 border-[hsl(var(--custom-border))] transition-colors"
+                  
                   onClick={() => {
                     toast({
                       title: "Report Sent",
@@ -642,7 +779,7 @@ export default function Component() {
                   onClick={() => {
                     setIsPdfGenerating(true);
                     setTimeout(() => {
-                      const pdfBlob = pdf(<PDFReport summary={summary} paymentSchedule={paymentSchedule} formValues={form.getValues()} />).toBlob();
+                      const pdfBlob = pdf(<PDFReport summary={summary} paymentSchedule={paymentSchedule} formValues={form.getValues()}/>).toBlob();
                       pdfBlob.then((blob) => {
                         const url = URL.createObjectURL(blob);
                         const link = document.createElement('a');
