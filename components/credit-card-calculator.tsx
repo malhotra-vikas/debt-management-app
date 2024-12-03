@@ -521,7 +521,7 @@ const PDFReport = ({ summary, paymentSchedule, formValues }: { summary: Summary,
             return (
               <View key={additionalPayment}>
                 <Text style={styles.scenarioTitle}>
-                → With an extra ${additionalPayment}/month, you could be debt-free by {' '}
+                  With an extra ${additionalPayment}/month, you could be debt-free by {' '}
                   <Text style={styles.debtFreeDate}>
                     {scenarioSummary.revisedDebtFreeDate}
                   </Text>, 
