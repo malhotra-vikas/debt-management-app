@@ -391,7 +391,7 @@ export default function Component() {
   return (
     <div className="card-calculator-container">
       <Card className="card-calculator-card">
-        <CardHeader className="space-y-1">
+        <CardHeader className="space-y-1 pb-2">
           <CardTitle className="card-calculator-title">
             <CreditCard className="mr-2 h-6 w-6" />
              Enter your card details below
@@ -403,7 +403,7 @@ export default function Component() {
         <CardContent>
           <Form {...form}>
             <form className="card-calculator-form">
-              <div className="card-calculator-grid">
+              <div className="card-calculator-grid space-y-4 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-4">
                 <FormField
                   control={form.control}
                   name="principal"
@@ -436,6 +436,8 @@ export default function Component() {
                     </FormItem>
                   )}
                 />
+              </div>
+              <div className="mt-4">
                 <FormField
                   control={form.control}
                   name="additionalPayment"
@@ -458,7 +460,7 @@ export default function Component() {
                   )}
                 />
               </div>
-              <div className="card-calculator-advanced-options">
+              <div className="card-calculator-advanced-options mt-4">
                 <Switch
                   id="advanced-options"
                   checked={showAdvancedOptions}
@@ -467,7 +469,7 @@ export default function Component() {
                 <Label htmlFor="advanced-options">Advanced Options</Label>
               </div>
               {showAdvancedOptions && (
-                <div className="card-calculator-grid">
+                <div className="card-calculator-grid space-y-4 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-4">
                   <FormField
                     control={form.control}
                     name="minimumPayment"
@@ -553,7 +555,7 @@ export default function Component() {
                   <PopoverTrigger asChild>
                     <Button 
                       variant="outline" 
-                      className="group text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200 transition-colors"
+                      className="group hover:text-[hsl(var(--custom-text))] border-[hsl(var(--custom-border))] transition-colors"
                     >
                       Reduce Payoff Time
                       <ArrowRightIcon className="inline-block ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -588,7 +590,7 @@ export default function Component() {
                           Calculate Results
                         </Button>
                       </div>
-                      {form.getValues('additionalPayment') > 0 && originalTotalInterestPaid !== null && (
+                      {form.getValues('additionalPayment') > 0 && originalTotalInterestPaid !== null && (originalTotalInterestPaid - summary.totalInterestPaid) > 0 && (
                         <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                           With an extra ${form.getValues('additionalPayment')}/month, you could be debt-free by <span className="font-bold text-green-600 dark:text-green-400">{calculateDebtFreeDate(summary.monthsToPayoff)}</span>, 
                           saving <span className="font-bold text-green-600 dark:text-green-400">{currencyFormatter.format(originalTotalInterestPaid - summary.totalInterestPaid)}</span> in interest!
@@ -600,7 +602,7 @@ export default function Component() {
                 </Popover>
                 <Button 
                   variant="outline" 
-                  className="group text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200 transition-colors"
+                  className="group hover:text-[hsl(var(--custom-text))] border-[hsl(var(--custom-border))] transition-colors"
                   onClick={() => {
                     toast({
                       title: "Report Sent",
@@ -614,7 +616,7 @@ export default function Component() {
                 {/*
                 <Button 
                   variant="outline" 
-                  className="group text-purple-600 hover:text-purple-700 hover:bg-purple-50 border-purple-200 transition-colors"
+                  className="group hover:text-[hsl(var(--custom-text))] border-[hsl(var(--custom-border))] transition-colors"
                   onClick={() => {
                     setIsPdfGenerating(true);
                     setTimeout(() => {
@@ -640,7 +642,7 @@ export default function Component() {
             </CardContent>
           </Card>
 
-          <Card className="card-calculator-card overflow-hidden">
+          <Card className="card-calculator-card">
             <CardHeader>
               <CardTitle className="text-2xl font-bold flex items-center justify-between">
                 Payment Schedule
