@@ -33,18 +33,6 @@ import { pdf } from '@react-pdf/renderer'
 
 // Import the CSS file
 import '@/styles/credit-card-calculator.css'
-
-import Mailchimp from "mailchimp-api-v3"
-
-import dotenv from 'dotenv';
-dotenv.config();
-
-const apiKey = process.env.MAILCHIMP_API_KEY;
-const listId = process.env.MAILCHIMP_LIST_ID;
-const serverPrefix = process.env.MAILCHIMP_SERVER_PREFIX;
-
-// Initialize Mailchimp
-const mailchimp = new Mailchimp(apiKey);
  
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -690,29 +678,25 @@ export default function Component() {
     console.log(link)
 
     try {
-      // Create a campaign
-      const campaign = await mailchimp.post('/campaigns', {
-        type: 'regular',
-        recipients: { list_id: listId },
-        settings: {
-          subject_line: 'Hello from MailChimp',
-          reply_to: 'your-email@example.com',
-          from_name: 'Your Name or Company'
-        }
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, name, link }),
       });
 
-      // Set the campaign content
-      await mailchimp.put(`/campaigns/${campaign.id}/content`, {
-        html: `<p>Hello ${name},</p><p>Check out this link: <a href="${link}">${link}</a></p>`
-      });
+      if (!response.ok) {
+        throw new Error('Failed to send email');
+      }
 
-      // Send the campaign
-      const response = await mailchimp.post(`/campaigns/${campaign.id}/actions/send`);
-      console.log('Campaign sent successfully:', response);
+      const data = await response.json();
+      console.log('Email sent successfully:', data);
+      return data;
     } catch (error) {
-      console.error('Failed to create or send campaign:', error);
+      console.error('Error sending email:', error);
+      throw error;
     }
-
   }
 
   function calculatePaymentSchedule(values: FormValues): [PaymentScheduleItem[], Summary] {

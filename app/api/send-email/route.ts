@@ -16,15 +16,24 @@ export async function POST(request: Request) {
     try {
         const { email, name, pdfUrl } = await request.json();
 
-        // Send email using Mailchimp
-        const response = await Mailchimp.messages.send({
-            message: {
-                from_email: 'your-email@example.com',
-                subject: 'Your Credit Card Debt Report',
-                text: `Hello ${name},\n\nHere's your credit card debt report: ${pdfUrl}`,
-                to: [{ email, type: 'to' }]
+        // Create a campaign
+        const campaign = await Mailchimp.campaigns.create({
+            type: 'regular',
+            recipients: { list_id: listId },
+            settings: {
+                subject_line: 'Your Credit Card Debt Report',
+                from_name: 'DealingWithDebt.org',
+                reply_to: 'no-reply@DealingWithDebt.org'
             }
         });
+
+        // Set campaign content
+        await Mailchimp.campaigns.setContent(campaign.id, {
+            html: `Hello ${name},<br><br>Here's your credit card debt report: <a href="${pdfUrl}">${pdfUrl}</a>`
+        });
+
+        // Send the campaign
+        await Mailchimp.campaigns.send(campaign.id);
 
         return NextResponse.json({ success: true, message: 'Email sent successfully' });
     } catch (error) {
