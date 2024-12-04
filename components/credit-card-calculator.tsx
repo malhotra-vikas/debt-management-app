@@ -607,7 +607,7 @@ const uploadPdfToServer = async (pdfBlob: Blob) => {
   formData.append('pdf', pdfBlob, 'credit-card-debt-report.pdf');
 
   try {
-    const response = await fetch('http://localhost:3150/upload-pdf', {
+    const response = await fetch('http://ai.dealingwithdebt.org:3150/upload-pdf', {
       method: 'POST',
       body: formData,
     });
@@ -615,11 +615,11 @@ const uploadPdfToServer = async (pdfBlob: Blob) => {
     if (!response.ok) {
       throw new Error('Failed to upload PDF');
     }
-    console.log("Upload Response is ", response)
+    const responseData = await response.json();
 
-    return await response.json();
+    return responseData;
   } catch (error) {
-    console.error('Error uploading PDF:', error);
+    console.log('Error uploading PDF:', error);
     throw error;
   }
 };
@@ -720,10 +720,18 @@ export default function Component() {
       yearsToPayoff: parseFloat((month / 12).toFixed(2)),
       originalTotalInterestPaid: originalTotalInterestPaid ? originalTotalInterestPaid : 0,
       apr: values.apr,
-      monthlyPayment: monthlyPayment
+      monthlyPayment: monthlyPayment,
+      revisedDebtFreeDate: calculateDebtFreeDate(month)
     }
 
     return [schedule, summary]
+  }
+
+  function sendEmailWithMailChimp(email: string, name: string, link: any) {
+    console.log("Send email via MailChimp to ")
+    console.log(email)
+    console.log(name)
+    console.log(link)
   }
 
   return (
@@ -987,17 +995,19 @@ export default function Component() {
                               return;
                             }
                             setIsPdfGenerating(true);
-                            setEmailPopupOpen(false);
                             try {
                               const pdfBlob = await pdf(<PDFReport summary={summary} paymentSchedule={paymentSchedule} formValues={form.getValues()} />).toBlob();
-                              await uploadPdfToServer(pdfBlob);
+                              const uploadResult = await uploadPdfToServer(pdfBlob);
                               setIsPdfGenerating(false);
+                              setEmailPopupOpen(false);
+                              await sendEmailWithMailChimp(email, name, uploadResult.link);                              
                               toast({
                                 title: "Report Sent",
                                 description: `Your debt repayment report has been generated and sent to ${email}.`,
                               });
                               setName('');
                               setEmail('');
+                              console.log("Upload successful:", uploadResult);
                             } catch (error) {
                               setIsPdfGenerating(false);
                               toast({
@@ -1005,6 +1015,7 @@ export default function Component() {
                                 description: "Failed to generate or send the report. Please try again.",
                                 variant: "destructive",
                               });
+                              console.log("Error in email submission:", error);
                             }
                           }}
                           className="w-full bg-blue-600 text-white hover:bg-blue-700 transition-colors"
