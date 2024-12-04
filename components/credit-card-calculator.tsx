@@ -597,11 +597,40 @@ const PDFReport = ({ summary, paymentSchedule, formValues }: { summary: Summary,
   );
 };
 
+const isValidEmail = (email: string) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+const uploadPdfToServer = async (pdfBlob: Blob) => {
+  const formData = new FormData();
+  formData.append('pdf', pdfBlob, 'credit-card-debt-report.pdf');
+
+  try {
+    const response = await fetch('http://localhost:3150/upload-pdf', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to upload PDF');
+    }
+    console.log("Upload Response is ", response)
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error uploading PDF:', error);
+    throw error;
+  }
+};
+
 export default function Component() {
   const [paymentSchedule, setPaymentSchedule] = useState<PaymentScheduleItem[]>([])
   const [summary, setSummary] = useState<Summary | null>(null)
   const [showChart, setShowChart] = useState(false)
   const [popoverOpen, setPopoverOpen] = useState(false)
+  const [emailPopupOpen, setEmailPopupOpen] = useState(false)
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const { toast } = useToast()
   const [isPdfGenerating, setIsPdfGenerating] = useState(false)
@@ -909,45 +938,111 @@ export default function Component() {
                     </div>
                   </PopoverContent>
                 </Popover>
-                <Button 
-                  variant="outline" 
-                  className="group text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200 border-[hsl(var(--custom-border))] transition-colors"
-                  
-                  onClick={() => {
-                    toast({
-                      title: "Report Sent",
-                      description: "Your debt repayment report has been sent to your email.",
-                    });
-                  }}
-                >
-                  Email my report
-                  <Send className="inline-block ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </Button>
-                {
+                <Popover open={emailPopupOpen} onOpenChange={setEmailPopupOpen}>
+                  <PopoverTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      className="group text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200 border-[hsl(var(--custom-border))] transition-colors"
+                    >
+                      Email my report
+                      <Send className="inline-block ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-96 p-0 bg-white dark:bg-gray-800 rounded-lg shadow-xl">
+                    <div className="p-4 bg-blue-50 dark:bg-blue-900 rounded-t-lg">
+                      <h3 className="font-semibold text-lg mb-2 text-blue-800 dark:text-blue-100">Email My Report</h3>
+                      <p className="text-sm text-blue-700 dark:text-blue-200">Enter your name and email to receive the debt repayment report.</p>
+                    </div>
+                    <div className="p-4">
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="name" className="text-sm font-medium text-gray-700 dark:text-gray-300">Name</Label>
+                          <Input
+                            id="name"
+                            placeholder="Enter your name"
+                            className="mt-1 w-full border-gray-300 dark:border-gray-600"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">Email</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            placeholder="Enter your email"
+                            className="mt-1 w-full border-gray-300 dark:border-gray-600"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                          />
+                        </div>
+                        <Button 
+                          onClick={async () => {
+                            if (!isValidEmail(email)) {
+                              toast({
+                                title: "Invalid Email",
+                                description: "Please enter a valid email address.",
+                                variant: "destructive",
+                              });
+                              return;
+                            }
+                            setIsPdfGenerating(true);
+                            setEmailPopupOpen(false);
+                            try {
+                              const pdfBlob = await pdf(<PDFReport summary={summary} paymentSchedule={paymentSchedule} formValues={form.getValues()} />).toBlob();
+                              await uploadPdfToServer(pdfBlob);
+                              setIsPdfGenerating(false);
+                              toast({
+                                title: "Report Sent",
+                                description: `Your debt repayment report has been generated and sent to ${email}.`,
+                              });
+                              setName('');
+                              setEmail('');
+                            } catch (error) {
+                              setIsPdfGenerating(false);
+                              toast({
+                                title: "Error",
+                                description: "Failed to generate or send the report. Please try again.",
+                                variant: "destructive",
+                              });
+                            }
+                          }}
+                          className="w-full bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                          disabled={isPdfGenerating}
+                        >
+                          {isPdfGenerating ? 'Generating Report...' : 'Send Report'}
+                        </Button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
                 <Button 
                   variant="outline" 
                   className="group hover:text-[hsl(var(--custom-text))] border-[hsl(var(--custom-border))] transition-colors"
-                  onClick={() => {
+                  onClick={async () => {
                     setIsPdfGenerating(true);
-                    setTimeout(() => {
-                      const pdfBlob = pdf(<PDFReport summary={summary} paymentSchedule={paymentSchedule} formValues={form.getValues()}/>).toBlob();
-                      pdfBlob.then((blob) => {
-                        const url = URL.createObjectURL(blob);
-                        const link = document.createElement('a');
-                        link.href=url;
-                        link.download = 'credit-card-debt-report.pdf';
-                        link.click();
-                        URL.revokeObjectURL(url);
-                        setIsPdfGenerating(false);
+                    try {
+                      const pdfBlob = await pdf(<PDFReport summary={summary} paymentSchedule={paymentSchedule} formValues={form.getValues()} />).toBlob();
+                      await uploadPdfToServer(pdfBlob);
+                      setIsPdfGenerating(false);
+                      toast({
+                        title: "PDF Generated",
+                        description: "Your debt repayment report has been uploaded to the server.",
                       });
-                    }, 100);
+                    } catch (error) {
+                      setIsPdfGenerating(false);
+                      toast({
+                        title: "Error",
+                        description: "Failed to generate or upload the PDF. Please try again.",
+                        variant: "destructive",
+                      });
+                    }
                   }}
                   disabled={isPdfGenerating}
                 >
                   {isPdfGenerating ? 'Generating PDF...' : 'Download PDF Report'}
                   <FileDown className="inline-block ml-1 h-4 w-4 transition-transform group-hover:translate-y-1" />
                 </Button>
-                }
               </div>
             </CardContent>
           </Card>
