@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ArrowDownIcon, ArrowUpIcon, CalendarIcon, DollarSignIcon, CreditCard, PercentIcon, ArrowRightIcon, Info, Send, FileDown } from 'lucide-react'
+import { ArrowDownIcon, ArrowUpIcon, CalendarIcon, DollarSignIcon, CreditCard, PercentIcon, ArrowRightIcon, Info, Send } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { useToast } from "@/components/ui/use-toast"
 import { Switch } from "@/components/ui/switch"
@@ -34,6 +34,18 @@ import { pdf } from '@react-pdf/renderer'
 // Import the CSS file
 import '@/styles/credit-card-calculator.css'
 
+import Mailchimp from "mailchimp-api-v3"
+
+import dotenv from 'dotenv';
+dotenv.config();
+
+const apiKey = process.env.MAILCHIMP_API_KEY;
+const listId = process.env.MAILCHIMP_LIST_ID;
+const serverPrefix = process.env.MAILCHIMP_SERVER_PREFIX;
+
+// Initialize Mailchimp
+const mailchimp = new Mailchimp(apiKey);
+ 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD',
@@ -616,6 +628,7 @@ const uploadPdfToServer = async (pdfBlob: Blob) => {
       throw new Error('Failed to upload PDF');
     }
     const responseData = await response.json();
+    console.log("Upload Response:", responseData);
 
     return responseData;
   } catch (error) {
@@ -669,6 +682,38 @@ export default function Component() {
       })
     }
   }, [form.watch('principal'), form.watch('apr'), form.watch('minimumPayment'), form.watch('additionalPayment'), form.watch('requiredPrincipalPercentage')])
+
+  async function sendEmailWithMailChimp(email: string, name: string, link: any) {
+    console.log("Send email via MailChimp to ")
+    console.log(email)
+    console.log(name)
+    console.log(link)
+
+    try {
+      // Create a campaign
+      const campaign = await mailchimp.post('/campaigns', {
+        type: 'regular',
+        recipients: { list_id: listId },
+        settings: {
+          subject_line: 'Hello from MailChimp',
+          reply_to: 'your-email@example.com',
+          from_name: 'Your Name or Company'
+        }
+      });
+
+      // Set the campaign content
+      await mailchimp.put(`/campaigns/${campaign.id}/content`, {
+        html: `<p>Hello ${name},</p><p>Check out this link: <a href="${link}">${link}</a></p>`
+      });
+
+      // Send the campaign
+      const response = await mailchimp.post(`/campaigns/${campaign.id}/actions/send`);
+      console.log('Campaign sent successfully:', response);
+    } catch (error) {
+      console.error('Failed to create or send campaign:', error);
+    }
+
+  }
 
   function calculatePaymentSchedule(values: FormValues): [PaymentScheduleItem[], Summary] {
     let balance = values.principal
@@ -726,14 +771,6 @@ export default function Component() {
 
     return [schedule, summary]
   }
-
-  function sendEmailWithMailChimp(email: string, name: string, link: any) {
-    console.log("Send email via MailChimp to ")
-    console.log(email)
-    console.log(name)
-    console.log(link)
-  }
-
   return (
     <div className="card-calculator-container">
       <Card className="card-calculator-card">
@@ -1027,33 +1064,7 @@ export default function Component() {
                     </div>
                   </PopoverContent>
                 </Popover>
-                <Button 
-                  variant="outline" 
-                  className="group hover:text-[hsl(var(--custom-text))] border-[hsl(var(--custom-border))] transition-colors"
-                  onClick={async () => {
-                    setIsPdfGenerating(true);
-                    try {
-                      const pdfBlob = await pdf(<PDFReport summary={summary} paymentSchedule={paymentSchedule} formValues={form.getValues()} />).toBlob();
-                      await uploadPdfToServer(pdfBlob);
-                      setIsPdfGenerating(false);
-                      toast({
-                        title: "PDF Generated",
-                        description: "Your debt repayment report has been uploaded to the server.",
-                      });
-                    } catch (error) {
-                      setIsPdfGenerating(false);
-                      toast({
-                        title: "Error",
-                        description: "Failed to generate or upload the PDF. Please try again.",
-                        variant: "destructive",
-                      });
-                    }
-                  }}
-                  disabled={isPdfGenerating}
-                >
-                  {isPdfGenerating ? 'Generating PDF...' : 'Download PDF Report'}
-                  <FileDown className="inline-block ml-1 h-4 w-4 transition-transform group-hover:translate-y-1" />
-                </Button>
+                
               </div>
             </CardContent>
           </Card>
