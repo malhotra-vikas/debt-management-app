@@ -55,13 +55,13 @@ export async function POST(request: Request) {
         console.log("API Key", process.env.MAILCHIMP_API_KEY)
         console.log("Prefix Key", process.env.MAILCHIMP_SERVER_PREFIX)
         console.log("List ID", process.env.MAILCHIMP_LIST_ID)
-
+/* 
         // Add subscriber and await to ensure they are added before proceeding
         const subscriberResponse = await addSubscriberToList(email, name, link);
         if (!subscriberResponse.id) {
             throw new Error('Failed to add subscriber');
         }
-/*        
+       
         console.log("Creating campaign for:", email);
 
 
