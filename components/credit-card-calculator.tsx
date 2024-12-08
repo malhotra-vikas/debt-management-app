@@ -20,6 +20,7 @@ import { Separator } from '@/components/ui/separator'
 import { useToast } from "@/components/ui/use-toast"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
+import { MdCheckCircle } from 'react-icons/md'; // Importing an icon for success indication
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
@@ -633,6 +634,11 @@ export default function Component() {
   const [emailPopupOpen, setEmailPopupOpen] = useState(false)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [emailSentSuccess, setEmailSentSuccess] = useState(false);
+  const [emailMessage, setEmailMessage] = useState('');
+  const [reportUrl, setReportUrl] = useState('');  // This should be set to the actual URL of the report
+
+  const [reportAvailable, setReportAvailableMessage] = useState('')
   const { toast } = useToast()
   const [isPdfGenerating, setIsPdfGenerating] = useState(false)
   const [originalTotalInterestPaid, setOriginalTotalInterestPaid] = useState<number | null>(null)
@@ -648,6 +654,17 @@ export default function Component() {
       requiredPrincipalPercentage: 1.5,
     },
   })
+
+  useEffect(() => {
+    let timer;
+    if (emailSentSuccess) {
+      timer = setTimeout(() => {
+        setEmailSentSuccess(false); // Hide the notification after 5 seconds
+      }, 5000);
+    }
+
+    return () => clearTimeout(timer); // Clear the timer if the component unmounts
+  }, [emailSentSuccess]);
 
   useEffect(() => {
     const apr = form.watch('apr')
@@ -691,8 +708,19 @@ export default function Component() {
       }
 
       const data = await response.json();
-      console.log('Email sent successfully:', data);
-      return data;
+
+      // Enhanced variable names and structure
+      const result = {
+        emailData: data, // Provides clearer context to what 'data' contains
+        reportLink: link // Corrected typo in key name, and use camelCase for consistency
+    };
+    
+      console.log('Email sent successfully:', result);
+      setEmailSentSuccess(true);
+      setEmailMessage('Email has been successfully sent and the report is available.');
+      setReportUrl(link);
+
+      return result;
     } catch (error) {
       console.error('Error sending email:', error);
       throw error;
@@ -1021,11 +1049,12 @@ export default function Component() {
                               const uploadResult = await uploadPdfToServer(pdfBlob);
                               setIsPdfGenerating(false);
                               setEmailPopupOpen(false);
-                              await sendEmailWithMailChimp(email, name, uploadResult.link);                              
+                              const reportSentResponse = await sendEmailWithMailChimp(email, name, uploadResult.link);                              
                               toast({
                                 title: "Report Sent",
                                 description: `Your debt repayment report has been generated and sent to ${email}.`,
                               });
+                              setReportAvailableMessage(`Your debt repayment report has been generated and sent to ${reportSentResponse.reportLink}.`)
                               setName('');
                               setEmail('');
                               console.log("Upload successful:", uploadResult);
@@ -1047,9 +1076,17 @@ export default function Component() {
                       </div>
                     </div>
                   </PopoverContent>
-                </Popover>
-                
+                </Popover>  
               </div>
+                {emailSentSuccess && (
+                  <div id="reportAvailable" style={{ marginTop: '20px', padding: '15px', backgroundColor: '#e0ffe0', borderRadius: '5px', color: '#4CAF50', textAlign: 'center' }}>
+                    <MdCheckCircle size={24} style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+                    <span>Email has been successfully sent and the report is available. </span>
+                    <a href={reportUrl} target="_blank" rel="noopener noreferrer" style={{ fontWeight: 'bold', color: '#4CAF50' }}>
+                      View and Download Report
+                    </a>
+                  </div>
+                )}
             </CardContent>
           </Card>
 
