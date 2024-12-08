@@ -608,7 +608,7 @@ const uploadPdfToServer = async (pdfBlob: Blob) => {
   formData.append('pdf', pdfBlob, 'credit-card-debt-report.pdf');
 
   try {
-    const response = await fetch('http://ai.dealingwithdebt.org:3150/upload-pdf', {
+    const response = await fetch('https://ai.dealingwithdebt.org:3150/upload-pdf', {
       method: 'POST',
       body: formData,
     });
