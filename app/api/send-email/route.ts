@@ -45,12 +45,12 @@ export async function addSubscriberToList(email: string, name: string, pdfUrl: s
 
 export async function POST(request: Request) {
     try {
-        const { email, name, link } = await request.json();
+        const { email, fname, lname, link } = await request.json();
         
         console.log("IN email seding route")
 
         console.log(email)
-        console.log(name)
+        console.log(fname)
         console.log(link)
         console.log("API Key", process.env.MAILCHIMP_API_KEY)
         console.log("Prefix Key", process.env.MAILCHIMP_SERVER_PREFIX)

@@ -395,8 +395,17 @@ const calculateScenarioSummary = (principal: number, apr: number, minimumPayment
   }
 }
 
-const PDFReport = ({ summary, paymentSchedule, formValues }: { summary: Summary, paymentSchedule: PaymentScheduleItem[], formValues: FormValues }) => {
+interface PDFReportProps {
+  summary: Summary;
+  paymentSchedule: PaymentScheduleItem[];
+  formValues: FormValues;
+  fName: string;
+  lName: string;
+}
+
+const PDFReport = ({ summary, paymentSchedule, formValues, fName, lName }: PDFReportProps) => {
   const scenarios = [10, 25, 50];
+  console.log("in PDF additional payment selected", formValues.additionalPayment)
 
   const renderScenarioCharts = (scenarioSummary: Summary) => {
     const totalAmount = scenarioSummary.totalPrincipalPaid + scenarioSummary.totalInterestPaid;
@@ -501,7 +510,7 @@ const PDFReport = ({ summary, paymentSchedule, formValues }: { summary: Summary,
     <Document>
       <Page size="A4" style={styles.page}>
         <View style={styles.section}>
-          <Text style={styles.title}>Credit Card Payoff Report</Text>
+          <Text style={styles.title}> Credit Card Payoff Report for {fName} {lName}</Text>
           <Text style={styles.subtitle}>Current Payoff Details</Text>
           <View style={styles.table}>
             <View style={[styles.tableRow, styles.tableHeader]}>
@@ -632,7 +641,8 @@ export default function Component() {
   const [showChart, setShowChart] = useState(false)
   const [popoverOpen, setPopoverOpen] = useState(false)
   const [emailPopupOpen, setEmailPopupOpen] = useState(false)
-  const [name, setName] = useState('')
+  const [fname, setFName] = useState('')
+  const [lname, setLName] = useState('')
   const [email, setEmail] = useState('')
   const [emailSentSuccess, setEmailSentSuccess] = useState(false);
   const [emailMessage, setEmailMessage] = useState('');
@@ -688,10 +698,10 @@ export default function Component() {
     }
   }, [form.watch('principal'), form.watch('apr'), form.watch('minimumPayment'), form.watch('additionalPayment'), form.watch('requiredPrincipalPercentage')])
 
-  async function sendEmailWithMailChimp(email: string, name: string, link: any) {
+  async function sendEmailWithMailChimp(email: string, fname: string, lname: string, link: any) {
     console.log("Send email via MailChimp to ")
     console.log(email)
-    console.log(name)
+    console.log(fname)
     console.log(link)
 
     try {
@@ -700,7 +710,7 @@ export default function Component() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, name, link }),
+        body: JSON.stringify({ email, fname, lname, link }),
       });
 
       if (!response.ok) {
@@ -1013,13 +1023,23 @@ export default function Component() {
                     <div className="p-4">
                       <div className="space-y-4">
                         <div>
-                          <Label htmlFor="name" className="text-sm font-medium text-gray-700 dark:text-gray-300">Name</Label>
+                          <Label htmlFor="fname" className="text-sm font-medium text-gray-700 dark:text-gray-300">First Name</Label>
                           <Input
-                            id="name"
-                            placeholder="Enter your name"
+                            id="fname"
+                            placeholder="Your first name"
                             className="mt-1 w-full border-gray-300 dark:border-gray-600"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
+                            value={fname}
+                            onChange={(e) => setFName(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="lname" className="text-sm font-medium text-gray-700 dark:text-gray-300">Last Name</Label>
+                          <Input
+                            id="lname"
+                            placeholder="Your last name"
+                            className="mt-1 w-full border-gray-300 dark:border-gray-600"
+                            value={lname}
+                            onChange={(e) => setLName(e.target.value)}
                           />
                         </div>
                         <div>
@@ -1045,17 +1065,20 @@ export default function Component() {
                             }
                             setIsPdfGenerating(true);
                             try {
-                              const pdfBlob = await pdf(<PDFReport summary={summary} paymentSchedule={paymentSchedule} formValues={form.getValues()} />).toBlob();
+                              console.log("FName before callig PDF - ", fname)
+                              console.log("LName before callig PDF - ", lname)
+                              const pdfBlob = await pdf(<PDFReport summary={summary} paymentSchedule={paymentSchedule} formValues={form.getValues()} fName={fname} lName={lname} />).toBlob();
                               const uploadResult = await uploadPdfToServer(pdfBlob);
                               setIsPdfGenerating(false);
                               setEmailPopupOpen(false);
-                              const reportSentResponse = await sendEmailWithMailChimp(email, name, uploadResult.link);                              
+                              const reportSentResponse = await sendEmailWithMailChimp(email, fname, lname, uploadResult.link);                                                            
                               toast({
                                 title: "Report Sent",
                                 description: `Your debt repayment report has been generated and sent to ${email}.`,
                               });
                               setReportAvailableMessage(`Your debt repayment report has been generated and sent to ${reportSentResponse.reportLink}.`)
-                              setName('');
+                              setFName('');
+                              setLName('');
                               setEmail('');
                               console.log("Upload successful:", uploadResult);
                             } catch (error) {
