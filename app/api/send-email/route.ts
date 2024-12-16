@@ -6,88 +6,105 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const listId = process.env.MAILCHIMP_LIST_ID;
+const apiKey = process.env.MAILCHIMP_API_KEY;
+const serverPrefix = process.env.MAILCHIMP_SERVER_PREFIX;
 
 // Initialize Mailchimp
 Mailchimp.setConfig({
-    apiKey: process.env.MAILCHIMP_API_KEY,
-    server: process.env.MAILCHIMP_SERVER_PREFIX, // e.g., 'us1'
+    apiKey: apiKey,
+    server: serverPrefix
 });
 
-export function generateSubscriberHash(email: string) {
-    return crypto.createHash('md5').update(email.toLowerCase()).digest("hex");
+// Define TypeScript Types for Payload and Response
+interface MergeFields {
+    LINK: string,
+    FNAME: string,
+    LNAME: string,
+    MMERGE5: string, // linkk
+    MMERGE7: string, // Name of the tool
+    MMERGE6: string // IP Address
 }
 
-export async function addSubscriberToList(email: string, name: string, pdfUrl: string) {
-    const source = "Credit Card Payoff Calculator"
-    const listId = process.env.MAILCHIMP_LIST_ID;
-    const subscriberHash = generateSubscriberHash(email); // Generate the MD5 hash of the email
-
-    try {
-        const response = await Mailchimp.lists.setListMember(listId, subscriberHash, {
-            email_address: email,
-            status_if_new: 'subscribed', // Status if the subscriber is new
-            status: 'subscribed', // Status to be updated if the subscriber exists
-            merge_fields: {
-                FNAME: name,
-                DocLocation: pdfUrl,
-                Source: source,
-                merge_field5: pdfUrl,
-                merge_field7: source
-            }
-        });
-        console.log(`Added or updated ${email} in list. Subscriber ID: ${response.id}`);
-        return response;
-    } catch (error) {
-        console.error('Error adding subscriber:', error);
-        throw error;
-    }
+interface AddUserPayload {
+    email_address: string;
+    status: 'subscribed' | 'pending';
+    merge_fields?: MergeFields;
 }
+
+
+interface MailchimpResponse {
+    id: string;
+    email_address: string;
+    status: string;
+    [key: string]: any;
+}
+
 
 export async function POST(request: Request) {
     try {
         const { email, fname, lname, link } = await request.json();
-        
+
         console.log("IN email seding route")
 
-        console.log(email)
-        console.log(fname)
-        console.log(link)
+        console.log("Email :", email)
+        console.log("FName :", fname)
+        console.log("Link to be sent : ", link)
         console.log("API Key", process.env.MAILCHIMP_API_KEY)
         console.log("Prefix Key", process.env.MAILCHIMP_SERVER_PREFIX)
         console.log("List ID", process.env.MAILCHIMP_LIST_ID)
-/* 
-        // Add subscriber and await to ensure they are added before proceeding
-        const subscriberResponse = await addSubscriberToList(email, name, link);
-        if (!subscriberResponse.id) {
-            throw new Error('Failed to add subscriber');
-        }
-       
-        console.log("Creating campaign for:", email);
 
+        await addUserToList(email, fname, lname, link)
 
-        // Create a campaign
-        const campaign = await Mailchimp.campaigns.create({
-            type: 'regular',
-            recipients: { list_id: listId },
-            settings: {
-                subject_line: 'Your Credit Card Debt Report',
-                from_name: 'DealingWithDebt.org',
-                reply_to: 'no-reply@DealingWithDebt.org'
-            }
-        });
-
-        // Set campaign content
-        await Mailchimp.campaigns.setContent(campaign.id, {
-            html: `Hello ${name},<br><br>Here's your credit card debt report: <a href="${pdfUrl}">${pdfUrl}</a>`
-        });
-
-        // Send the campaign
-        await Mailchimp.campaigns.send(campaign.id);
-*/
         return NextResponse.json({ success: true, message: 'Email sent successfully' });
-        
+
     } catch (error) {
         console.error('Detailed error from Mailchimp:', error.response || error.text);
         return NextResponse.json({ success: false, message: 'Failed to send email', details: error.message }, { status: 500 });
     }
+
+    // Function to Add a User to a Mailchimp List
+    async function addUserToList(email: string, fName: string, lLname: string, link: string): Promise<void> {
+        // Mailchimp requires the email to be hashed using MD5 for identifying users
+        const emailHash = crypto.createHash('md5').update(email.toLowerCase()).digest('hex');
+
+        const url = `https://${serverPrefix}.api.mailchimp.com/3.0/lists/${listId}/members/${emailHash}`;
+
+        const payload: AddUserPayload = {
+            email_address: email,
+            status: 'subscribed', // Change to 'pending' if you want to send a confirmation email
+            merge_fields: {
+                LINK: link,
+                FNAME: fName,
+                LNAME: lLname,
+                MMERGE5: link,
+                MMERGE6: "ip",
+                MMERGE7: "Credit Card Payoff Calculator"
+            },
+        };
+
+        try {
+            const response = await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    Authorization: `Basic ${Buffer.from(`anystring:${apiKey}`).toString(
+                        'base64'
+                    )}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                console.error('Mailchimp API Error:', error);
+                throw new Error(`Failed to add user: ${response.statusText}`);
+            }
+
+            const data: MailchimpResponse = await response.json();
+            console.log('User added successfully:', data);
+        } catch (error) {
+            console.error('Error adding user to Mailchimp:', error);
+        }
+    }
+
 }

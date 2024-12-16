@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
+import pdflogo from './ui/pdflogo.jpg'
+
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -29,7 +31,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { Document, Page, Text, View, StyleSheet, Svg, Path, Rect, Font } from '@react-pdf/renderer'
+import { Document, Page, Text, View, StyleSheet, Image, Svg, Path, Rect, Font } from '@react-pdf/renderer'
 import { pdf } from '@react-pdf/renderer'
 
 // Import the CSS file
@@ -108,6 +110,15 @@ const styles = StyleSheet.create({
     fontFamily: 'Helvetica',
     color: '#333333'
   },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 20, // Adds space between the logo and the title
+  },
+  logo: {
+    width: 150, // Adjust width to fit your design
+    height: 50, // Adjust height to fit your design
+    objectFit: 'contain', // Ensures the logo scales properly  
+  },
   section: {
     margin: 10,
     padding: 10,
@@ -121,11 +132,29 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 16,
     marginBottom: 10,
     color: '#002A65',
     fontWeight: 'bold',
-    textAlign: 'center',
+    textAlign: 'left',
+  },
+  summaryItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between', // Ensures label and value are at opposite ends
+    alignItems: 'center', // Aligns items vertically in the center
+    marginVertical: 8, // Adds space between rows
+  },
+  summaryLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#002A65',
+    flex: 1, // Allows the label to take up available space
+  },
+  summaryValue: {
+    fontSize: 14,
+    color: '#002A65',
+    textAlign: 'right', // Ensures the value aligns to the right
+    flex: 1, // Allows the value to take up available space
   },
   text: {
     fontSize: 12,
@@ -230,7 +259,7 @@ const styles = StyleSheet.create({
     marginRight: 5,
   },
   legendText: {
-    fontSize: 10,
+    fontSize: 11,
   },
   chart: {
     width: '48%',
@@ -249,7 +278,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   barChartLabel: {
-    fontSize: 8,
+    fontSize: 10,
     textAnchor: 'middle',
   },
   chartTable: {
@@ -289,7 +318,7 @@ const styles = StyleSheet.create({
     marginRight: 5,
   },
   pieChartLegendText: {
-    fontSize: 8,
+    fontSize: 10,
   },
   scenarioTable: {
     display: 'table',
@@ -405,6 +434,7 @@ interface PDFReportProps {
 
 const PDFReport = ({ summary, paymentSchedule, formValues, fName, lName }: PDFReportProps) => {
   const scenarios = [10, 25, 50];
+  const originalAdditionalPayment = formValues.additionalPayment
   console.log("in PDF additional payment selected", formValues.additionalPayment)
 
   const renderScenarioCharts = (scenarioSummary: Summary) => {
@@ -444,16 +474,16 @@ const PDFReport = ({ summary, paymentSchedule, formValues, fName, lName }: PDFRe
       <View style={styles.scenarioChartContainer}>
         <View style={styles.chartTableCell}>
           <Svg height={120} width={120}>
-            <Path d={principalPath} fill="#4CAF50" />
-            <Path d={interestPath} fill="#FF5722" />
+            <Path d={principalPath} fill="#72A967" />
+            <Path d={interestPath} fill="#E63946" />
           </Svg>
           <View style={styles.pieChartLegend}>
             <View style={styles.pieChartLegendItem}>
-              <View style={[styles.pieChartLegendColor, { backgroundColor: '#4CAF50' }]} />
+              <View style={[styles.pieChartLegendColor, { backgroundColor: '#72A967' }]} />
               <Text style={styles.pieChartLegendText}>Principal</Text>
             </View>
             <View style={styles.pieChartLegendItem}>
-              <View style={[styles.pieChartLegendColor, { backgroundColor: '#FF5722' }]} />
+              <View style={[styles.pieChartLegendColor, { backgroundColor: '#E63946' }]} />
               <Text style={styles.pieChartLegendText}>Interest</Text>
             </View>
           </View>
@@ -470,7 +500,7 @@ const PDFReport = ({ summary, paymentSchedule, formValues, fName, lName }: PDFRe
                     y={barY}
                     width={30}
                     height={barHeight}
-                    fill={item.label === 'Principal' ? '#4CAF50' : item.label === 'Interest' ? '#FF5722' : '#3B82F6'}
+                    fill={item.label === 'Principal' ? '#72A967' : item.label === 'Interest' ? '#E63946' : '#002A65'}
                   />
                   <Text
                     x={index * 60 + 25}
@@ -509,25 +539,45 @@ const PDFReport = ({ summary, paymentSchedule, formValues, fName, lName }: PDFRe
   return (
     <Document>
       <Page size="A4" style={styles.page}>
+        {/* Logo Section */}
+        <View style={styles.logoContainer}>
+          <Image src={pdflogo.src} style={styles.logo} />
+        </View>
+
+        {/* Title Section */}
         <View style={styles.section}>
           <Text style={styles.title}> Credit Card Payoff Report for {fName} {lName}</Text>
-          <Text style={styles.subtitle}>Current Payoff Details</Text>
-          <View style={styles.table}>
-            <View style={[styles.tableRow, styles.tableHeader]}>
-              <View style={styles.summaryTableCol}><Text style={styles.tableCell}>Total Paid</Text></View>
-              <View style={styles.summaryTableCol}><Text style={styles.tableCell}>Total Interest</Text></View>
-              <View style={styles.summaryTableCol}><Text style={styles.tableCell}>Total Principal</Text></View>
-              <View style={styles.summaryTableCol}><Text style={styles.tableCell}>Time to Pay Off</Text></View>
-              <View style={styles.summaryTableCol}><Text style={styles.tableCell}>Debt Free Date</Text></View>
+
+          <View>
+            <Text style={styles.subtitle}>Current Payoff Summary</Text>
+            
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>Total Paid:</Text>
+              <Text style={styles.summaryValue}>{currencyFormatter.format(summary.totalInterestPaid + summary.totalPrincipalPaid)}</Text>
             </View>
-            <View style={styles.tableRow}>
-              <View style={styles.summaryTableCol}><Text style={styles.tableCell}>{currencyFormatter.format(summary.totalInterestPaid + summary.totalPrincipalPaid)}</Text></View>
-              <View style={styles.summaryTableCol}><Text style={styles.tableCell}>{currencyFormatter.format(summary.totalInterestPaid)}</Text></View>
-              <View style={styles.summaryTableCol}><Text style={styles.tableCell}>{currencyFormatter.format(summary.totalPrincipalPaid)}</Text></View>
-              <View style={styles.summaryTableCol}><Text style={styles.tableCell}>{summary.yearsToPayoff.toFixed(1)} years ({summary.monthsToPayoff} months)</Text></View>
-              <View style={styles.summaryTableCol}><Text style={styles.tableCell}>{calculateDebtFreeDate(summary.monthsToPayoff)}</Text></View>
+
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>Interest Paid:</Text>
+              <Text style={styles.summaryValue}>{currencyFormatter.format(summary.totalInterestPaid)}</Text>
+            </View>
+
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>Principal Paid:</Text>
+              <Text style={styles.summaryValue}>{currencyFormatter.format(summary.totalPrincipalPaid)}</Text>
+            </View>
+
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>Pay Off Time:</Text>
+              <Text style={styles.summaryValue}>{summary.yearsToPayoff.toFixed(1)} years ({summary.monthsToPayoff} months)</Text>
+            </View>
+
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>Debt-Free Date:</Text>
+              <Text style={styles.summaryValue}>{calculateDebtFreeDate(summary.monthsToPayoff)}</Text>
             </View>
           </View>
+
+
           <View style={{ marginTop: 20 }} />
           <View style={styles.chartTable}>
             <View style={styles.chartTableRow}>
@@ -549,45 +599,66 @@ const PDFReport = ({ summary, paymentSchedule, formValues, fName, lName }: PDFRe
             </View>
           </View>
         </View>
+        <View style={{ marginBottom: 150 }} />
+
         <View style={styles.section}>
           <Text style={styles.subtitle}>Additional Payment Scenarios</Text>
-          {scenarios.map((additionalPayment) => {
+          {scenarios.map((additionalPayment, index) => {
             const scenarioSummary = calculateScenarioSummary(
               formValues.principal,
               formValues.apr,
               formValues.minimumPayment,
-              additionalPayment,
+              originalAdditionalPayment + additionalPayment,
               formValues.requiredPrincipalPercentage
             );
+            console.log("summary.totalInterestPaid is - ", summary.totalInterestPaid)
             const interestSaved = summary.totalInterestPaid - scenarioSummary.totalInterestPaid;
+
             return (
-              <View key={additionalPayment}>
+              <React.Fragment key={additionalPayment}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <Svg style={styles.arrow} viewBox="0 0 24 24">
                     <Path d="M16.01 11H4v2h12.01v3L20 12l-3.99-4v3z" fill="#4CAF50" />
                   </Svg>
                   <Text style={styles.scenarioTitle}>
-                    With an extra <Text style={styles.bold}>${additionalPayment}/month</Text>, you could be debt-free by {' '}
+                      Assuming Minimum Payment Plus <Text style={styles.bold}>${originalAdditionalPayment + additionalPayment}/month</Text>, you could be debt-free by {' '}
                     <Text style={[styles.debtFreeDate, styles.bold]}>
                       {calculateDebtFreeDate(scenarioSummary.monthsToPayoff)}
-                    </Text>, 
-                    saving {' '}
-                    <Text style={[styles.savings, styles.bold]}>
-                      {currencyFormatter.format(interestSaved)}
-                    </Text> in interest!
+                    </Text>
                   </Text>
                 </View>
+      
+                {/* Render Charts */}
                 {renderScenarioCharts(scenarioSummary)}
+
+                {/* Spacing */}
                 <View style={{ marginTop: 10, marginBottom: 10 }} />
-                </View>
-              
+
+                {/* Add Page Break After Second Scenario */}
+                {index === 1 && <Text break />}
+
+              </React.Fragment>
             );
+          
           })}
         </View>
+        <Text break />
+
         <View style={styles.section}>
-          <View style={{ marginBottom: 140 }} />
 
           <Text style={styles.subtitle}>Original Payment Schedule</Text>
+
+          {/* Conditional rendering based on additionalPayment */}
+          {originalAdditionalPayment > 0 ? (
+              <Text style={styles.scenarioTitle}>
+                  Assuming Minimum Payment Plus ${originalAdditionalPayment.toFixed(2)} Are Made Each Month
+              </Text>
+          ) : (
+              <Text style={styles.scenarioTitle}>
+                  Assuming Only Minimum Payments Are Made Each Month
+              </Text>
+          )}
+
           <View style={styles.table}>
             <TableHeader />
             {paymentSchedule.map((item, index) => (
