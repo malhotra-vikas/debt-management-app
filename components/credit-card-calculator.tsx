@@ -577,7 +577,17 @@ const PDFReport = ({ summary, paymentSchedule, formValues, fName, lName }: PDFRe
             </View>
           </View>
 
-
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>          
+            {originalAdditionalPayment > 0 ? (
+                <Text style={styles.scenarioTitle}>
+                    Assuming Minimum Payment Plus <Text style={styles.bold}>${originalAdditionalPayment.toFixed(2)}</Text> Are Made Each Month
+                </Text>
+            ) : (
+                <Text style={styles.scenarioTitle}>
+                    Assuming Only Minimum Payments Are Made Each Month
+                </Text>
+            )}            
+          </View>
           <View style={{ marginTop: 20 }} />
           <View style={styles.chartTable}>
             <View style={styles.chartTableRow}>
@@ -599,7 +609,7 @@ const PDFReport = ({ summary, paymentSchedule, formValues, fName, lName }: PDFRe
             </View>
           </View>
         </View>
-        <View style={{ marginBottom: 150 }} />
+        <View style={{ marginBottom: 100 }} />
 
         <View style={styles.section}>
           <Text style={styles.subtitle}>Additional Payment Scenarios</Text>

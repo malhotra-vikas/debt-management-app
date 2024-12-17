@@ -83,24 +83,49 @@ export async function POST(request: Request) {
         };
 
         try {
-            const response = await fetch(url, {
+            // Check if the user exists
+            const checkResponse = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    Authorization: `Basic ${Buffer.from(`anystring:${apiKey}`).toString('base64')}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (checkResponse.ok) {
+                console.log(`User ${email} already exists. Deleting the user...`);
+                // Delete the existing user
+                const deleteResponse = await fetch(url, {
+                    method: 'DELETE',
+                    headers: {
+                        Authorization: `Basic ${Buffer.from(`anystring:${apiKey}`).toString('base64')}`,
+                    },
+                });
+
+                if (!deleteResponse.ok) {
+                    const errorDetail = await deleteResponse.json();
+                    throw new Error(`Failed to delete user: ${errorDetail.detail}`);
+                }
+                console.log(`User ${email} deleted successfully.`);
+            }
+
+            // Re-add the user
+            console.log(`Re-adding user ${email} to the list...`);
+            const addResponse = await fetch(url, {
                 method: 'PUT',
                 headers: {
-                    Authorization: `Basic ${Buffer.from(`anystring:${apiKey}`).toString(
-                        'base64'
-                    )}`,
+                    Authorization: `Basic ${Buffer.from(`anystring:${apiKey}`).toString('base64')}`,
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(payload),
             });
+            const data: MailchimpResponse = await addResponse.json();
 
-            if (!response.ok) {
-                const error = await response.json();
-                console.error('Mailchimp API Error:', error);
-                throw new Error(`Failed to add user: ${response.statusText}`);
+            if (!addResponse.ok) {
+                console.error('Error adding user:', data);
+                throw new Error(`Failed to add user: ${data.detail || addResponse.statusText}`);
             }
 
-            const data: MailchimpResponse = await response.json();
             console.log('User added successfully:', data);
         } catch (error) {
             console.error('Error adding user to Mailchimp:', error);
