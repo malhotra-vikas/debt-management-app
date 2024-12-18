@@ -1039,13 +1039,14 @@ export default function Component() {
               <div className="card-calculator-actions">
                 <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
                   <PopoverTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      className="group text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200 border-[hsl(var(--custom-border))] transition-colors"
+                    <Button
+                      variant="outline"
+                      className="group text-[#72A967] hover:text-[#72A967] hover:bg-[#d9e9d8] border-[#72A967] transition-colors"
                     >
                       Reduce Payoff Time
                       <ArrowRightIcon className="inline-block ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </Button>
+
                   </PopoverTrigger>
                   <PopoverContent className="w-96 p-0 bg-white dark:bg-gray-800 rounded-lg shadow-xl">
                     <div className="p-4 bg-green-50 dark:bg-green-900 rounded-t-lg">
@@ -1088,13 +1089,13 @@ export default function Component() {
                 </Popover>
                 <Popover open={emailPopupOpen} onOpenChange={setEmailPopupOpen}>
                   <PopoverTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      className="group text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200 border-[hsl(var(--custom-border))] transition-colors"
-                    >
-                      Email my report
-                      <Send className="inline-block ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                    </Button>
+                  <Button 
+                    variant="outline" 
+                    className="group text-[#002A65] hover:text-[#002A65] hover:bg-[#e3eaf3] border-[#72A967] transition-colors"
+                  >
+                    Email my report
+                    <Send className="inline-block ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-96 p-0 bg-white dark:bg-gray-800 rounded-lg shadow-xl">
                     <div className="p-4 bg-blue-50 dark:bg-blue-900 rounded-t-lg">
