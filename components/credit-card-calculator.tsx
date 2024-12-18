@@ -896,7 +896,7 @@ export default function Component() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="flex items-center group">
-                        Outstanding Principal Balance ($)
+                        Balance ($)
                         <InfoTooltip content="The current balance outstanding of your credit card debt" />
                       </FormLabel>
                       <FormControl>
