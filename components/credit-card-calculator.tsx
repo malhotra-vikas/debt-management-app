@@ -889,7 +889,8 @@ export default function Component() {
         <CardContent>
           <Form {...form}>
             <form className="card-calculator-form">
-              <div className="card-calculator-grid space-y-4 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-4 font-sans">
+              <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-4 font-sans">
+
                 <FormField
                   control={form.control}
                   name="principal"
@@ -955,7 +956,7 @@ export default function Component() {
                 <Label htmlFor="advanced-options">Advanced Options</Label>
               </div>
               {showAdvancedOptions && (
-                <div className="card-calculator-grid space-y-4 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-4">
+                <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-4">
                   <FormField
                     control={form.control}
                     name="minimumPayment"
@@ -1036,7 +1037,7 @@ export default function Component() {
                   <span className="card-calculator-summary-subtext">Estimated payoff date</span>
                 </div>
               </div>
-              <div className="card-calculator-actions">
+              <div className="card-calculator-actions flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-4 mt-4">
                 <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
                   <PopoverTrigger asChild>
                     <Button
@@ -1195,83 +1196,85 @@ export default function Component() {
             </CardContent>
           </Card>
 
-          <Card className="card-calculator-card">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold flex items-center justify-between">
-                Payment Schedule
-                <div className="flex items-center space-x-2">
-                  <Label htmlFor="chart-view" className="text-sm font-normal">Chart View</Label>
-                  <Switch
-                    id="chart-view"
-                    checked={showChart}
-                    onCheckedChange={setShowChart}
-                  />
-                </div>
-              </CardTitle>
-              <p className="card-calculator-description mt-2">
-                {form.getValues('additionalPayment') > 0
-                  ? `Assuming Minimum Payment Plus ${currencyFormatter.format(form.getValues('additionalPayment'))} Are Made Each Month`
-                  : 'Assuming Only Minimum Payments Are Made Each Month'}
-              </p>
-            </CardHeader>
-            <CardContent className="p-0">
-              {showChart ? (
-                <div className="card-calculator-chart h-[400px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart
-                      data={paymentSchedule}
-                      margin={{
-                        top: 5,
-                        right: 30,
-                        left: 20,
-                        bottom: 5,
-                      }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
-                      <Tooltip 
-                        formatter={(value, name) => [currencyFormatter.format(value), name]} labelFormatter={(label) => `Month ${label}`}
-                      />
-                      <Legend />
-                      <Line type="monotone" dataKey="principal" stroke="#10b981" name="Principal" />
-                      <Line type="monotone" dataKey="interest" stroke="#ef4444" name="Interest" />
-                      <Line type="monotone" dataKey="payment" stroke="#3b82f6" name="Total Payment" />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              ) : (
-                <div className="card-calculator-table-container overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
-                  <div className="card-calculator-table-wrapper max-h-[400px] overflow-y-auto">
-                    <table className="card-calculator-table w-full border-collapse bg-white dark:bg-gray-800">
-                      <thead className="card-calculator-table-header sticky top-0 z-10 bg-gray-50 dark:bg-gray-700">
-                        <tr>
-                          <th className="card-calculator-table-header-cell p-3 text-sm text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Month</th>
-                          <th className="card-calculator-table-header-cell p-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Beg Bal</th>
-                          <th className="card-calculator-table-header-cell p-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Tot Paid</th>
-                          <th className="card-calculator-table-header-cell p-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Principal</th>
-                          <th className="card-calculator-table-header-cell p-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Interest</th>
-                          <th className="card-calculator-table-header-cell p-3 text-right text-xs fontmedium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Remaining Balance</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {paymentSchedule.map((item) => (
-                          <tr key={item.month} className="card-calculator-table-row" title={`Month: ${item.month}, Total Paid: ${currencyFormatter.format(item.totPaid)}, Req Minimum: ${currencyFormatter.format(item.requiredMinimumPayment)}, Add'l Principal: ${currencyFormatter.format(form.getValues('additionalPayment'))}`}>
-                            <td className="card-calculator-table-cell p-3 text-sm">Month {item.month}</td>
-                            <td className="card-calculator-table-cell p-3 text-sm text-left">{currencyFormatter.format(item.startingBalance)}</td>
-                            <td className="card-calculator-table-cell p-3 text-sm text-left">{currencyFormatter.format(item.totPaid)}</td>
-                            <td className="card-calculator-table-cell p-3 text-sm text-left">{currencyFormatter.format(item.principal)}</td>
-                            <td className="card-calculator-table-cell p-3 text-sm text-left">{currencyFormatter.format(item.interest)}</td>
-                            <td className="card-calculator-table-cell p-3 text-sm text-left">{currencyFormatter.format(item.balance)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+          <div className="hidden sm:block">
+            <Card className="card-calculator-card mt-4">
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold flex items-center justify-between">
+                  Payment Schedule
+                  <div className="flex items-center space-x-2">
+                    <Label htmlFor="chart-view" className="text-sm font-normal">Chart View</Label>
+                    <Switch
+                      id="chart-view"
+                      checked={showChart}
+                      onCheckedChange={setShowChart}
+                    />
                   </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                </CardTitle>
+                <p className="card-calculator-description mt-2">
+                  {form.getValues('additionalPayment') > 0
+                    ? `Assuming Minimum Payment Plus ${currencyFormatter.format(form.getValues('additionalPayment'))} Are Made Each Month`
+                    : 'Assuming Only Minimum Payments Are Made Each Month'}
+                </p>
+              </CardHeader>
+              <CardContent className="p-0">
+                {showChart ? (
+                  <div className="card-calculator-chart h-[400px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart
+                        data={paymentSchedule}
+                        margin={{
+                          top: 5,
+                          right: 30,
+                          left: 20,
+                          bottom: 5,
+                        }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis />
+                        <Tooltip 
+                          formatter={(value, name) => [currencyFormatter.format(value), name]} labelFormatter={(label) => `Month ${label}`}
+                        />
+                        <Legend />
+                        <Line type="monotone" dataKey="principal" stroke="#10b981" name="Principal" />
+                        <Line type="monotone" dataKey="interest" stroke="#ef4444" name="Interest" />
+                        <Line type="monotone" dataKey="payment" stroke="#3b82f6" name="Total Payment" />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <div className="card-calculator-table-container overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div className="card-calculator-table-wrapper max-h-[400px] overflow-y-auto">
+                      <table className="card-calculator-table w-full border-collapse bg-white dark:bg-gray-800">
+                        <thead className="card-calculator-table-header sticky top-0 z-10 bg-gray-50 dark:bg-gray-700">
+                          <tr>
+                            <th className="card-calculator-table-header-cell p-3 text-sm text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Month</th>
+                            <th className="card-calculator-table-header-cell p-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Beg Bal</th>
+                            <th className="card-calculator-table-header-cell p-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Tot Paid</th>
+                            <th className="card-calculator-table-header-cell p-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Principal</th>
+                            <th className="card-calculator-table-header-cell p-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Interest</th>
+                            <th className="card-calculator-table-header-cell p-3 text-right text-xs fontmedium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Remaining Balance</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {paymentSchedule.map((item) => (
+                            <tr key={item.month} className="card-calculator-table-row" title={`Month: ${item.month}, Total Paid: ${currencyFormatter.format(item.totPaid)}, Req Minimum: ${currencyFormatter.format(item.requiredMinimumPayment)}, Add'l Principal: ${currencyFormatter.format(form.getValues('additionalPayment'))}`}>
+                              <td className="card-calculator-table-cell p-3 text-sm">Month {item.month}</td>
+                              <td className="card-calculator-table-cell p-3 text-sm text-left">{currencyFormatter.format(item.startingBalance)}</td>
+                              <td className="card-calculator-table-cell p-3 text-sm text-left">{currencyFormatter.format(item.totPaid)}</td>
+                              <td className="card-calculator-table-cell p-3 text-sm text-left">{currencyFormatter.format(item.principal)}</td>
+                              <td className="card-calculator-table-cell p-3 text-sm text-left">{currencyFormatter.format(item.interest)}</td>
+                              <td className="card-calculator-table-cell p-3 text-sm text-left">{currencyFormatter.format(item.balance)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       )}
     </div>
