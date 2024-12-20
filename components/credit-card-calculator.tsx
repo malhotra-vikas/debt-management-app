@@ -36,7 +36,7 @@ import { pdf } from '@react-pdf/renderer'
 
 // Import the CSS file
 import '@/styles/credit-card-calculator.css'
- 
+
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD',
@@ -889,7 +889,7 @@ export default function Component() {
         <CardContent>
           <Form {...form}>
             <form className="card-calculator-form">
-              <div className="card-calculator-grid space-y-4 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-4">
+              <div className="card-calculator-grid space-y-4 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-4 font-sans">
                 <FormField
                   control={form.control}
                   name="principal"
@@ -902,7 +902,7 @@ export default function Component() {
                       <FormControl>
                         <Input type="number" step="10" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="font-sans" />
                     </FormItem>
                   )}
                 />
@@ -911,14 +911,14 @@ export default function Component() {
                   name="apr"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="flex items-center group">
+                      <FormLabel className="flex items-center group font-sans">
                         APR (%)
                         <InfoTooltip content="Annual Percentage Rate - the yearly interest rate on your credit card" />
                       </FormLabel>
                       <FormControl>
                         <Input type="number" step="1" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="font-sans" />
                     </FormItem>
                   )}
                 />
@@ -968,7 +968,7 @@ export default function Component() {
                         <FormControl>
                           <Input type="number" step="1" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="font-sans" />
                       </FormItem>
                     )}
                   />
@@ -984,7 +984,7 @@ export default function Component() {
                         <FormControl>
                           <Input type="number" step="10" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="font-sans" />
                       </FormItem>
                     )}
                   />
