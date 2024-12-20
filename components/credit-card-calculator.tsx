@@ -740,9 +740,9 @@ export default function Component() {
     defaultValues: {
       principal: 1000,
       apr: 18,
-      minimumPayment: 25,
+      minimumPayment: 40,
       additionalPayment: 0,
-      requiredPrincipalPercentage: 1.5,
+      requiredPrincipalPercentage: 1.0,
     },
   })
 
@@ -964,7 +964,7 @@ export default function Component() {
                       <FormItem>
                         <FormLabel className="flex items-center group">
                         Alternative Minimum Payment ($)
-                          <InfoTooltip content="Defined in the card agreement, this is lowest minimum payment the issuer accepts for cards with a balance. If your balance falls below this number the balance becomes the minimum payment. By default we have this set at $25" />
+                          <InfoTooltip content="Defined in the card agreement, this is lowest minimum payment the issuer accepts for cards with a balance. If your balance falls below this number the balance becomes the minimum payment. By default we have this set at $40" />
                         </FormLabel>
                         <FormControl>
                           <Input type="number" step="1" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
@@ -980,7 +980,7 @@ export default function Component() {
                       <FormItem>
                         <FormLabel className="flex items-center group">
                           Minimum Principal Payment (%)
-                          <InfoTooltip content="Defined in the card agreement, this is the percent of your outstanding balance the issuer requires you to pay each month. It is usually between 1% and 3% By default we have this set at 1.5%" />
+                          <InfoTooltip content="Defined in the card agreement, this is the percent of your outstanding balance the issuer requires you to pay each month. It is usually between 1% and 3% By default we have this set at 1.0%" />
                         </FormLabel>
                         <FormControl>
                           <Input type="number" step="10" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
