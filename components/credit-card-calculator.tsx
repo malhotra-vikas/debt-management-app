@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRightWidth: 0,
     borderBottomWidth: 0,
-    borderColor: '#72A967',
+    borderColor: '#96D18C',
   },
   tableRow: {
     flexDirection: 'row',
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderLeftWidth: 0,
     borderTopWidth: 0,
-    borderColor: '#72A967',
+    borderColor: '#96D18C',
   },
   tableCol: {
     width: '16.66%',
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderLeftWidth: 0,
     borderTopWidth: 0,
-    borderColor: '#72A967',
+    borderColor: '#96D18C',
   },
   tableHeader: {
     backgroundColor: '#f3f4f6',
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
     width: 'auto',
     borderStyle: 'solid',
     borderWidth: 1,
-    borderColor: '#72A967',
+    borderColor: '#96D18C',
     marginBottom: 10,
   },
   chartTableRow: {
@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
     width: '50%',
     borderStyle: 'solid',
     borderWidth: 1,
-    borderColor: '#72A967',
+    borderColor: '#96D18C',
     padding: 5,
     justifyContent: 'center',
     alignItems: 'center',
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
     width: 'auto',
     borderStyle: 'solid',
     borderWidth: 1,
-    borderColor: '#72A967',
+    borderColor: '#96D18C',
     marginBottom: 20,
   },
   scenarioTableRow: {
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
     width: '50%',
     borderStyle: 'solid',
     borderWidth: 1,
-    borderColor: '#72A967',
+    borderColor: '#96D18C',
     padding: 5,
   },
   scenarioChartContainer: {
@@ -474,12 +474,12 @@ const PDFReport = ({ summary, paymentSchedule, formValues, fName, lName }: PDFRe
       <View style={styles.scenarioChartContainer}>
         <View style={styles.chartTableCell}>
           <Svg height={120} width={120}>
-            <Path d={principalPath} fill="#72A967" />
+            <Path d={principalPath} fill="#96D18C" />
             <Path d={interestPath} fill="#E63946" />
           </Svg>
           <View style={styles.pieChartLegend}>
             <View style={styles.pieChartLegendItem}>
-              <View style={[styles.pieChartLegendColor, { backgroundColor: '#72A967' }]} />
+              <View style={[styles.pieChartLegendColor, { backgroundColor: '#96D18C' }]} />
               <Text style={styles.pieChartLegendText}>Principal</Text>
             </View>
             <View style={styles.pieChartLegendItem}>
@@ -500,7 +500,7 @@ const PDFReport = ({ summary, paymentSchedule, formValues, fName, lName }: PDFRe
                     y={barY}
                     width={30}
                     height={barHeight}
-                    fill={item.label === 'Principal' ? '#72A967' : item.label === 'Interest' ? '#E63946' : '#002A65'}
+                    fill={item.label === 'Principal' ? '#96D18C' : item.label === 'Interest' ? '#E63946' : '#002A65'}
                   />
                   <Text
                     x={index * 60 + 25}
@@ -1042,9 +1042,9 @@ export default function Component() {
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
-                      className="group text-[#72A967] hover:text-[#72A967] hover:bg-[#d9e9d8] border-[#72A967] transition-colors"
+                      className="group text-[#96D18C] hover:text-[#96D18C] hover:bg-[#d9e9d8] border-[#96D18C] transition-colors"
                     >
-                      Reduce Payoff Time
+                      Reduce Payoff
                       <ArrowRightIcon className="inline-block ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </Button>
 
@@ -1092,7 +1092,7 @@ export default function Component() {
                   <PopoverTrigger asChild>
                   <Button 
                     variant="outline" 
-                    className="group text-[#002A65] hover:text-[#002A65] hover:bg-[#e3eaf3] border-[#72A967] transition-colors"
+                    className="group text-[#002A65] hover:text-[#002A65] hover:bg-[#e3eaf3] border-[#96D18C] transition-colors"
                   >
                     Email my report
                     <Send className="inline-block ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
