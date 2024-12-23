@@ -901,7 +901,21 @@ export default function Component() {
                         <InfoTooltip content="The current balance outstanding of your credit card debt" />
                       </FormLabel>
                       <FormControl>
-                        <Input type="number" step="10" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                        <Input
+                          type="number"
+                          step="10"
+                          {...field}
+                          onChange={e => {
+                            const parsedValue = parseFloat(e.target.value);
+                            // Check if parsed value is NaN
+                            if (isNaN(parsedValue)) {
+                              // Handle NaN case: set a default value or handle it in a way that suits your application
+                              field.onChange(0);  // or any fallback value you prefer
+                            } else {
+                              field.onChange(parsedValue);
+                            }
+                          }}
+                        />
                       </FormControl>
                       <FormMessage className="font-sans" />
                     </FormItem>
@@ -917,7 +931,21 @@ export default function Component() {
                         <InfoTooltip content="Annual Percentage Rate - the yearly interest rate on your credit card" />
                       </FormLabel>
                       <FormControl>
-                        <Input type="number" step="1" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                        <Input
+                          type="number"
+                          step="1"
+                          {...field}
+                          onChange={e => {
+                            const parsedValue = parseFloat(e.target.value);
+                            // Check if parsed value is NaN
+                            if (isNaN(parsedValue)) {
+                              // Handle NaN case: set a default value or handle it in a way that suits your application
+                              field.onChange(0);  // or any fallback value you prefer
+                            } else {
+                              field.onChange(parsedValue);
+                            }
+                          }}
+                        />
                       </FormControl>
                       <FormMessage className="font-sans" />
                     </FormItem>
@@ -967,9 +995,23 @@ export default function Component() {
                           <InfoTooltip content="Defined in the card agreement, this is lowest minimum payment the issuer accepts for cards with a balance. If your balance falls below this number the balance becomes the minimum payment. By default we have this set at $40" />
                         </FormLabel>
                         <FormControl>
-                          <Input type="number" step="1" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
-                        </FormControl>
-                        <FormMessage className="font-sans" />
+                        <Input
+                          type="number"
+                          step="10"
+                          {...field}
+                          onChange={e => {
+                            const parsedValue = parseFloat(e.target.value);
+                            // Check if parsed value is NaN
+                            if (isNaN(parsedValue)) {
+                              // Handle NaN case: set a default value or handle it in a way that suits your application
+                              field.onChange(0);  // or any fallback value you prefer
+                            } else {
+                              field.onChange(parsedValue);
+                            }
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage className="font-sans" />
                       </FormItem>
                     )}
                   />
@@ -983,9 +1025,24 @@ export default function Component() {
                           <InfoTooltip content="Defined in the card agreement, this is the percent of your outstanding balance the issuer requires you to pay each month. It is usually between 1% and 3% By default we have this set at 1.0%" />
                         </FormLabel>
                         <FormControl>
-                          <Input type="number" step="10" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
-                        </FormControl>
-                        <FormMessage className="font-sans" />
+                        <Input
+                          type="number"
+                          step="10"
+                          {...field}
+                          onChange={e => {
+                            const parsedValue = parseFloat(e.target.value);
+                            // Check if parsed value is NaN
+                            if (isNaN(parsedValue)) {
+                              // Handle NaN case: set a default value or handle it in a way that suits your application
+                              field.onChange(0);  // or any fallback value you prefer
+                            } else {
+                              field.onChange(parsedValue);
+                            }
+                          }}
+                        />
+                      </FormControl>
+
+                      <FormMessage className="font-sans" />
                       </FormItem>
                     )}
                   />
