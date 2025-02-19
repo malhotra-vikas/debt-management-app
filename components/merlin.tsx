@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { useChat } from "ai/react"
 import { Button } from "@/components/ui/button"
@@ -10,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Bot, User } from "lucide-react"
 
 export default function QuestionBot() {
-    const { messages, input, handleInputChange, handleSubmit, append } = useChat()
+    const { messages, input, handleInputChange, handleSubmit: originalHandleSubmit, append } = useChat()
     const [showOptions, setShowOptions] = useState(false)
     const [options, setOptions] = useState<string[]>([])
 
@@ -36,12 +35,32 @@ export default function QuestionBot() {
         setShowOptions(false)
     }
 
-    const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         if (showOptions) {
             setShowOptions(false)
         }
-        handleSubmit(e)
+
+        // Call the original handleSubmit function
+        await originalHandleSubmit(e)
+
+        // Fetch the AI's response manually
+        const response = await fetch("/api/chat", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ messages: [...messages, { role: "user", content: input }] }),
+        })
+
+        if (response.ok) {
+            const data = await response.json()
+            // Append the AI's response to the chat
+            append({
+                role: "assistant",
+                content: data.message,
+            })
+        }
     }
 
     return (

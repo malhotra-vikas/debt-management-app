@@ -6,7 +6,7 @@ export const questions = [
     },
     {
         question: "What's your current employment status? (Employed, Self-employed, Unemployed, Student, Retired)",
-        type: "choice",
+        type: "options",
         options: ["Employed", "Self-employed", "Unemployed", "Student", "Retired"],
     },
     {
