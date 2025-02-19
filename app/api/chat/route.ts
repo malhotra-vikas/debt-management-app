@@ -1,9 +1,11 @@
 import type { Message } from "ai"
-import { questions } from "@/lib/questions"
+import { questions, FIRST_QUESTION } from "@/lib/questions"
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 
-const questionBank = questions
+interface AnswerHistory {
+    [questionId: string]: string | string[]
+}
 
 export async function POST(req: Request) {
     const { messages } = await req.json()
@@ -21,14 +23,86 @@ export async function POST(req: Request) {
         content: m.content,
     }))
 
-    let currentQuestionIndex = chatHistory.filter((m) => m.role === "assistant").length
-    console.log("currentQuestionIndex is ", currentQuestionIndex)
+    // Build answer history from chat history
+    const answerHistory: AnswerHistory = {}
+    let currentQuestionId = FIRST_QUESTION
 
-    if (currentQuestionIndex >= questionBank.length) {
-        currentQuestionIndex = 0
+    // Process chat history to build answer history
+    for (let i = 0; i < messages.length; i++) {
+        const message = messages[i]
+        if (message.role === "assistant") {
+            // Find the question that was asked
+            const [questionText] = message.content.split(":")
+            const questionEntry = Object.entries(questions).find(([_, q]) => q.question === questionText)
+
+            if (questionEntry) {
+                const [qId, question] = questionEntry
+                // Get the user's answer if available
+                if (i + 1 < messages.length && messages[i + 1].role === "user") {
+                    const answer = messages[i + 1].content
+                    answerHistory[qId] = question.type === "multi-select" ? answer.split(", ") : answer
+                }
+                currentQuestionId = qId
+            }
+        }
     }
 
-    const currentQuestion = questionBank[currentQuestionIndex]
+    console.log("Answer history:", answerHistory)
+
+    // Determine the next question
+    if (messages.length === 0) {
+        currentQuestionId = FIRST_QUESTION
+    } else {
+        // Find the last question asked
+        const lastQuestion = messages
+            .filter((m) => m.role === "assistant")
+            .map((m) => {
+                const [question] = m.content.split(":")
+                return Object.entries(questions).find(([_, q]) => q.question === question)
+            })
+            .filter(Boolean)
+            .pop()
+
+        if (!lastQuestion) {
+            currentQuestionId = FIRST_QUESTION
+        } else {
+            const [lastQuestionId, lastQuestionData] = lastQuestion
+            // Get the user's answer to the last question
+            const lastAnswer = messages[messages.length - 1].content
+
+            // Store answer in history
+            if (lastQuestionData.type === "multi-select") {
+                answerHistory[lastQuestionId] = lastAnswer.split(", ")
+            } else {
+                answerHistory[lastQuestionId] = lastAnswer
+            }
+
+            // Determine the next question based on the answer and answer history
+            if (typeof lastQuestionData.nextQuestion === "function") {
+                // For questions that need previous context
+                if (lastQuestionId === "home_equity") {
+                    // Check assets question answer for "I have savings"
+                    const assetsAnswer = answerHistory["assets"] as string[]
+                    currentQuestionId = assetsAnswer?.includes("I have savings") ? "savings_amount" : "situation_description"
+                } else {
+                    currentQuestionId = lastQuestionData.nextQuestion(
+                        Array.isArray(answerHistory[lastQuestionId])
+                            ? (answerHistory[lastQuestionId] as string[])
+                            : [answerHistory[lastQuestionId] as string],
+                    )
+                }
+            } else {
+                currentQuestionId = lastQuestionData.nextQuestion || FIRST_QUESTION
+            }
+        }
+    }
+
+    // If we've reached the end of the questions, start over
+    if (!currentQuestionId || !questions[currentQuestionId]) {
+        currentQuestionId = FIRST_QUESTION
+    }
+
+    const currentQuestion = questions[currentQuestionId]
     console.log("currentQuestion is ", currentQuestion)
 
     let userMessage = `Ask the user: "${currentQuestion.question}"`
