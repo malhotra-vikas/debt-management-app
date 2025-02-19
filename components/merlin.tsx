@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils"
 interface Option {
     text: string
     value: string
+    number: number
 }
 
 export default function QuestionBot() {
@@ -24,20 +25,35 @@ export default function QuestionBot() {
         if (messages.length > 0) {
             const lastMessage = messages[messages.length - 1]
             if (lastMessage.role === "assistant") {
-                // Reset selection for new questions
                 setSelectedOption(null)
 
-                const optionsMatch = lastMessage.content.match(/OPTIONS:\s*((?:(?:\d+\.\s*)[^.]+\.?\s*)+)/i)
+                console.log("lastMessage is ", lastMessage)
+
+                // Improved regex to better handle numbered options
+                const optionsText = lastMessage.content
+                console.log("optionsText is ", optionsText)
+
+                const optionsMatch = optionsText.match(/OPTIONS:\s*(.+?)(?=\s*(?:Please choose|$))/is)
+
                 if (optionsMatch) {
-                    const optionsText = optionsMatch[1]
-                    const optionsList = optionsText
+                    // Parse numbered options more reliably
+                    const optionsList = optionsMatch[1]
                         .split(/(?=\d+\.)/)
                         .filter(Boolean)
                         .map((option) => {
-                            const trimmed = option.trim()
-                            const text = trimmed.replace(/^\d+\.\s*/, "").trim()
-                            return { text, value: text }
+                            const match = option.match(/(\d+)\.\s*([^.]+)/)
+                            if (match) {
+                                const [, number, text] = match
+                                return {
+                                    number: Number.parseInt(number),
+                                    text: text.trim(),
+                                    value: text.trim(),
+                                }
+                            }
+                            return null
                         })
+                        .filter((option): option is Option => option !== null)
+
                     setOptions(optionsList)
                     setShowOptions(true)
                 } else {
@@ -50,7 +66,6 @@ export default function QuestionBot() {
     const handleOptionClick = async (option: Option) => {
         setSelectedOption(option)
 
-        // Small delay to show the selection before sending
         setTimeout(async () => {
             append({ role: "user", content: option.value })
             setShowOptions(false)
@@ -93,7 +108,7 @@ export default function QuestionBot() {
 
         return (
             <>
-                <div className={`flex items-start mb-${hasOptions ? "2" : "4"}`}>
+                <div className={`flex items-start ${hasOptions ? "mb-4" : "mb-6"}`}>
                     {message.role === "assistant" && <Bot className="mr-2 h-6 w-6 text-gray-500" />}
                     <div
                         className={`rounded-lg p-4 max-w-md ${message.role === "assistant" ? "bg-gray-100" : "bg-blue-500 text-white"
@@ -104,11 +119,11 @@ export default function QuestionBot() {
                     {message.role === "user" && <User className="ml-2 h-6 w-6 text-gray-500" />}
                 </div>
                 {hasOptions && showOptions && (
-                    <div className="ml-8 mb-4">
-                        <div className="grid grid-cols-2 gap-3">
-                            {options.map((option, index) => (
+                    <div className="ml-8 mb-6">
+                        <div className="grid grid-cols-1 gap-3">
+                            {options.map((option) => (
                                 <Card
-                                    key={index}
+                                    key={option.number}
                                     className={cn(
                                         "cursor-pointer transition-all duration-200 ease-in-out border-2",
                                         selectedOption?.value === option.value
@@ -127,7 +142,7 @@ export default function QuestionBot() {
                                             {selectedOption?.value === option.value ? (
                                                 <Check className="h-5 w-5" />
                                             ) : (
-                                                <span className="font-semibold">{index + 1}</span>
+                                                <span className="font-semibold">{option.number}</span>
                                             )}
                                         </div>
                                         <p
