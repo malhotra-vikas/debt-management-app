@@ -32,6 +32,19 @@ export default function Home() {
               </Button>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Merlin Bot</CardTitle>
+              <CardDescription>AI Bot that collects all financial details and makes recommedations</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild className="w-full">
+                <Link href="/merlin">Go to Merlin Bot</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
         </div>
       </div>
     </main>
