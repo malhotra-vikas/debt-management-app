@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Bot, User, Check } from "lucide-react"
 import { cn } from "@/lib/utils"
+import "@/styles/questionBot.css"
 
 interface Option {
     text: string
@@ -27,16 +28,10 @@ export default function QuestionBot() {
             if (lastMessage.role === "assistant") {
                 setSelectedOption(null)
 
-                console.log("lastMessage is ", lastMessage)
-
-                // Improved regex to better handle numbered options
                 const optionsText = lastMessage.content
-                console.log("optionsText is ", optionsText)
-
                 const optionsMatch = optionsText.match(/OPTIONS:\s*(.+?)(?=\s*(?:Please choose|$))/is)
 
                 if (optionsMatch) {
-                    // Parse numbered options more reliably
                     const optionsList = optionsMatch[1]
                         .split(/(?=\d+\.)/)
                         .filter(Boolean)
@@ -65,12 +60,10 @@ export default function QuestionBot() {
 
     const handleOptionClick = async (option: Option) => {
         setSelectedOption(option)
+        setShowOptions(false) // Immediately hide options
 
-        setTimeout(async () => {
-            append({ role: "user", content: option.value })
-            setShowOptions(false)
-            await fetchNextQuestion(option.value)
-        }, 500)
+        append({ role: "user", content: option.value })
+        await fetchNextQuestion(option.value)
     }
 
     const fetchNextQuestion = async (userResponse: string) => {
@@ -108,55 +101,45 @@ export default function QuestionBot() {
 
         return (
             <>
-                <div className={`flex items-start ${hasOptions ? "mb-4" : "mb-6"}`}>
-                    {message.role === "assistant" && <Bot className="mr-2 h-6 w-6 text-gray-500" />}
+                <div
+                    className={cn("message-container", {
+                        "mb-4": hasOptions && showOptions,
+                        "mb-6": !hasOptions || !showOptions,
+                    })}
+                >
+                    {message.role === "assistant" && <Bot className="icon icon-bot" />}
                     <div
-                        className={`rounded-lg p-4 max-w-md ${message.role === "assistant" ? "bg-gray-100" : "bg-blue-500 text-white"
-                            }`}
+                        className={cn(
+                            "message-bubble",
+                            message.role === "assistant" ? "message-bubble-bot" : "message-bubble-user",
+                        )}
                     >
                         {questionText}
                     </div>
-                    {message.role === "user" && <User className="ml-2 h-6 w-6 text-gray-500" />}
+                    {message.role === "user" && <User className="icon icon-user" />}
                 </div>
                 {hasOptions && showOptions && (
-                    <div className="ml-8 mb-6">
-                        <div className="grid grid-cols-1 gap-3">
-                            {options.map((option) => (
-                                <Card
-                                    key={option.number}
-                                    className={cn(
-                                        "cursor-pointer transition-all duration-200 ease-in-out border-2",
-                                        selectedOption?.value === option.value
-                                            ? "border-blue-500 bg-blue-50"
-                                            : "border-gray-200 hover:border-gray-300",
-                                    )}
-                                    onClick={() => handleOptionClick(option)}
-                                >
-                                    <CardContent className="flex items-center p-4">
-                                        <div
-                                            className={cn(
-                                                "flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full mr-3",
-                                                selectedOption?.value === option.value ? "bg-blue-500 text-white" : "bg-blue-100 text-blue-600",
-                                            )}
-                                        >
-                                            {selectedOption?.value === option.value ? (
-                                                <Check className="h-5 w-5" />
-                                            ) : (
-                                                <span className="font-semibold">{option.number}</span>
-                                            )}
-                                        </div>
-                                        <p
-                                            className={cn(
-                                                "text-lg",
-                                                selectedOption?.value === option.value ? "text-blue-700 font-medium" : "text-gray-700",
-                                            )}
-                                        >
-                                            {option.text}
-                                        </p>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </div>
+                    <div className="options-container grid grid-cols-1 gap-3">
+                        {options.map((option) => (
+                            <Card
+                                key={option.number}
+                                className={cn("option-card", selectedOption?.value === option.value && "option-card-selected")}
+                                onClick={() => handleOptionClick(option)}
+                            >
+                                <CardContent className="option-content">
+                                    <div
+                                        className={cn("option-number", selectedOption?.value === option.value && "option-number-selected")}
+                                    >
+                                        {selectedOption?.value === option.value ? (
+                                            <Check className="h-5 w-5" />
+                                        ) : (
+                                            <span>{option.number}</span>
+                                        )}
+                                    </div>
+                                    <p className="option-text">{option.text}</p>
+                                </CardContent>
+                            </Card>
+                        ))}
                     </div>
                 )}
             </>
@@ -164,17 +147,19 @@ export default function QuestionBot() {
     }
 
     return (
-        <div className="flex flex-col h-screen max-w-3xl mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-4">Question Bot</h1>
+        <div className="question-bot flex flex-col h-screen max-w-3xl mx-auto p-4">
+            <h1 className="question-bot-title">Question Bot</h1>
             <div className="flex-1 overflow-y-auto mb-4">
                 {messages.map((message) => (
                     <MessageContent key={message.id} message={message} />
                 ))}
             </div>
             {!showOptions && (
-                <form onSubmit={handleFormSubmit} className="flex space-x-2">
-                    <Input value={input} onChange={handleInputChange} placeholder="Type your answer..." className="flex-1" />
-                    <Button type="submit">Send</Button>
+                <form onSubmit={handleFormSubmit} className="input-form">
+                    <Input value={input} onChange={handleInputChange} placeholder="Type your answer..." className="input-field" />
+                    <Button type="submit" className="submit-button">
+                        Send
+                    </Button>
                 </form>
             )}
         </div>

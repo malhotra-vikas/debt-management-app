@@ -1,0 +1,129 @@
+:root {
+    --color-primary: #002a65;
+    --color-bg-user: #e5e7eb;
+    --color-bg-bot: #e7f7e7;
+    --color-bg-selected: #e7f7e7;
+    --color-border-selected: #002a65;
+}
+
+.question-bot {
+    font-family: sans-serif;
+    color: var(--color-primary);
+}
+
+.question-bot-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+
+.message-container {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.message-bubble {
+    border-radius: 0.5rem;
+    padding: 1rem;
+    max-width: 28rem;
+}
+
+.message-bubble-bot {
+    background-color: var(--color-bg-bot);
+}
+
+.message-bubble-user {
+    background-color: var(--color-bg-user);
+}
+
+.icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    color: var(--color-primary);
+}
+
+.icon-bot {
+    margin-right: 0.5rem;
+}
+
+.icon-user {
+    margin-left: 0.5rem;
+}
+
+.options-container {
+    margin-left: 2rem;
+    margin-bottom: 1.5rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+}
+
+.option-card {
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    border: 2px solid #e2e8f0;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.option-card:hover {
+    border-color: var(--color-primary);
+}
+
+.option-card-selected {
+    border-color: var(--color-border-selected);
+    background-color: var(--color-bg-selected);
+}
+
+.option-content {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+}
+
+.option-number {
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    margin-right: 0.75rem;
+    font-weight: 600;
+    background-color: var(--color-bg-bot);
+    color: var(--color-primary);
+}
+
+.option-number-selected {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+.option-text {
+    font-size: 1.125rem;
+}
+
+.input-form {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.input-field {
+    flex: 1;
+    color: var(--color-primary);
+}
+
+.input-field::placeholder {
+    color: rgba(0, 42, 101, 0.5);
+}
+
+.submit-button {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+.submit-button:hover {
+    background-color: rgba(0, 42, 101, 0.9);
+}
