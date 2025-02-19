@@ -33,6 +33,7 @@
     "dotenv": "^16.4.7",
     "expo-font": "^13.0.1",
     "express": "^4.21.1",
+    "framer-motion": "^12.4.5",
     "langchain": "^0.3.19",
     "lucide-react": "^0.456.0",
     "mailchimp-api-v3": "^1.15.0",
