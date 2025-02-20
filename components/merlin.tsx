@@ -293,7 +293,7 @@ export default function QuestionBot() {
                     {isReturningUser && (
                         <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-4" role="alert">
                             <p className="font-bold">Welcome back!</p>
-                            <p>We're glad to see you again. Your previous responses have been loaded.</p>
+                            <p>We're glad to see you again. Let's continue from when we left off.</p>
                         </div>
                     )}
                     {messages.map((message, index) => (
