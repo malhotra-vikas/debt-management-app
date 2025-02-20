@@ -68,7 +68,10 @@ export async function POST(req: Request) {
         } else {
             const [lastQuestionId, lastQuestionData] = lastQuestion
             // Get the user's answer to the last question
-            const lastAnswer = messages[messages.length - 1].content
+            const lastAnswer = messages[messages.length - 1].content.trim()
+
+            console.log("Last question ID:", lastQuestionId)
+            console.log("Last answer:", lastAnswer)
 
             // Store answer in history
             if (lastQuestionData.type === "multi-select") {
@@ -79,8 +82,11 @@ export async function POST(req: Request) {
 
             // Determine the next question based on the answer and answer history
             if (typeof lastQuestionData.nextQuestion === "function") {
-                // For questions that need previous context
-                if (lastQuestionId === "home_equity") {
+                if (lastQuestionId === "employment_status") {
+                    // Explicitly handle employment status answer
+                    console.log("Processing employment status answer:", lastAnswer)
+                    currentQuestionId = lastAnswer.trim() === "Yes" ? "income_sources" : "annual_income"
+                } else if (lastQuestionId === "home_equity") {
                     // Check assets question answer for "I have savings"
                     const assetsAnswer = answerHistory["assets"] as string[]
                     currentQuestionId = assetsAnswer?.includes("I have savings") ? "savings_amount" : "situation_description"
@@ -94,6 +100,8 @@ export async function POST(req: Request) {
             } else {
                 currentQuestionId = lastQuestionData.nextQuestion || FIRST_QUESTION
             }
+
+            console.log("Next question ID:", currentQuestionId)
         }
     }
 
