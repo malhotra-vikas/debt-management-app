@@ -12,7 +12,7 @@ export function saveProgress(userId: string, lastQuestionId: string) {
         userId,
         lastQuestionId
     }
-    Cookies.set(COOKIE_NAME, JSON.stringify(progress), { expires: 365 })
+    Cookies.set(COOKIE_NAME, JSON.stringify(progress), { expires: 90 })
 }
 
 export function getProgress(): UserProgress | null {
