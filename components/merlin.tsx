@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
 import "@/styles/questionBot.css"
 import { v4 as uuidv4 } from "uuid"
-import Cookies from "js-cookie"
+import { saveProgress, getProgress } from "@/lib/cookies"
 
 interface Option {
     text: string
@@ -35,6 +35,7 @@ export default function QuestionBot() {
     const [userId, setUserId] = useState<string>("")
     const [userResponses, setUserResponses] = useState<UserResponse[]>([])
     const [isReturningUser, setIsReturningUser] = useState(false)
+    const [lastQuestionId, setLastQuestionId] = useState<string>("")
 
     const {
         messages,
@@ -53,18 +54,28 @@ export default function QuestionBot() {
     const messagesEndRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
-        let id = Cookies.get("userId")
-        if (!id) {
-            id = uuidv4()
-            Cookies.set("userId", id, { expires: 365 })
-            setIsReturningUser(false)
-            // Send first question for new users
-            fetchNextQuestion("")
-        } else {
+        const progress = getProgress()
+        let id: string
+
+        if (progress) {
+            id = progress.userId
             setIsReturningUser(true)
+            setLastQuestionId(progress.lastQuestionId)
+        } else {
+            id = uuidv4()
+            setIsReturningUser(false)
         }
+
         setUserId(id)
-        fetchUserResponses(id)
+        fetchUserResponses(id).then(() => {
+            if (!progress) {
+                // For new users, start with first question
+                fetchNextQuestion("")
+            } else {
+                // For returning users, continue from last question
+                fetchNextQuestion("", progress.lastQuestionId)
+            }
+        })
     }, [])
 
     useEffect(() => {
@@ -123,13 +134,16 @@ export default function QuestionBot() {
     )
 
     const fetchNextQuestion = useCallback(
-        async (userResponse: string) => {
+        async (userResponse: string, specificQuestionId?: string) => {
             const response = await fetch("/api/chat", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ messages: [...messages, { role: "user", content: userResponse }] }),
+                body: JSON.stringify({
+                    messages: userResponse ? [...messages, { role: "user", content: userResponse }] : [],
+                    lastQuestionId: specificQuestionId || lastQuestionId,
+                }),
             })
 
             if (response.ok) {
@@ -138,9 +152,12 @@ export default function QuestionBot() {
                     role: "assistant",
                     content: data.message,
                 })
+                // Save progress after each question
+                saveProgress(userId, data.nextQuestionId)
+                setLastQuestionId(data.nextQuestionId)
             }
         },
-        [messages, append],
+        [messages, append, userId, lastQuestionId],
     )
 
     const handleSelectionDone = useCallback(

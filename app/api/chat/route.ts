@@ -8,9 +8,10 @@ interface AnswerHistory {
 }
 
 export async function POST(req: Request) {
-    const { messages } = await req.json()
+    const { messages, lastQuestionId } = await req.json()
 
     console.log("messages are ", messages)
+    console.log("lastQuestionId is ", lastQuestionId)
 
     const systemMessage = {
         role: "system",
@@ -25,7 +26,7 @@ export async function POST(req: Request) {
 
     // Build answer history from chat history
     const answerHistory: AnswerHistory = {}
-    let currentQuestionId = FIRST_QUESTION
+    let currentQuestionId = lastQuestionId || FIRST_QUESTION
 
     // Process chat history to build answer history
     for (let i = 0; i < messages.length; i++) {
@@ -51,7 +52,7 @@ export async function POST(req: Request) {
 
     // Determine the next question
     if (messages.length === 0) {
-        currentQuestionId = FIRST_QUESTION
+        currentQuestionId = lastQuestionId || FIRST_QUESTION
     } else {
         // Find the last question asked
         const lastQuestion = messages
@@ -64,7 +65,7 @@ export async function POST(req: Request) {
             .pop()
 
         if (!lastQuestion) {
-            currentQuestionId = FIRST_QUESTION
+            currentQuestionId = lastQuestionId || FIRST_QUESTION
         } else {
             const [lastQuestionId, lastQuestionData] = lastQuestion
             // Get the user's answer to the last question
@@ -83,11 +84,8 @@ export async function POST(req: Request) {
             // Determine the next question based on the answer and answer history
             if (typeof lastQuestionData.nextQuestion === "function") {
                 if (lastQuestionId === "employment_status") {
-                    // Explicitly handle employment status answer
-                    console.log("Processing employment status answer:", lastAnswer)
                     currentQuestionId = lastAnswer.trim() === "Yes" ? "income_sources" : "annual_income"
                 } else if (lastQuestionId === "home_equity") {
-                    // Check assets question answer for "I have savings"
                     const assetsAnswer = answerHistory["assets"] as string[]
                     currentQuestionId = assetsAnswer?.includes("I have savings") ? "savings_amount" : "situation_description"
                 } else {
@@ -154,6 +152,12 @@ export async function POST(req: Request) {
     const aiMessage = responseData.choices[0].message.content
     console.log("AI aiMessage is ", aiMessage)
 
-    return new Response(JSON.stringify({ message: userMessage1 }), { status: 200 })
+    return new Response(
+        JSON.stringify({
+            message: userMessage1,
+            nextQuestionId: currentQuestionId,
+        }),
+        { status: 200 },
+    )
 }
 
