@@ -1,5 +1,4 @@
 import QuestionBot from '@/components/merlin'
-import CreditCardCalculator from '@/components/merlin'
 
 export default function MerlinBotPage() {
   return (
