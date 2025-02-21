@@ -1,4 +1,6 @@
 import '@/styles/globals.css'
+import "@/styles/questionBot.css"
+
 import { Inter } from 'next/font/google'
 import { ThemeProvider } from '@/contexts/theme-context'
 import { Toaster } from "@/components/ui/toaster"

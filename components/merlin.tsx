@@ -3,10 +3,13 @@
 import type React from "react"
 import { useChat } from "@ai-sdk/react"
 import { useState, useRef, useEffect, useCallback } from "react"
+import { ShieldCheck } from "lucide-react"
 import { Send, Bot, Shield, Lock } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+
 
 interface CollectedData {
     name?: string
@@ -37,7 +40,6 @@ export default function Chat() {
         scrollToBottom()
     }, [scrollToBottom])
 
-    // Update collected data based on AI responses
     const updateCollectedData = (message: string) => {
         if (message.toLowerCase().includes("name is")) {
             const name = message.split("name is ")[1].split(" ")[0].trim()
@@ -61,47 +63,45 @@ export default function Chat() {
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-[#f9fafb] p-4">
-            {/* Trust Indicators */}
-            <div className="w-full max-w-2xl mb-4 flex justify-center gap-6 text-sm text-[var(--color-text-secondary)]">
-                <div className="flex items-center gap-2">
-                    <Lock className="h-4 w-4" />
-                    <span>Secure & Confidential</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <Shield className="h-4 w-4" />
-                    <span>Expert Financial Analysis</span>
-                </div>
-            </div>
-
-            <Card className="w-full max-w-2xl shadow-lg border-0">
-                <CardHeader className="border-b bg-white py-6">
-                    <div className="flex items-center gap-4">
-                        <div className="p-3 rounded-full bg-[var(--color-bg-bot)]">
-                            <Bot className="h-8 w-8 text-[var(--color-primary)]" />
+            <Card className="w-full max-w-2xl shadow-sm border border-gray-100">
+                {/* Header */}
+                <CardHeader className="border-b space-y-4 pb-4">
+                    <div className="flex justify-start gap-4 text-sm text-[var(--color-text-secondary)]">
+                        <div className="flex items-center gap-2">
+                            <Lock className="h-6 w-6" />
+                            <span>Secure & Confidential</span>
                         </div>
+                        <div className="flex items-center gap-2">
+                            <Shield className="h-6 w-6" />
+                            <span>Expert Financial Analysis</span>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <Bot className="h-8 w-8 text-[var(--color-primary)]" />
                         <div>
-                            <CardTitle className="text-2xl font-bold text-[var(--color-primary)]">Merlin</CardTitle>
-                            <CardDescription className="text-[var(--color-text-secondary)] text-base">
+                            <CardTitle className="text-xl font-bold text-[var(--color-primary)]">Merlin</CardTitle>
+                            <div className="text-sm text-[var(--color-text-secondary)]">
                                 Your Trusted Financial and Debt Analysis Assistant
-                            </CardDescription>
+                            </div>
                         </div>
                     </div>
                 </CardHeader>
 
-                <CardContent className="h-[60vh] overflow-y-auto p-6" id="chat-container">
-                    <div className="space-y-6">
+                {/* Chat Content */}
+                <CardContent className="h-[60vh] overflow-y-auto p-4" id="chat-container">
+                    <div className="space-y-4">
                         {messages.map((m) => (
-                            <div
-                                key={m.id}
-                                className={`flex ${m.role === "user" ? "justify-end" : "justify-start"} message-container`}
-                            >
-                                <div className={`message-bubble ${m.role === "user" ? "message-bubble-user" : "message-bubble-bot"}`}>
+                            <div key={m.id} className="message-container">
+                                <div
+                                    className={`message-bubble ${m.role === "user" ? "message-bubble-user ml-auto" : "message-bubble-bot"
+                                        }`}
+                                >
                                     {m.content}
                                 </div>
                             </div>
                         ))}
                         {isLoading && (
-                            <div className="flex justify-start message-container">
+                            <div className="message-container">
                                 <div className="message-bubble message-bubble-bot">
                                     <div className="loader" />
                                 </div>
@@ -111,7 +111,8 @@ export default function Chat() {
                     <div ref={messagesEndRef} />
                 </CardContent>
 
-                <CardFooter className="border-t bg-white p-6">
+                {/* Input Form */}
+                <CardFooter className="border-t p-4">
                     <form onSubmit={onSubmit} className="input-form w-full">
                         <Input
                             value={input}
@@ -119,7 +120,7 @@ export default function Chat() {
                             placeholder="Type your message here..."
                             className="input-field"
                         />
-                        <Button type="submit" disabled={isLoading} className="submit-button px-6">
+                        <Button type="submit" disabled={isLoading} className="submit-button">
                             <Send className="h-4 w-4" />
                             <span className="sr-only">Send message</span>
                         </Button>
@@ -129,16 +130,18 @@ export default function Chat() {
 
             {/* Data Preview */}
             {Object.keys(collectedData).length > 0 && (
-                <Card className="w-full max-w-2xl mt-6 shadow-md border-0">
-                    <CardHeader className="border-b py-4">
-                        <CardTitle className="text-[var(--color-primary)] text-lg font-medium">Information Summary</CardTitle>
+                <Card className="w-full max-w-2xl mt-4 shadow-sm border border-gray-100">
+                    <CardHeader className="border-b py-3">
+                        <CardTitle className="text-sm font-medium text-[var(--color-text-secondary)]">
+                            Collected Information
+                        </CardTitle>
                     </CardHeader>
-                    <CardContent className="p-6">
-                        <div className="space-y-4">
+                    <CardContent className="p-4">
+                        <div className="space-y-2 text-sm">
                             {Object.entries(collectedData).map(([key, value]) => (
-                                <div key={key} className="flex gap-4 items-start">
-                                    <span className="font-medium capitalize text-[var(--color-text-secondary)] w-24">{key}:</span>
-                                    <span className="text-[var(--color-text-primary)] flex-1">{value}</span>
+                                <div key={key} className="flex gap-2">
+                                    <span className="font-medium capitalize text-[var(--color-text-secondary)]">{key}:</span>
+                                    <span className="text-[var(--color-text-primary)]">{value}</span>
                                 </div>
                             ))}
                         </div>
