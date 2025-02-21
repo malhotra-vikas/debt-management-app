@@ -60,7 +60,7 @@ You will next collect information from the user on their financial goals
 Please collect this information one step at a time and validate responses.`
 
     const result = streamText({
-        model: openai("gpt-4o"),
+        model: openai("gpt-4o-mini"),
         messages,
         system: systemPrompt,
     })
