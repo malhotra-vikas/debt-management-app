@@ -129,6 +129,7 @@ export default function Chat() {
             </Card>
 
             {/* Data Preview */}
+{/* 
             {Object.keys(collectedData).length > 0 && (
                 <Card className="w-full max-w-2xl mt-4 shadow-sm border border-gray-100">
                     <CardHeader className="border-b py-3">
@@ -148,6 +149,7 @@ export default function Chat() {
                     </CardContent>
                 </Card>
             )}
+*/}            
 
             {/* Footer Trust Message */}
             <div className="mt-6 text-center text-sm text-[var(--color-text-secondary)] max-w-md">
