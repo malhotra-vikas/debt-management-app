@@ -19,8 +19,8 @@ interface CollectedData {
 
 const initialMessage = {
     id: "initial-message",
-    content: `Hello! I'm Merlin, your personal financial wizard. I work with Dealing With Debt and i am here to help you get debt-free. 
-        Tell me what brings you here today? `,
+    content: `Hello! I'm Merlin. I am an A.I Assistant with Dealing With Debt and i understand that you are looking for some direction on how to resolve a debt situation. 
+        Is that correct? `,
     role: "assistant",
 }
 
