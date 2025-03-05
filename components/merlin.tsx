@@ -24,7 +24,7 @@ const initialMessage = {
     role: "assistant",
 }
 
-export default function Chat() {
+export default function MerlinChat() {
     const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
         initialMessages: [initialMessage],
     })

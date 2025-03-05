@@ -34,7 +34,6 @@ interface UserResponse {
 export default function QuestionBot() {
     const [userId, setUserId] = useState<string>("")
     const [userResponses, setUserResponses] = useState<UserResponse[]>([])
-    const [isReturningUser, setIsReturningUser] = useState(false)
     const [lastQuestionId, setLastQuestionId] = useState<string>("")
 
     const {
@@ -59,11 +58,11 @@ export default function QuestionBot() {
 
         if (progress) {
             id = progress.userId
-            setIsReturningUser(true)
+            //setIsReturningUser(true)
             setLastQuestionId(progress.lastQuestionId)
         } else {
             id = uuidv4()
-            setIsReturningUser(false)
+            //setIsReturningUser(false)
         }
 
         setUserId(id)
@@ -290,12 +289,6 @@ export default function QuestionBot() {
             </header>
             <div className="flex-1 overflow-hidden">
                 <div className="h-full overflow-y-auto p-6" id="chat-container">
-                    {isReturningUser && (
-                        <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-4" role="alert">
-                            <p className="font-bold">Welcome back!</p>
-                            <p>We're glad to see you again. Let's continue from when we left off.</p>
-                        </div>
-                    )}
                     {messages.map((message, index) => (
                         <MessageContent
                             key={message.id}

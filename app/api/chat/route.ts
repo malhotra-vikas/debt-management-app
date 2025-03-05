@@ -1,76 +1,207 @@
-import { openai } from "@ai-sdk/openai"
-import { streamText } from "ai"
+import type { Message } from "ai"
+import { questions, FIRST_QUESTION } from "@/lib/questions"
 
-export const maxDuration = 30
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY
+
+interface AnswerHistory {
+    [questionId: string]: string | string[]
+}
 
 export async function POST(req: Request) {
-    const { messages } = await req.json()
+    const { messages, lastQuestionId } = await req.json()
 
-    // Configure the AI to collect specific information
-    const systemPrompt = `You are Merlin a warm, friendly debt analyst from Dealing With Debt. You understand and empathize with challenging life situations that people may be going through. 
-  
-  You are an expert on how these life situations can put pressure on people's finacial situations. 
-  
-  You are an expert analyst who asks users questions to understand their personal, financial, income and debt situation. 
-  
-  Your goal is to collect the information from users. You do not help build budgets. 
+    console.log("messages are ", messages)
+    console.log("lastQuestionId is ", lastQuestionId)
 
-  All your responses will be no more that 3 lines.
+    const systemMessage = {
+        role: "system",
+        content:
+            `You are Merlin a warm, friendly debt analyst. You understand and empathize with challenging life situations that people may be going through. 
+            You are an expert on how these life situations can put pressure on people's finacial situations. 
+            You are an expert analyst who asks users questions to understand their personal, financial, income and debt situation. 
+            You ask one question at a time and wait for the user's response before moving to the next question. If the question can have options, you present them to the user.
 
-  You will start by collecting personally identifiable informarion from the user
-- First Name
-- Last Name
-- Email
+            ### **Response Format**
+            Return a **valid JSON object** in the following structure:
+            \`\`\`json
+            {
+                "question": {
+                    "title": "A very humane yet Concise question",
+                    "OptionsList": {
+                            "option": {
+                                "title": "option one"
+                            },
+                            "option": {
+                                "title": "option two"
+                            }
+                        }
+                }
+            }
+            \`\`\`
+            DO NOT add extra text, explanations, or formatting outside this JSON structure.
+            `,
+    }
 
-Once this is collected, you will help the user understand that during this session we will talk about their (a) personal situations that are leading to a high debt, high financial 
-stress situation (b) Their income and debt details as well as (c) Their goals. 
+    const chatHistory = messages.map((m: Message) => ({
+        role: m.role === "user" ? "user" : "assistant",
+        content: m.content,
+    }))
 
-You will next ask user menaingful and thoughtful questions to collect information on their Situations that has led to high debt, financial pressure and financial stress to the user. 
-- Usually people have multiple situations that may be causing finacial stress. Here are some examples of questions
-- Have you experienced any recent life events (Divorce, Death of Spouse, Child Birth, Loss of job, or similar)
-- Have you experienced a catastrophic loss (house fire, or similar)?
-- Do you have education expenses (tuition, student loans, etc.)
-- Are you caring for extended family members (aging parents, children, etc.)
-- Are you financing daily living expenses on credit cards?
-- You will ask one question at a time and follow up if necessary to collect all situation details
+    // Build answer history from chat history
+    const answerHistory: AnswerHistory = {}
+    let currentQuestionId = lastQuestionId || FIRST_QUESTION
 
-You will next collect information from the user on their assets
-- The user may be home, savings, etc in assets
-- You will collect the break down of their assets like equity in home. Savings amount etc
-- If the user doe not know equity, you will ask them to share address so that we can look up equity offline
-- You will ask one question at a time and follow up if necessary to collect all  details
+    // Process chat history to build answer history
+    for (let i = 0; i < messages.length; i++) {
+        const message = messages[i]
+        if (message.role === "assistant") {
+            // Find the question that was asked
+            const [questionText] = message.content.split(":")
+            const questionEntry = Object.entries(questions).find(([_, q]) => q.question === questionText)
 
-You will next collect information from the user on their income
-- The income may be spread acros various sources like full time, part time, gig economy work, etc
-- You will collect the break down of their income across various sources
-- You will collect the information like salary, bonuses etc. 
-- You will ask user if they expect any changes in the income 
-- Keep asking them if they have other income sources with potential examples, till they say no
-- You will ask one question at a time and follow up if necessary to collect all  details
+            if (questionEntry) {
+                const [qId, question] = questionEntry
+                // Get the user's answer if available
+                if (i + 1 < messages.length && messages[i + 1].role === "user") {
+                    const answer = messages[i + 1].content
+                    answerHistory[qId] = question.type === "multi-select" ? answer.split(", ") : answer
+                }
+                currentQuestionId = qId
+            }
+        }
+    }
 
-You will next collect information from the user on their debt
-- They may have different kind of debts like Credit Card, Mortgage, Car, Medical, Personal, Education, etc
-- You will collect the break down of their debt across various sources
-- You will collect the outstanding debt, interest rate, etc
-- You will ask them to share the name of all the finacial institution where you have debt
-- Keep asking them if they have other debts with potential examples, till they say no
-- You will collect information on how well they are able to manage it currently with on time payments, etc
-- You will ask one question at a time and follow up if necessary to collect all  details
+    console.log("Answer history:", answerHistory)
 
-You will next collect information from the user on their financial goals
-- You will collect information on how they envision, debt free life would look and feel like
-- You will ask one question at a time and follow up if necessary to collect all  details
+    // Determine the next question
+    if (messages.length === 0) {
+        currentQuestionId = lastQuestionId || FIRST_QUESTION
+    } else {
+        // Find the last question asked
+        const lastQuestion = messages
+            .filter((m) => m.role === "assistant")
+            .map((m) => {
+                const [question] = m.content.split(":")
+                return Object.entries(questions).find(([_, q]) => q.question === question)
+            })
+            .filter(Boolean)
+            .pop()
 
-Once all information is collected you will suggest users about some tools like 
-1. https://ai.dealingwithdebt.org/credit-card-calculator - A calculator that helps users get a sense of how much debt they are carrying and the cost of that debt
+        if (!lastQuestion) {
+            currentQuestionId = lastQuestionId || FIRST_QUESTION
+        } else {
+            const [lastQuestionId, lastQuestionData] = lastQuestion
+            // Get the user's answer to the last question
+            const lastAnswer = messages[messages.length - 1].content.trim()
 
-Please collect this information one step at a time and validate responses.`
+            console.log("Last question ID:", lastQuestionId)
+            console.log("Last answer:", lastAnswer)
 
-    const result = streamText({
-        model: openai("gpt-4o-mini"),
-        messages,
-        system: systemPrompt,
+            // Store answer in history
+            if (lastQuestionData.type === "multi-select") {
+                answerHistory[lastQuestionId] = lastAnswer.split(", ")
+            } else {
+                answerHistory[lastQuestionId] = lastAnswer
+            }
+
+            // Determine the next question based on the answer and answer history
+            if (typeof lastQuestionData.nextQuestion === "function") {
+                if (lastQuestionId === "employment_status") {
+                    currentQuestionId = lastAnswer.trim() === "Yes" ? "income_sources" : "annual_income"
+                } else if (lastQuestionId === "home_equity") {
+                    const assetsAnswer = answerHistory["assets"] as string[]
+                    currentQuestionId = assetsAnswer?.includes("I have savings") ? "savings_amount" : "situation_description"
+                } else {
+                    currentQuestionId = lastQuestionData.nextQuestion(
+                        Array.isArray(answerHistory[lastQuestionId])
+                            ? (answerHistory[lastQuestionId] as string[])
+                            : [answerHistory[lastQuestionId] as string],
+                    )
+                }
+            } else {
+                currentQuestionId = lastQuestionData.nextQuestion || FIRST_QUESTION
+            }
+
+            console.log("Next question ID:", currentQuestionId)
+        }
+    }
+
+    // If we've reached the end of the questions, start over
+    if (!currentQuestionId || !questions[currentQuestionId]) {
+        currentQuestionId = FIRST_QUESTION
+    }
+
+    const currentQuestion = questions[currentQuestionId]
+    console.log("currentQuestion is ", currentQuestion)
+
+    let userMessage = `Ask the user with releveant past context: "${currentQuestion.question}"`
+    let userMessage1 = `${currentQuestion.question}`
+
+    if (currentQuestion.type === "options" || currentQuestion.type === "multi-select") {
+        const optionsString = currentQuestion.options?.join(", ")
+        const selectType = currentQuestion.type === "multi-select" ? "Select all that apply" : "Please choose one"
+        userMessage +=  `:${currentQuestion.type}:${currentQuestion.options}`
+        userMessage1 += `:${currentQuestion.type}:${currentQuestion.options}`
+    } else if (currentQuestion.type === "text") {
+        userMessage1 += `:${currentQuestion.type}:`
+    }
+
+    console.log("userMessage sent to AI Payload is ", userMessage)
+    console.log("userMessage sent to to UI is  ", userMessage1)
+
+    const openaiPayload = {
+        model: "gpt-4o-mini",
+        messages: [systemMessage, ...chatHistory, { role: "user", content: userMessage }],
+        stream: false,
+    }
+
+
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify(openaiPayload),
     })
 
-    return result.toDataStreamResponse()
+    if (!response.ok) {
+        const errorData = await response.json()
+        console.error("OpenAI API Error:", errorData)
+        return new Response(JSON.stringify({ error: "Failed to fetch OpenAI response" }), { status: 500 })
+    }
+
+    const responseData = await response.json()
+
+    const aiMessage = responseData.choices[0].message.content
+    console.log("AI aiMessage is ", aiMessage)
+
+    // Trim and clean up the string
+    const sanitizedMessage = aiMessage.trim().replace(/^```json/, "").replace(/```$/, "");
+
+    const parsedMessage = JSON.parse(sanitizedMessage);
+    console.log("AI parsedMessage is ", parsedMessage)
+
+    let questionTitle = parsedMessage?.question?.title || "No question found";
+
+    console.log("AI questionTitle is ", questionTitle)
+
+
+    if (currentQuestion.type === "options" || currentQuestion.type === "multi-select") {
+        const optionsString = currentQuestion.options?.join(", ")
+        const selectType = currentQuestion.type === "multi-select" ? "Select all that apply" : "Please choose one"
+        questionTitle += `:${currentQuestion.type}:${currentQuestion.options}`
+    } else if (currentQuestion.type === "text") {
+        questionTitle += `:${currentQuestion.type}:`
+    }
+    console.log("AI questionTitle is ", questionTitle)
+    
+    return new Response(
+        JSON.stringify({
+            message: userMessage1,
+            nextQuestionId: currentQuestionId,
+        }),
+        { status: 200 },
+    )
 }
+
