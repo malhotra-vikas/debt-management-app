@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Chatbot Interface</title>
+    <style>
+        #chatbot-icon-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            cursor: pointer;
+            z-index: 1000;
+            /* Ensures the button stays on top of other content */
+        }
+
+        #chatbot-button {
+            background: transparent;
+            border: none;
+            outline: none;
+        }
+
+        #chatbot-button img {
+            width: 60px;
+            /* Adjust size as needed */
+            height: auto;
+            display: block;
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            /* Use full view height */
+            overflow: hidden;
+            /* Optional: to prevent scrolling */
+        }
+    </style>
+
+
+</head>
+
+<body>
+
+    <div class="webchat" style="height: 100vh; width: 100vw;">
+        <iframe style="height: 100%; width: 100%; border: none;" srcdoc='
+        <!doctype html>
+        <html lang="en">
+          <head></head>
+          <body>
+            <script src="https://cdn.botpress.cloud/webchat/v2.2/inject.js"></script>
+            <script defer>
+              window.botpress.on("webchat:ready", (conversationId) => {
+                botpress.open();
+              });
+              window.botpress.init({
+                "botId": "1fde9b90-743e-4d6f-b30d-b2429e2e349a",
+                "configuration": {
+                  "composerPlaceholder": "Chat with Merlin",
+                  "botName": "Merlin",
+                  "botDescription": "Merlin is an A.I. Assistant that works with Dealing With Debt",
+                  "website": {},
+                  "botAvatar": "https://1010public.s3.us-east-2.amazonaws.com/upload_inline_amxJR7Z04w_aWGC7nG6Ov_1685587077434.jpeg",
+                  "email": {},
+                  "phone": {},
+                  "termsOfService": {},
+                  "privacyPolicy": {},
+                  "color": "#3B82F6",
+                  "variant": "solid",
+                  "themeMode": "light",
+                  "fontFamily": "inter",
+                  "radius": 1,
+                  "showPoweredBy": false,
+                  "allowFileUpload": false
+                },
+                "clientId": "5fddb6b1-f926-4b7a-b7cf-bdff8041f916"
+              });            
+            </script>
+          </body>
+        </html>'></iframe>
+
+    </div>
+
+</body>
+
+</html>
