@@ -40,10 +40,23 @@ export default function Home() {
             </CardHeader>
             <CardContent>
               <Button asChild className="w-full">
-                <Link href="/merlin">Go to Merlin Bot</Link>
+                <Link href="/merlin-pop.html">Go to Merlin Bot - Version-1</Link>
               </Button>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Merlin Bot</CardTitle>
+              <CardDescription>AI Bot that collects all financial details and makes recommedations</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild className="w-full">
+                <Link href="/merlin.html">Go to Merlin Bot - IFrame Full Page Version</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
 
         </div>
       </div>
