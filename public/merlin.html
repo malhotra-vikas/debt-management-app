@@ -11,6 +11,8 @@
             margin: 0;
             height: 100vh;
             overflow: hidden;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
         }
 
         /* Chatbot Floating Button */
@@ -41,12 +43,12 @@
             height: 100%;
         }
 
-        /* BotPress Chat UI */
+        /* Hide Floating Button (if not needed) */
         .bpFab {
             display: none;
-            /* Hides the floating icon */
         }
 
+        /* Bot UI Fullscreen */
         .bpWebchat {
             position: absolute !important;
             top: 0 !important;
@@ -68,7 +70,6 @@
                 width: 100vw !important;
                 height: 100vh !important;
                 border-radius: 0 !important;
-                /* Ensures full-screen display */
             }
         }
     </style>
@@ -76,39 +77,59 @@
 
 <body>
 
-    <div id="webchat-container">
-        <script src="https://cdn.botpress.cloud/webchat/v2.2/inject.js?v=<?= time(); ?>"></script>
-        <script>
-            window.botpress.on("webchat:ready", () => {
-                window.botpress.open();
-            });
+    <div id="webchat-container"></div>
 
-            window.botpress.init({
-                "botId": "1fde9b90-743e-4d6f-b30d-b2429e2e349a",
-                "configuration": {
-                    "botName": "Merlin",
-                    "botAvatar": "https://1010public.s3.us-east-2.amazonaws.com/dwd_favicon.png",
-                    "website": {},
-                    "email": {},
-                    "phone": {},
-                    "termsOfService": {},
-                    "privacyPolicy": {},
-                    "color": "#3bf5a1",
-                    "variant": "solid",
-                    "themeMode": "light",
-                    "fontFamily": "inter",
-                    "color": "#3B82F6",
-                    "showPoweredBy": false,
-                    "allowFileUpload": false,
-                    "showCloseButton": false,
-                    "closeOnEscape": false,
-                    "stylesheet": 'https://webchat-styler-css.botpress.app/prod/code/3fcd3e4e-d5bc-4bf5-8699-14b621b3ada2/v31782/style.css?v=' + new Date().getTime(),
-                    "radius": 1
-                },
-                "clientId": "5fddb6b1-f926-4b7a-b7cf-bdff8041f916"
-            });
-        </script>
-    </div>
+    <script>
+        (function loadBotpress() {
+            var script = document.createElement("script");
+            script.src = "https://cdn.botpress.cloud/webchat/v2.2/inject.js?v=" + new Date().getTime();
+            script.async = true;
+            script.defer = true;
+
+            script.onload = function () {
+                console.log("✅ BotPress script loaded successfully.");
+
+                window.botpress.on("webchat:ready", () => {
+                    console.log("✅ BotPress webchat is ready. Opening bot...");
+                    window.botpress.open();
+                    setTimeout(() => {
+                        console.log("🔄 Trying to show chatbot...");
+                        if (!document.querySelector(".bpWebchat")) {
+                            console.error("⚠️ Chat UI did not render. Retrying...");
+                            window.botpress.open();
+                        }
+                    }, 3000);
+                });
+
+                window.botpress.init({
+                    "botId": "1fde9b90-743e-4d6f-b30d-b2429e2e349a",
+                    "configuration": {
+                        "botName": "Merlin",
+                        "botAvatar": "https://1010public.s3.us-east-2.amazonaws.com/dwd_favicon.png",
+                        "color": "#3B82F6",
+                        "variant": "solid",
+                        "themeMode": "light",
+                        "fontFamily": "inter",
+                        "radius": 1,
+                        "showPoweredBy": false,
+                        "allowFileUpload": false,
+                        "showCloseButton": false,
+                        "closeOnEscape": false,
+                        "stylesheet": "https://webchat-styler-css.botpress.app/prod/code/3fcd3e4e-d5bc-4bf5-8699-14b621b3ada2/v31782/style.css?v=" + new Date().getTime()
+                    },
+                    "clientId": "5fddb6b1-f926-4b7a-b7cf-bdff8041f916"
+                });
+            };
+
+            script.onerror = function () {
+                console.error("⚠️ BotPress script failed to load. Retrying in 3 seconds...");
+                setTimeout(loadBotpress, 3000);
+            };
+
+            document.body.appendChild(script);
+        })();
+    </script>
+
 
 </body>
 
