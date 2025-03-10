@@ -11,18 +11,6 @@ export default function Home() {
         <div className="grid md:grid-cols-2 gap-8">
           <Card>
             <CardHeader>
-              <CardTitle>Debt Information Form</CardTitle>
-              <CardDescription>Fill out your debt information to get personalized advice</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild className="w-full">
-                <Link href="/debt-information-form">Go to Debt Information Form</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
               <CardTitle>Credit Card Payoff Calculator</CardTitle>
               <CardDescription>Calculate your credit card debt repayment plan</CardDescription>
             </CardHeader>
