@@ -50,13 +50,23 @@
 
         /* Bot UI Fullscreen */
         .bpWebchat {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            width: 100% !important;
+            height: 100vh !important;
+            max-height: calc(100vh - env(safe-area-inset-bottom)) !important; /* Adjust for Safari bottom UI */
+            position: fixed !important;
+            bottom: 0 !important;
+            right: 0 !important;
+            z-index: 100000 !important;
+/*
             position: absolute !important;
             top: 0 !important;
             left: 0 !important;
             right: 0 !important;
             bottom: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
+*/            
         }
 
         /* Mobile Styles */
@@ -112,7 +122,10 @@
                         "allowFileUpload": false,
                         "showCloseButton": false,
                         "closeOnEscape": false,
-                        "stylesheet": "https://webchat-styler-css.botpress.app/prod/code/3fcd3e4e-d5bc-4bf5-8699-14b621b3ada2/v31782/style.css?v=" + new Date().getTime()
+                        "stylesheet": "https://webchat-styler-css.botpress.app/prod/code/3fcd3e4e-d5bc-4bf5-8699-14b621b3ada2/v31782/style.css?v=" + new Date().getTime(),
+                        "layout": {
+                           "inputBottomPadding": "20px"  // Moves chat input up
+                        }                        
                     },
                     "clientId": "5fddb6b1-f926-4b7a-b7cf-bdff8041f916"
                 });
