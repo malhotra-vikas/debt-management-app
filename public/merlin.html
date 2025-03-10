@@ -3,15 +3,23 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chatbot Interface</title>
     <style>
+        /* General Styles */
+        body {
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Chatbot Floating Button */
         #chatbot-icon-container {
             position: fixed;
             bottom: 20px;
             right: 20px;
             cursor: pointer;
             z-index: 1000;
-            /* Ensures the button stays on top of other content */
         }
 
         #chatbot-button {
@@ -22,27 +30,54 @@
 
         #chatbot-button img {
             width: 60px;
-            /* Adjust size as needed */
             height: auto;
             display: block;
         }
 
-        body {
-            margin: 0;
-            height: 100vh;
-            /* Use full view height */
-            overflow: hidden;
-            /* Optional: to prevent scrolling */
+        /* Chatbot Container */
+        #webchat-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* BotPress Chat UI */
+        .bpFab {
+            display: none;
+            /* Hides the floating icon */
+        }
+
+        .bpWebchat {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* Mobile Styles */
+        @media (max-width: 768px) {
+            #webchat-container {
+                width: 100vw;
+                height: 100vh;
+            }
+
+            .bpWebchat {
+                width: 100vw !important;
+                height: 100vh !important;
+                border-radius: 0 !important;
+                /* Ensures full-screen display */
+            }
         }
     </style>
-
-
 </head>
 
 <body>
 
-    <div id="webchat-container" style="position: relative; width: 100%; height: 100%;">
-        <script src="https://cdn.botpress.cloud/webchat/v2.2/inject.js"></script>
+    <div id="webchat-container">
+        <script src="https://cdn.botpress.cloud/webchat/v2.2/inject.js?v=<?= time(); ?>"></script>
         <script>
             window.botpress.on("webchat:ready", () => {
                 window.botpress.open();
@@ -65,35 +100,14 @@
                     "color": "#3B82F6",
                     "showPoweredBy": false,
                     "allowFileUpload": false,
-                    'showCloseButton': false,
-                    'closeOnEscape': false,
-                    'stylesheet':'https://webchat-styler-css.botpress.app/prod/code/3fcd3e4e-d5bc-4bf5-8699-14b621b3ada2/v31782/style.css',
+                    "showCloseButton": false,
+                    "closeOnEscape": false,
+                    "stylesheet": 'https://webchat-styler-css.botpress.app/prod/code/3fcd3e4e-d5bc-4bf5-8699-14b621b3ada2/v31782/style.css?v=' + new Date().getTime(),
                     "radius": 1
                 },
                 "clientId": "5fddb6b1-f926-4b7a-b7cf-bdff8041f916"
             });
         </script>
-        <style>
-            #webchat-container {
-                position: relative;
-                width: 100%;
-                height: 100%;
-            }
-
-            .bpFab {
-                display: none;
-            }
-
-            .bpWebchat {
-                position: absolute !important;
-                top: 0 !important;
-                left: 0 !important;
-                right: 0 !important;
-                bottom: 0 !important;
-                width: 100% !important;
-                height: 100% !important;
-            }
-        </style>
     </div>
 
 </body>
