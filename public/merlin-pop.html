@@ -84,11 +84,8 @@
                             window.botpress.open();
                             setTimeout(() => {
                                 console.log("🔄 Trying to show chatbot...");
-                                if (!document.querySelector(".bpWebchat")) {
-                                    console.error("⚠️ Chat UI did not render. Retrying...");
-                                    window.botpress.open();
-                                }
-                            }, 3000);
+                                window.botpress.open();
+                              }, 2000);
                         });
 
                         window.botpress.init({
