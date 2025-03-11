@@ -110,6 +110,9 @@ const styles = StyleSheet.create({
     fontFamily: 'Helvetica',
     color: '#333333'
   },
+  fallbackText: {
+    fontFamily: 'Times-Roman', // Explicit fallback style
+  },
   logoContainer: {
     alignItems: 'center',
     marginBottom: 20, // Adds space between the logo and the title
