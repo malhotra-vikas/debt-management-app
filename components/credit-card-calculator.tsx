@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     borderBottomStyle: 'solid',
     alignItems: 'center',
     height: 24,
-    fontStyle: 'bold',
+    fontWeight: 'bold',
   },
   summaryTableCol: {
     width: '20%',
