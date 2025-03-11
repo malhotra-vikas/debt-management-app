@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     backgroundColor: '#ffffff',
     padding: 30,
-    fontFamily: 'Helvetica',
+    fontFamily: 'Times-Roman',
     color: '#333333'
   },
   fallbackText: {
