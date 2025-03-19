@@ -31,7 +31,7 @@ export async function activateUser(email: string) {
         const userData = await getUserDataFromEmail(email)
 
         // 2. Make API call to create user
-        const apiUrl = "https://app.dealingwithdebt.org/wp-json/affiliate/v1/create-user"
+        const apiUrl = process.env.API_URL
         const apiSecret = process.env.API_SECRET_TOKEN
 
         if (!apiSecret) {
