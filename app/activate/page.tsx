@@ -1,11 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { activateUser } from './actions'
 
 export default function ActivatePage() {
     const searchParams = useSearchParams()
+    const router = useRouter()
+
     const email = searchParams.get('email')
     const action = searchParams.get('action')
 
@@ -27,7 +29,13 @@ export default function ActivatePage() {
             } catch (error) {
                 setStatus('error')
                 setMessage('User Activation Failed')
+            } finally {
+                // Redirect to login page after a short delay
+                setTimeout(() => {
+                    router.push('https://app.dealingwithdebt.org/login/')
+                }, 3000) // Redirect after 3 seconds
             }
+
         }
 
         handleActivation()
