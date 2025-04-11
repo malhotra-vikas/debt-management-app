@@ -8,11 +8,11 @@ export function middleware(request: NextRequest) {
 
     // Only run on activation routes
     if (pathname === "/activate") {
-        const email = searchParams.get("email")
+        const client = searchParams.get("client")
         const action = searchParams.get("action")
 
         // Basic validation
-        if (!email || !action) {
+        if (!client || !action) {
             return NextResponse.redirect(new URL("/?error=invalid_link", request.url))
         }
 

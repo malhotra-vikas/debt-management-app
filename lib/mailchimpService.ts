@@ -28,6 +28,64 @@ interface UserPayload {
     SETTLEMENTS_REACHED: string;
 }
 
+export async function getUserDataFromLeadsDB(clientId: string): Promise<UserPayload | null> {
+    try {
+        // Construct the URL for the backend API
+        const apiUrl = `http://ai.dealingwithdebt.org:3020/fetch-lead-by-clientid?client=${clientId}`;
+
+        console.log("API being called is ", apiUrl)
+
+
+        // Make the GET request to fetch the user data
+        const response = await fetch(apiUrl, {
+            method: 'GET', // Using GET to fetch data
+        });
+
+        // Check if the response is successful (status code 200)
+        if (response.ok) {
+            const data = await response.json(); // Parse the response JSON
+
+            // Assuming your API returns an object with a "data" array
+            if (data && data.data && Array.isArray(data.data)) {
+                // If data exists and it's an array, return the full data
+                const rawUserData = data.data[0];  // Assuming there's only one user data in the array
+
+                // Map the raw data to match the UserPayload interface
+                const userData: UserPayload = {
+                    SPONSOR_NAME: rawUserData.sponsor_name,
+                    CLIENT_FIRST: rawUserData.client_first,
+                    CLIENT_LAST: rawUserData.client_last,
+                    CLIENT_ZIP: rawUserData.client_zip,
+                    CLIENT_EMAIL: rawUserData.client_email,
+                    CLIENT_MOBILE: rawUserData.client_mobile,
+                    CLIENT_STATE: rawUserData.client_state,
+                    CLIENT_DOB: rawUserData.client_dob,
+                    CLIENT_ID: rawUserData.client_id,
+                    PROCESSOR_ACCT: rawUserData.processor_acct,
+                    CLIENT_STATUS: rawUserData.client_status,
+                    AFFILIATE_ENROLLED_DATE: new Date(rawUserData.affiliate_enrolled_date).toLocaleDateString('en-CA'),  // 'en-CA' for "YYYY-MM-DD" format
+                    DRAFTS: rawUserData.drafts || 0,  // Defaulting to 0 if missing
+                    DEBT_AMT_ENROLLED: rawUserData.debt_amt_enrolled || 0,  // Defaulting to 0 if missing
+                    SETTLEMENTS_REACHED: rawUserData.settlements_reached || 'N/A'  // Defaulting to 'N/A' if missing
+                };
+
+                console.log("userData being retud is ", userData)
+
+                return userData;  // Return the full user data
+            } else {
+                console.error('No valid user data found in the response');
+                return null; // Return null if data is not valid
+            }
+        } else {
+            console.error('Failed to fetch data:', response.statusText);
+            return null; // Return null if the response is not OK
+        }
+    } catch (error) {
+        console.error('Error fetching user data:', error);
+        return null; // Return null if an error occurs
+    }
+}
+
 // Fetch user data from Mailchimp based on email
 export async function getUserDataFromEmail(email: string): Promise<UserPayload | null> {
     try {

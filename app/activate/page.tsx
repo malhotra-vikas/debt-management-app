@@ -8,22 +8,25 @@ export default function ActivatePage() {
     const searchParams = useSearchParams()
     const router = useRouter()
 
-    const email = searchParams.get('email')
+    const clientId = searchParams.get('client')
     const action = searchParams.get('action')
+
+    console.log("Client ID:", clientId)  // Log the clientId to check
+    console.log("Action:", action)  // Log the action to check
 
     const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
     const [message, setMessage] = useState('')
 
     useEffect(() => {
         const handleActivation = async () => {
-            if (!email || !action || action !== 'join') {
+            if (!clientId || !action || action !== 'join') {
                 setStatus('error')
-                setMessage('Invalid activation link. Please check your email and try again.')
+                setMessage('Invalid action. Please check your email and try again.')
                 return
             }
 
             try {
-                const result = await activateUser(email)
+                const result = await activateUser(clientId)
                 setStatus('success')
                 setMessage(result.message)
             } catch (error) {
@@ -39,7 +42,7 @@ export default function ActivatePage() {
         }
 
         handleActivation()
-    }, [email, action])
+    }, [clientId, action])
 
     return (
         <div className="flex min-h-screen flex-col items-center justify-center p-4">

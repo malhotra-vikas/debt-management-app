@@ -1,7 +1,7 @@
 "use server"
 
 import { z } from "zod"
-import { getUserDataFromEmail } from "@/lib/mailchimpService";
+import { getUserDataFromEmail, getUserDataFromLeadsDB } from "@/lib/mailchimpService";
 
 // Define the expected payload structure
 const userPayloadSchema = z.object({
@@ -25,10 +25,10 @@ const userPayloadSchema = z.object({
 type UserPayload = z.infer<typeof userPayloadSchema>
 
 
-export async function activateUser(email: string) {
+export async function activateUser(clientId: string) {
     try {
         // 1. Get user data based on email
-        const userData = await getUserDataFromEmail(email)
+        const userData = await getUserDataFromLeadsDB(clientId)
 
         // 2. Make API call to create user
         const apiUrl = process.env.API_URL
