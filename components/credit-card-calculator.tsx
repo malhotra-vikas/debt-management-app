@@ -743,7 +743,7 @@ export default function Component() {
     defaultValues: {
       principal: 1000,
       apr: 18,
-      minimumPayment: 40,
+      minimumPayment: 25,
       additionalPayment: 0,
       requiredPrincipalPercentage: 1.0,
     },
@@ -1040,7 +1040,7 @@ export default function Component() {
                       <FormItem>
                         <FormLabel className="flex items-center group">
                           Alternative Minimum Payment ($)
-                          <InfoTooltip content="Defined in the card agreement, this is lowest minimum payment the issuer accepts for cards with a balance. If your balance falls below this number the balance becomes the minimum payment. By default we have this set at $40" />
+                          <InfoTooltip content="Defined in the card agreement, this is lowest minimum payment the issuer accepts for cards with a balance. If your balance falls below this number the balance becomes the minimum payment. By default we have this set at $25" />
                         </FormLabel>
                         <FormControl>
                           <Input
