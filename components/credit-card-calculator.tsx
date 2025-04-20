@@ -91,7 +91,7 @@ function InfoTooltip({ content }: { content: string }) {
         <TooltipTrigger asChild>
           <Info className="h-4 w-4 ml-1 inline-block text-muted-foreground hover:text-primary cursor-help transition-colors" />
         </TooltipTrigger>
-        <TooltipContent 
+        <TooltipContent
           className="bg-popover text-popover-foreground shadow-lg rounded-md px-3 py-2 text-sm max-w-xs"
           sideOffset={5}
         >
@@ -226,11 +226,11 @@ const styles = StyleSheet.create({
   },
   debtFreeDate: {
     fontWeight: 'bold',
-    color: '#4CAF50', 
+    color: '#4CAF50',
   },
   savings: {
     fontWeight: 'bold',
-    color: '#4CAF50', 
+    color: '#4CAF50',
   },
   chartContainer: {
     marginTop: 20,
@@ -553,7 +553,7 @@ const PDFReport = ({ summary, paymentSchedule, formValues, fName, lName }: PDFRe
 
           <View>
             <Text style={styles.subtitle}>Current Payoff Summary</Text>
-            
+
             <View style={styles.summaryItem}>
               <Text style={styles.summaryLabel}>Total Paid:</Text>
               <Text style={styles.summaryValue}>{currencyFormatter.format(summary.totalInterestPaid + summary.totalPrincipalPaid)}</Text>
@@ -580,16 +580,16 @@ const PDFReport = ({ summary, paymentSchedule, formValues, fName, lName }: PDFRe
             </View>
           </View>
 
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>          
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             {originalAdditionalPayment > 0 ? (
-                <Text style={styles.scenarioTitle}>
-                    Assuming Minimum Payment Plus <Text style={styles.bold}>${originalAdditionalPayment.toFixed(2)}</Text> Are Made Each Month
-                </Text>
+              <Text style={styles.scenarioTitle}>
+                Assuming Minimum Payment Plus <Text style={styles.bold}>${originalAdditionalPayment.toFixed(2)}</Text> Are Made Each Month
+              </Text>
             ) : (
-                <Text style={styles.scenarioTitle}>
-                    Assuming Only Minimum Payments Are Made Each Month
-                </Text>
-            )}            
+              <Text style={styles.scenarioTitle}>
+                Assuming Only Minimum Payments Are Made Each Month
+              </Text>
+            )}
           </View>
           <View style={{ marginTop: 20 }} />
           <View style={styles.chartTable}>
@@ -634,13 +634,13 @@ const PDFReport = ({ summary, paymentSchedule, formValues, fName, lName }: PDFRe
                     <Path d="M16.01 11H4v2h12.01v3L20 12l-3.99-4v3z" fill="#4CAF50" />
                   </Svg>
                   <Text style={styles.scenarioTitle}>
-                      Assuming Minimum Payment Plus <Text style={styles.bold}>${originalAdditionalPayment + additionalPayment}/month</Text>, you could be debt-free by {' '}
+                    Assuming Minimum Payment Plus <Text style={styles.bold}>${originalAdditionalPayment + additionalPayment}/month</Text>, you could be debt-free by {' '}
                     <Text style={[styles.debtFreeDate, styles.bold]}>
                       {calculateDebtFreeDate(scenarioSummary.monthsToPayoff)}
                     </Text>
                   </Text>
                 </View>
-      
+
                 {/* Render Charts */}
                 {renderScenarioCharts(scenarioSummary)}
 
@@ -652,7 +652,7 @@ const PDFReport = ({ summary, paymentSchedule, formValues, fName, lName }: PDFRe
 
               </React.Fragment>
             );
-          
+
           })}
         </View>
         <Text break />
@@ -663,13 +663,13 @@ const PDFReport = ({ summary, paymentSchedule, formValues, fName, lName }: PDFRe
 
           {/* Conditional rendering based on additionalPayment */}
           {originalAdditionalPayment > 0 ? (
-              <Text style={styles.scenarioTitle}>
-                  Assuming Minimum Payment Plus ${originalAdditionalPayment.toFixed(2)} Are Made Each Month
-              </Text>
+            <Text style={styles.scenarioTitle}>
+              Assuming Minimum Payment Plus ${originalAdditionalPayment.toFixed(2)} Are Made Each Month
+            </Text>
           ) : (
-              <Text style={styles.scenarioTitle}>
-                  Assuming Only Minimum Payments Are Made Each Month
-              </Text>
+            <Text style={styles.scenarioTitle}>
+              Assuming Only Minimum Payments Are Made Each Month
+            </Text>
           )}
 
           <View style={styles.table}>
@@ -782,6 +782,51 @@ export default function Component() {
     }
   }, [form.watch('principal'), form.watch('apr'), form.watch('minimumPayment'), form.watch('additionalPayment'), form.watch('requiredPrincipalPercentage')])
 
+  async function sendEmailWithoutMailChimp(email: string, fname: string, lname: string, link: string) {
+    console.log("Send email to:");
+    console.log(email);
+    console.log(fname);
+    console.log(link);
+  
+    try {
+      const url = new URL('https://us.dealingwithdebt.org/wp-json/uap/v2/uap-8671-8672');
+  
+      // Set query parameters
+      url.searchParams.append('emailAddress', email);
+      url.searchParams.append('firstName', fname);
+      url.searchParams.append('lastName', lname);
+      url.searchParams.append('reportLink', link);
+  
+      const response = await fetch(url.toString(), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Failed to send email: ${response.statusText}`);
+      }
+  
+      const data = await response.json();
+  
+      const result = {
+        emailData: data,
+        reportLink: link
+      };
+  
+      console.log('Email sent successfully:', result);
+      setEmailSentSuccess(true);
+      setEmailMessage('Email has been successfully sent and the report is available.');
+      setReportUrl(link);
+  
+      return result;
+    } catch (error) {
+      console.error('Error sending email:', error);
+      throw error;
+    }
+  }
+  
   async function sendEmailWithMailChimp(email: string, fname: string, lname: string, link: any) {
     console.log("Send email via MailChimp to ")
     console.log(email)
@@ -807,8 +852,8 @@ export default function Component() {
       const result = {
         emailData: data, // Provides clearer context to what 'data' contains
         reportLink: link // Corrected typo in key name, and use camelCase for consistency
-    };
-    
+      };
+
       console.log('Email sent successfully:', result);
       setEmailSentSuccess(true);
       setEmailMessage('Email has been successfully sent and the report is available.');
@@ -883,10 +928,10 @@ export default function Component() {
         <CardHeader className="space-y-1 pb-2">
           <CardTitle className="card-calculator-title">
             <CreditCard className="mr-2 h-6 w-6" />
-             Enter your card details below
+            Enter your card details below
           </CardTitle>
           <p className="card-calculator-description">
-            This calculator projects your payoff date and details and allows you to run simulations under various monthly payment scenarios.            
+            This calculator projects your payoff date and details and allows you to run simulations under various monthly payment scenarios.
           </p>
         </CardHeader>
         <CardContent>
@@ -994,27 +1039,27 @@ export default function Component() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="flex items-center group">
-                        Alternative Minimum Payment ($)
+                          Alternative Minimum Payment ($)
                           <InfoTooltip content="Defined in the card agreement, this is lowest minimum payment the issuer accepts for cards with a balance. If your balance falls below this number the balance becomes the minimum payment. By default we have this set at $40" />
                         </FormLabel>
                         <FormControl>
-                        <Input
-                          type="number"
-                          step="10"
-                          {...field}
-                          onChange={e => {
-                            const parsedValue = parseFloat(e.target.value);
-                            // Check if parsed value is NaN
-                            if (isNaN(parsedValue)) {
-                              // Handle NaN case: set a default value or handle it in a way that suits your application
-                              field.onChange(0);  // or any fallback value you prefer
-                            } else {
-                              field.onChange(parsedValue);
-                            }
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage className="font-sans" />
+                          <Input
+                            type="number"
+                            step="10"
+                            {...field}
+                            onChange={e => {
+                              const parsedValue = parseFloat(e.target.value);
+                              // Check if parsed value is NaN
+                              if (isNaN(parsedValue)) {
+                                // Handle NaN case: set a default value or handle it in a way that suits your application
+                                field.onChange(0);  // or any fallback value you prefer
+                              } else {
+                                field.onChange(parsedValue);
+                              }
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage className="font-sans" />
                       </FormItem>
                     )}
                   />
@@ -1028,24 +1073,24 @@ export default function Component() {
                           <InfoTooltip content="Defined in the card agreement, this is the percent of your outstanding balance the issuer requires you to pay each month. It is usually between 1% and 3% By default we have this set at 1.0%" />
                         </FormLabel>
                         <FormControl>
-                        <Input
-                          type="number"
-                          step="10"
-                          {...field}
-                          onChange={e => {
-                            const parsedValue = parseFloat(e.target.value);
-                            // Check if parsed value is NaN
-                            if (isNaN(parsedValue)) {
-                              // Handle NaN case: set a default value or handle it in a way that suits your application
-                              field.onChange(0);  // or any fallback value you prefer
-                            } else {
-                              field.onChange(parsedValue);
-                            }
-                          }}
-                        />
-                      </FormControl>
+                          <Input
+                            type="number"
+                            step="10"
+                            {...field}
+                            onChange={e => {
+                              const parsedValue = parseFloat(e.target.value);
+                              // Check if parsed value is NaN
+                              if (isNaN(parsedValue)) {
+                                // Handle NaN case: set a default value or handle it in a way that suits your application
+                                field.onChange(0);  // or any fallback value you prefer
+                              } else {
+                                field.onChange(parsedValue);
+                              }
+                            }}
+                          />
+                        </FormControl>
 
-                      <FormMessage className="font-sans" />
+                        <FormMessage className="font-sans" />
                       </FormItem>
                     )}
                   />
@@ -1131,7 +1176,7 @@ export default function Component() {
                             }
                           }}
                         />
-                        <Button 
+                        <Button
                           onClick={() => setPopoverOpen(false)}
                           className="bg-green-600 text-white hover:bg-green-700 transition-colors"
                         >
@@ -1140,7 +1185,7 @@ export default function Component() {
                       </div>
                       {form.getValues('additionalPayment') > 0 && originalTotalInterestPaid !== null && (originalTotalInterestPaid - summary.totalInterestPaid) > 0 && (
                         <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                          With an extra ${form.getValues('additionalPayment')}/month, you could be debt-free by <span className="font-bold text-green-600 dark:text-green-400">{calculateDebtFreeDate(summary.monthsToPayoff)}</span>, 
+                          With an extra ${form.getValues('additionalPayment')}/month, you could be debt-free by <span className="font-bold text-green-600 dark:text-green-400">{calculateDebtFreeDate(summary.monthsToPayoff)}</span>,
                           saving <span className="font-bold text-green-600 dark:text-green-400">{currencyFormatter.format(originalTotalInterestPaid - summary.totalInterestPaid)}</span> in interest!
                         </p>
                       )}
@@ -1150,13 +1195,13 @@ export default function Component() {
                 </Popover>
                 <Popover open={emailPopupOpen} onOpenChange={setEmailPopupOpen}>
                   <PopoverTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className="group text-[#002A65] hover:text-[#002A65] hover:bg-[#e3eaf3] border-[#96D18C] transition-colors"
-                  >
-                    Email my report
-                    <Send className="inline-block ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </Button>
+                    <Button
+                      variant="outline"
+                      className="group text-[#002A65] hover:text-[#002A65] hover:bg-[#e3eaf3] border-[#96D18C] transition-colors"
+                    >
+                      Email my report
+                      <Send className="inline-block ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-96 p-0 bg-white dark:bg-gray-800 rounded-lg shadow-xl">
                     <div className="p-4 bg-blue-50 dark:bg-blue-900 rounded-t-lg">
@@ -1196,7 +1241,7 @@ export default function Component() {
                             onChange={(e) => setEmail(e.target.value)}
                           />
                         </div>
-                        <Button 
+                        <Button
                           onClick={async () => {
                             if (!isValidEmail(email)) {
                               toast({
@@ -1214,7 +1259,8 @@ export default function Component() {
                               const uploadResult = await uploadPdfToServer(pdfBlob);
                               setIsPdfGenerating(false);
                               setEmailPopupOpen(false);
-                              const reportSentResponse = await sendEmailWithMailChimp(email, fname, lname, uploadResult.link);                                                            
+                              //const reportSentResponse = await sendEmailWithMailChimp(email, fname, lname, uploadResult.link);
+                              const reportSentResponse = await sendEmailWithoutMailChimp(email, fname, lname, uploadResult.link)
                               toast({
                                 title: "Report Sent",
                                 description: `Your debt repayment report has been generated and sent to ${email}.`,
@@ -1242,17 +1288,17 @@ export default function Component() {
                       </div>
                     </div>
                   </PopoverContent>
-                </Popover>  
+                </Popover>
               </div>
-                {emailSentSuccess && (
-                  <div id="reportAvailable" style={{ marginTop: '20px', padding: '15px', backgroundColor: '#e0ffe0', borderRadius: '5px', color: '#4CAF50', textAlign: 'center' }}>
-                    <MdCheckCircle size={24} style={{ verticalAlign: 'middle', marginRight: '8px' }} />
-                    <span>Email has been successfully sent and the report is available. </span>
-                    <a href={reportUrl} target="_blank" rel="noopener noreferrer" style={{ fontWeight: 'bold', color: '#4CAF50' }}>
-                      View and Download Report
-                    </a>
-                  </div>
-                )}
+              {emailSentSuccess && (
+                <div id="reportAvailable" style={{ marginTop: '20px', padding: '15px', backgroundColor: '#e0ffe0', borderRadius: '5px', color: '#4CAF50', textAlign: 'center' }}>
+                  <MdCheckCircle size={24} style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+                  <span>Email has been successfully sent and the report is available. </span>
+                  <a href={reportUrl} target="_blank" rel="noopener noreferrer" style={{ fontWeight: 'bold', color: '#4CAF50' }}>
+                    View and Download Report
+                  </a>
+                </div>
+              )}
             </CardContent>
           </Card>
 
